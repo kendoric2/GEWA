@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden Era — Workout Planner</title>
+<meta name="description" content="Arnold-inspired workout planner with an aggregated exercise database, smart split generator, and progress tracking.">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golden Era">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#5A4820;--gold-bg:rgba(201,168,76,0.07);--black:#0A0A0A;--surface:#131313;--surface2:#1C1C1C;--surface3:#242424;--border:#2C2C2C;--border-light:#383838;--text:#EFEFEF;--text-muted:#888;--text-dim:#4A4A4A;--green:#2ECC71;--green-bg:rgba(46,204,113,0.08);--blue:#3498DB;--red:#E74C3C;--purple:#9B59B6;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden;}
+/* APP SHELL */
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.app-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.08em;color:var(--text);line-height:1;cursor:pointer;}
+.app-logo span{color:var(--gold);}
+.header-actions{display:flex;gap:8px;align-items:center;}
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;}
+.bnav-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--text-dim);transition:.15s;}
+.bnav-btn.active{color:var(--gold);}
+.bnav-icon{font-size:18px;line-height:1;}
+.bnav-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;}
+/* SCREENS */
+.screen{display:none;padding:16px 16px 80px;max-width:720px;margin:0 auto;}
+.screen.active{display:block;}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none;transition:.15s;white-space:nowrap;}
+.btn-gold{background:var(--gold);color:var(--black);font-weight:700;}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-outline{background:transparent;color:var(--text-muted);border:1px solid var(--border-light);}
+.btn-outline:hover{color:var(--text);border-color:var(--text-muted);}
+.btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);font-size:10px;padding:5px 10px;}
+.btn-ghost:hover{color:var(--text-muted);}
+.btn-green{background:var(--green);color:var(--black);font-weight:700;}
+.btn-red{background:transparent;color:var(--red);border:1px solid var(--red);font-size:10px;padding:5px 10px;}
+.btn-purple{background:var(--purple);color:#fff;font-weight:700;}
+.btn-blue{background:var(--blue);color:#fff;font-weight:700;}
+.btn-sm{padding:5px 10px;font-size:10px;}
+/* SCREEN HEADERS */
+.screen-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.06em;margin-bottom:4px;}
+.screen-title span{color:var(--gold);}
+.screen-sub{font-size:12px;color:var(--text-muted);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+/* PROGRAM CARDS */
+.program-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.program-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;cursor:pointer;transition:.15s;}
+.program-card:hover{border-color:var(--border-light);}
+.program-card.active-program{border-color:var(--gold);}
+.pc-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.pc-info{flex:1;}
+.pc-name{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.pc-meta{font-size:11px;color:var(--text-muted);}
+.pc-badge{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-dim);padding:2px 8px;border-radius:2px;text-transform:uppercase;white-space:nowrap;}
+.pc-active-badge{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--black);background:var(--gold);padding:2px 8px;border-radius:2px;text-transform:uppercase;}
+.pc-actions{display:flex;gap:6px;padding:8px 16px;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;}
+/* CREATE BUTTONS */
+.create-row{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+/* DATA / BACKUP */
+.data-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding-top:16px;border-top:1px solid var(--border);}
+.data-note{font-size:11px;color:var(--text-dim);width:100%;margin-bottom:6px;line-height:1.5;}
+/* EXERCISE BANK */
+.bank-controls{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.search-input{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:8px 12px;font-size:13px;outline:none;}
+.search-input:focus{border-color:var(--gold);}
+.filter-select{background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:8px 12px;font-size:12px;outline:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--gold);}
+.exercise-list{display:flex;flex-direction:column;gap:8px;}
+.ex-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.ex-card-header{padding:12px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer;}
+.ex-card-header:hover{background:var(--surface2);}
+.ex-card-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.ex-card-muscle{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+.ex-card-type{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 8px;border-radius:2px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.type-compound{color:#3498DB;background:rgba(52,152,219,.1);border:1px solid rgba(52,152,219,.3);}
+.type-isolation{color:#9B59B6;background:rgba(155,89,182,.1);border:1px solid rgba(155,89,182,.3);}
+.ex-card-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border);}
+.ex-card-body.open{display:block;}
+.ex-how{margin-top:12px;}
+.ex-how-title{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;}
+.ex-how-text{font-size:12px;color:var(--text-muted);line-height:1.6;}
+.ex-cue{margin-top:8px;padding:8px 10px;background:var(--gold-bg);border-left:2px solid var(--gold-dim);font-size:11px;color:var(--text-muted);line-height:1.5;}
+.ex-add-btn{margin-top:10px;}
+.muscle-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dim);background:var(--surface3);border:1px solid var(--border);padding:2px 6px;border-radius:2px;margin-right:4px;margin-bottom:4px;}
+/* TRACKER */
+.day-selector{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;margin:-16px -16px 16px;}
+.day-selector::-webkit-scrollbar{display:none;}
+.day-tab{flex-shrink:0;padding:13px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;text-align:center;}
+.day-tab-name{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;margin-bottom:2px;}
+.day-tab-focus{font-size:12px;color:var(--text-muted);font-weight:500;}
+.day-tab.active .day-tab-name{color:var(--gold);}
+.day-tab.active .day-tab-focus{color:var(--text);}
+.day-tab.active{border-bottom-color:var(--gold);}
+.day-tab.rest-tab{opacity:.4;cursor:default;}
+.session-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.session-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em;line-height:1;}
+.session-title span{color:var(--gold);}
+.session-meta{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.session-acts{display:flex;gap:6px;flex-wrap:wrap;}
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.prog-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+.prog-track{flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease;}
+.prog-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);white-space:nowrap;}
+.last-session-bar{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);background:var(--gold-bg);border:1px solid var(--gold-dim);border-radius:3px;padding:8px 11px;margin-bottom:14px;line-height:1.5;}
+.last-session-bar b{color:var(--gold);font-weight:600;}
+.warmup-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:4px;padding:12px 14px;margin-bottom:14px;}
+.warmup-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--blue);text-transform:uppercase;margin-bottom:6px;}
+.warmup-item{font-size:12px;color:var(--text-muted);padding-left:12px;position:relative;margin-bottom:3px;}
+.warmup-item::before{content:'—';position:absolute;left:0;color:var(--text-dim);}
+.block{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.block-hdr{background:var(--surface2);padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.block-tag{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;background:var(--gold-bg);border:1px solid var(--gold-dim);padding:2px 8px;border-radius:2px;}
+.block-title{font-size:13px;font-weight:600;color:var(--text);}
+.block-rest{margin-left:auto;display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);}
+.btn-rt-start{background:var(--surface3);border:1px solid var(--border-light);color:var(--gold);border-radius:3px;min-width:26px;height:22px;font-size:12px;cursor:pointer;line-height:1;padding:0 5px;}
+.btn-rt-start:hover{border-color:var(--gold);}
+.ss-div{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--gold-bg);border-top:1px dashed var(--gold-dim);border-bottom:1px dashed var(--gold-dim);}
+.ss-line{flex:1;height:1px;background:var(--gold-dim);}
+.ss-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;}
+.exercise{padding:12px 14px;border-bottom:1px solid var(--border);}
+.exercise:last-child{border-bottom:none;}
+.ex-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.ex-name{font-size:14px;font-weight:600;color:var(--text);}
+.ex-muscle-tag{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+.ex-set-count{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);flex-shrink:0;}
+.sets-con{display:flex;flex-direction:column;gap:5px;margin-bottom:6px;}
+.set-row{display:grid;grid-template-columns:24px 1fr 1fr 1fr;gap:5px;align-items:center;}
+.set-num-lbl{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);text-align:center;}
+.set-col{display:flex;flex-direction:column;gap:2px;}
+.col-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+.presc-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);font-weight:600;padding:5px 7px;background:var(--gold-bg);border:1px solid var(--gold-dim);border-radius:3px;min-height:28px;display:flex;align-items:center;}
+.log-input{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);padding:5px 7px;background:var(--surface3);border:1px solid var(--border-light);border-radius:3px;outline:none;width:100%;min-height:28px;transition:border-color .15s;-webkit-appearance:none;}
+.log-input:focus{border-color:var(--gold);background:var(--surface2);}
+.log-input.filled{border-color:var(--green);color:var(--green);}
+.log-input::placeholder{color:var(--text-dim);font-size:10px;}
+.last-ref{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin:0 0 8px;letter-spacing:.02em;}
+.last-ref b{color:var(--gold-light);font-weight:600;}
+.notes-input{width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:3px;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:12px;padding:7px 10px;resize:none;outline:none;transition:border-color .15s;min-height:48px;}
+.notes-input:focus{border-color:var(--border-light);color:var(--text);}
+.notes-input::placeholder{color:var(--text-dim);}
+.coach-note{font-size:11px;color:var(--text-muted);line-height:1.55;padding:7px 10px;background:rgba(201,168,76,.04);border-left:2px solid var(--gold-dim);border-radius:0 2px 2px 0;margin-top:8px;}
+.alt-wrap{margin-top:8px;padding:8px 10px;background:rgba(52,152,219,.05);border:1px solid rgba(52,152,219,.2);border-radius:3px;}
+.alt-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+.alt-name{font-size:12px;color:var(--text-muted);}
+.complete-banner{display:none;background:var(--green-bg);border:1px solid var(--green);border-radius:4px;padding:12px 14px;margin-bottom:16px;align-items:center;gap:10px;flex-wrap:wrap;}
+.complete-banner.visible{display:flex;}
+.complete-text{font-size:13px;font-weight:600;color:var(--green);flex:1;}
+/* PROGRESS PANEL */
+.progress-panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:18px;}
+.pp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.pp-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.05em;}
+.pp-title span{color:var(--gold);}
+.pp-hint{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);margin-top:10px;line-height:1.5;}
+canvas#progChart{display:block;width:100%;height:180px;}
+/* RANDOM GENERATOR */
+.gen-section{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:16px;margin-bottom:16px;}
+.gen-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.06em;margin-bottom:4px;}
+.gen-title span{color:var(--gold);}
+.gen-desc{font-size:12px;color:var(--text-muted);margin-bottom:14px;}
+.muscle-picker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.muscle-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);transition:.15s;user-select:none;}
+.muscle-pill.selected{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+.rule-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.rule-label{font-size:12px;color:var(--text-muted);width:120px;flex-shrink:0;}
+.rule-select{background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:6px 10px;font-size:12px;outline:none;flex:1;}
+.gen-result{margin-top:16px;}
+.gen-ex-item{background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:10px 12px;margin-bottom:8px;}
+.gen-ex-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.gen-ex-meta{font-size:11px;color:var(--text-muted);margin-bottom:6px;}
+.gen-ex-alt{font-size:11px;color:var(--blue);cursor:pointer;text-decoration:underline;}
+.gen-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+/* HISTORY */
+.history-entry{background:var(--surface);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+.history-entry-hdr{background:var(--surface2);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.history-day-name{font-weight:600;font-size:13px;color:var(--text);}
+.history-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);}
+.history-entry-body{padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.7;}
+.history-entry-acts{display:flex;gap:8px;padding:8px 14px;border-top:1px solid var(--border);}
+.history-empty{text-align:center;padding:40px;color:var(--text-dim);font-size:13px;}
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:400;overflow-y:auto;}
+.modal-overlay.visible{display:block;}
+.modal{max-width:560px;margin:40px auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.modal-hdr{background:var(--surface2);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.06em;}
+.modal-body{padding:18px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;display:block;}
+.form-input{width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;}
+.form-input:focus{border-color:var(--gold);}
+.form-select{width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;cursor:pointer;}
+.form-select:focus{border-color:var(--gold);}
+.day-builder{margin-top:8px;}
+.day-slot{background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:10px 12px;margin-bottom:8px;}
+.day-slot-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
+.day-slot-name{font-weight:600;font-size:13px;}
+.added-exercises{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+.added-ex{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--surface3);border-radius:2px;font-size:12px;color:var(--text-muted);}
+.remove-ex{color:var(--red);cursor:pointer;font-size:14px;line-height:1;}
+.modal-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+/* REST TIMER */
+.rest-timer{position:fixed;left:50%;bottom:64px;transform:translateX(-50%) translateY(150px);background:var(--surface2);border:1px solid var(--gold-dim);border-radius:30px;padding:7px 9px 7px 16px;display:flex;align-items:center;gap:9px;z-index:250;transition:transform .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.65);}
+.rest-timer.show{transform:translateX(-50%) translateY(0);}
+.rest-timer.ending{border-color:var(--red);}
+.rest-timer.ending .rt-display{color:var(--red);}
+.rt-display{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:600;color:var(--gold);min-width:58px;text-align:center;}
+.rt-btn{background:var(--surface3);border:1px solid var(--border-light);color:var(--text-muted);border-radius:50%;width:30px;height:30px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rt-btn:hover{color:var(--text);border-color:var(--text-muted);}
+.rt-btn.rt-add{width:auto;border-radius:15px;padding:0 9px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.rt-btn.close{background:transparent;border:none;color:var(--text-dim);}
+/* TOAST */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:1px solid var(--border-light);border-radius:4px;padding:10px 18px;font-size:12px;color:var(--text);z-index:999;transition:transform .3s ease;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.6);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{border-color:var(--green);color:var(--green);}
+.toast.error{border-color:var(--red);color:var(--red);}
+/* EQUIPMENT TABS + DIFFICULTY + PROGRESSION */
+.equip-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.equip-tab{padding:7px 13px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);display:flex;align-items:center;gap:6px;transition:.15s;}
+.equip-tab:hover{color:var(--text);}
+.equip-tab.active{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+.equip-tab.soon{opacity:.45;cursor:not-allowed;}
+.equip-tab.soon:hover{color:var(--text-muted);}
+.equip-count{font-size:9px;background:var(--surface3);border-radius:8px;padding:1px 6px;color:var(--text-dim);}
+.equip-tab.active .equip-count{color:var(--gold);}
+.soon-badge{font-size:8px;background:var(--surface3);border:1px solid var(--border-light);border-radius:6px;padding:1px 5px;color:var(--text-muted);}
+.ex-badges{display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+.diff-badge{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;text-transform:uppercase;white-space:nowrap;}
+.diff-beginner{color:#2ECC71;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);}
+.diff-intermediate{color:#E8C96A;background:var(--gold-bg);border:1px solid var(--gold-dim);}
+.diff-advanced{color:#E74C3C;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);}
+.progression{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+.prog-step{font-size:11px;color:var(--text-muted);line-height:1.45;}
+.prog-step b{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-right:6px;font-weight:400;}
+.bank-empty{text-align:center;padding:48px 16px;color:var(--text-dim);font-size:13px;}
+.bank-empty .be-soon{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px;}
+/* DATA LAYER STATUS + SOURCE CHIPS + THUMBNAILS */
+.data-status{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px 11px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);}
+.data-status .ds-text{flex:1;line-height:1.5;}
+.data-status .ds-src{color:var(--text-dim);font-size:9px;}
+.data-status .ds-btn{flex-shrink:0;}
+.ds-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);flex-shrink:0;}
+.ds-dot.ds-online{background:var(--green);}
+.ds-dot.ds-cached{background:var(--gold);}
+.ds-dot.ds-loading{background:var(--blue);animation:dspulse 1s infinite;}
+.ds-dot.ds-offline{background:var(--red);}
+.ds-dot.ds-idle{background:var(--text-dim);}
+@keyframes dspulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+.src-chip{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);background:var(--surface3);border:1px solid var(--border);border-radius:2px;padding:2px 5px;white-space:nowrap;}
+.src-chip.src-builtin{color:var(--gold);border-color:var(--gold-dim);background:var(--gold-bg);}
+.ex-thumb{width:100%;max-width:240px;border-radius:4px;border:1px solid var(--border);margin-top:10px;background:#fff;display:block;}
+/* GENERATOR — EQUIPMENT SOURCE + WEEKLY PLAN */
+.gen-subtitle{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 8px;}
+.gen-equip{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;}
+.equip-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.equip-pill{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);transition:.15s;user-select:none;display:flex;align-items:center;gap:6px;}
+.equip-pill.selected{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+.equip-pill.soon{opacity:.45;cursor:not-allowed;}
+.plan-summary{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-dim);border-radius:3px;padding:8px 11px;margin-bottom:12px;line-height:1.5;}
+.plan-day{background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-bottom:8px;overflow:hidden;}
+.plan-day.rest{border-style:dashed;}
+.plan-day-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface3);}
+.plan-day-num{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dim);white-space:nowrap;}
+.plan-day-label{font-size:13px;font-weight:700;color:var(--text);}
+.plan-day-cat{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);text-transform:uppercase;}
+.plan-day.rest .plan-day-cat{color:var(--text-dim);}
+.plan-ex{padding:7px 12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between;gap:8px;align-items:center;}
+.plan-ex .pe-m{font-size:9px;color:var(--text-dim);text-transform:uppercase;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.plan-rest-msg{padding:9px 12px;font-size:12px;color:var(--text-dim);}
+/* REST DAY (TRACKER) */
+.rest-day-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:4px;padding:18px;margin-top:4px;}
+.rest-day-card h3{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.05em;color:var(--green);margin-bottom:8px;}
+.rest-day-card p{font-size:13px;color:var(--text-muted);line-height:1.6;}
+.rest-day-card ul{margin:12px 0 0 18px;color:var(--text-muted);font-size:13px;line-height:1.8;}
+.day-tab.restday{opacity:.6;}
+.day-tab.restday.active{opacity:1;}
+@media(max-width:480px){
+  .set-row{grid-template-columns:20px 1fr 1fr 1fr;gap:3px;}
+  .presc-val,.log-input{font-size:10px;padding:4px 5px;}
+}
+</style>
+</head>
+<body>
+<div class="app-header">
+  <div class="app-logo" onclick="showScreen('programs')">Golden <span>Era</span></div>
+  <div class="header-actions">
+    <button class="btn btn-outline btn-sm" onclick="exportPDF()">⬇ PDF</button>
+  </div>
+</div>
+<!-- SCREENS -->
+<div id="screen-programs" class="screen active">
+  <div class="screen-title">My <span>Programs</span></div>
+  <div class="screen-sub">Your workout programs. Tap to activate, then head to Tracker to log sessions.</div>
+  <div class="create-row">
+    <button class="btn btn-gold" onclick="showCreateModal()">+ Create Program</button>
+    <button class="btn btn-purple" onclick="showScreen('random')">🎲 Random Generator</button>
+  </div>
+  <div class="program-grid" id="programGrid"></div>
+  <div class="data-row">
+    <div class="data-note">Your programs and history live in this browser only. Back them up to keep them safe or move them to another device.</div>
+    <button class="btn btn-outline btn-sm" onclick="exportData()">⬇ Back up data</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
+    <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+  </div>
+</div>
+<div id="screen-tracker" class="screen">
+  <div class="day-selector" id="daySelector"></div>
+  <div id="trackerContent"></div>
+</div>
+<div id="screen-bank" class="screen">
+  <div class="screen-title">Exercise <span>Bank</span></div>
+  <div class="screen-sub">Dumbbell and bodyweight exercises grouped by equipment. Pick a bank, then filter by muscle or search. Tap any exercise for the full coaching breakdown.</div>
+  <div class="equip-tabs" id="equipTabs"></div>
+  <div class="data-status" id="dataStatus"></div>
+  <div class="bank-controls">
+    <input type="text" class="search-input" placeholder="Search exercises..." oninput="filterBank()" id="bankSearch">
+    <select class="filter-select" onchange="filterBank()" id="bankFilter">
+      <option value="">All Muscles</option>
+      <option value="chest">Chest</option>
+      <option value="back">Back</option>
+      <option value="shoulders">Shoulders</option>
+      <option value="biceps">Biceps</option>
+      <option value="triceps">Triceps</option>
+      <option value="quads">Quads</option>
+      <option value="hamstrings">Hamstrings</option>
+      <option value="glutes">Glutes</option>
+      <option value="calves">Calves</option>
+      <option value="core">Core</option>
+    </select>
+  </div>
+  <div class="exercise-list" id="exerciseList"></div>
+</div>
+<div id="screen-random" class="screen">
+  <div class="screen-title">Weekly <span>Generator</span></div>
+  <div class="screen-sub">Set the client's goal, experience, equipment and any injuries, pick the muscles and schedule — the generator builds a balanced split from the aggregated exercise database, spaces muscle groups for recovery, and sets goal-based reps. Save it as a program when you like it.</div>
+  <div class="gen-section">
+    <div class="gen-subtitle" style="margin-top:0">Client profile</div>
+    <div class="rule-row">
+      <div class="rule-label">Goal</div>
+      <select class="rule-select" id="genGoal"><option value="hypertrophy" selected>Build muscle</option><option value="strength">Strength</option><option value="fatloss">Fat loss</option><option value="endurance">Endurance</option></select>
+    </div>
+    <div class="rule-row">
+      <div class="rule-label">Experience</div>
+      <select class="rule-select" id="genExp"><option value="beginner">Beginner</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option></select>
+    </div>
+
+    <div class="gen-subtitle">Available equipment</div>
+    <div class="equip-presets" id="genEquipPresets"></div>
+    <div class="gen-equip" id="genEquip"></div>
+    <div class="gen-desc" style="margin-bottom:0">The plan is built only from equipment the client has.</div>
+
+    <div class="gen-subtitle">Injuries / limitations <span style="color:var(--text-dim);text-transform:none;letter-spacing:0">— optional</span></div>
+    <div class="muscle-picker" id="genInjuries">
+      <div class="muscle-pill" onclick="toggleInjury(this,'knees')">Knees</div>
+      <div class="muscle-pill" onclick="toggleInjury(this,'lower_back')">Lower back</div>
+      <div class="muscle-pill" onclick="toggleInjury(this,'shoulders')">Shoulders</div>
+      <div class="muscle-pill" onclick="toggleInjury(this,'elbows')">Elbows / wrists</div>
+    </div>
+
+    <div class="gen-subtitle">Muscle groups to train this week</div>
+    <div class="muscle-picker" id="musclePicker">
+      <div class="muscle-pill" onclick="toggleMuscle(this,'chest')">Chest</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'back')">Back</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'shoulders')">Shoulders</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'biceps')">Biceps</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'triceps')">Triceps</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'quads')">Quads</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'hamstrings')">Hamstrings</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'glutes')">Glutes</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'calves')">Calves</div>
+      <div class="muscle-pill" onclick="toggleMuscle(this,'core')">Core</div>
+    </div>
+
+    <div class="gen-subtitle">Schedule</div>
+    <div class="rule-row">
+      <div class="rule-label">Training days</div>
+      <select class="rule-select" id="genTrainDays"><option value="1">1 training day</option><option value="2">2 training days</option><option value="3">3 training days</option><option value="4" selected>4 training days</option><option value="5">5 training days</option><option value="6">6 training days</option></select>
+    </div>
+    <div class="rule-row">
+      <div class="rule-label">Rest days</div>
+      <select class="rule-select" id="genRestDays"><option value="0">0 rest days</option><option value="1">1 rest day</option><option value="2">2 rest days</option><option value="3" selected>3 rest days</option><option value="4">4 rest days</option><option value="5">5 rest days</option><option value="6">6 rest days</option></select>
+    </div>
+    <div class="rule-row">
+      <div class="rule-label">Exercises / day</div>
+      <select class="rule-select" id="genCount"><option value="4">4 exercises</option><option value="5">5 exercises</option><option value="6" selected>6 exercises</option><option value="7">7 exercises</option><option value="8">8 exercises</option></select>
+    </div>
+    <button class="btn btn-gold" onclick="generateWeeklyPlan()">🎲 Generate Plan</button>
+  </div>
+  <div class="gen-result" id="genResult"></div>
+</div>
+<div id="screen-history" class="screen">
+  <div class="screen-title">Session <span>History</span></div>
+  <div class="screen-sub">Track your progression and review past sessions. Export any session as PDF.</div>
+  <div id="progressPanel"></div>
+  <div id="historyList"></div>
+</div>
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="bnav-btn active" onclick="showScreen('programs')"><div class="bnav-icon">📋</div><div class="bnav-label">Programs</div></button>
+  <button class="bnav-btn" onclick="showScreen('tracker')"><div class="bnav-icon">💪</div><div class="bnav-label">Tracker</div></button>
+  <button class="bnav-btn" onclick="showScreen('bank')"><div class="bnav-icon">📚</div><div class="bnav-label">Exercise Bank</div></button>
+  <button class="bnav-btn" onclick="showScreen('random')"><div class="bnav-icon">🎲</div><div class="bnav-label">Generator</div></button>
+  <button class="bnav-btn" onclick="showScreen('history')"><div class="bnav-icon">🗂</div><div class="bnav-label">History</div></button>
+</div>
+<!-- CREATE PROGRAM MODAL -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">New Program</div>
+      <button class="btn btn-ghost" onclick="closeModal('createModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Program Name</label>
+        <input class="form-input" id="newProgName" placeholder="e.g. Push Pull Legs, Summer Cut...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input class="form-input" id="newProgDesc" placeholder="Short description...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Days Per Week</label>
+        <select class="form-select" id="newProgDays" onchange="buildDaySlots()">
+          <option value="3">3 days</option>
+          <option value="4">4 days</option>
+          <option value="5">5 days</option>
+          <option value="6" selected>6 days</option>
+        </select>
+      </div>
+      <div class="day-builder" id="dayBuilder"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('createModal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewProgram()">Save Program</button>
+    </div>
+  </div>
+</div>
+<!-- ADD EXERCISE TO DAY MODAL -->
+<div class="modal-overlay" id="addExModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">Add Exercise</div>
+      <button class="btn btn-ghost" onclick="closeModal('addExModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Search Exercise Bank</label>
+        <input class="form-input" id="addExSearch" placeholder="Type to search..." oninput="renderAddExList()">
+      </div>
+      <div style="max-height:300px;overflow-y:auto;" id="addExList"></div>
+    </div>
+  </div>
+</div>
+<!-- REST TIMER -->
+<div class="rest-timer" id="restTimer">
+  <div class="rt-display" id="rtDisplay">1:30</div>
+  <button class="rt-btn rt-add" onclick="addRest(15)" title="Add 15 seconds">+15</button>
+  <button class="rt-btn" id="rtPause" onclick="togglePause()" title="Pause / resume">❚❚</button>
+  <button class="rt-btn close" onclick="closeRest()" title="Close">✕</button>
+</div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+<script>
+// ─────────────────────────────────────────────
+// EXERCISE BANK DATA
+// ─────────────────────────────────────────────
+const DUMBBELL_BANK = [
+  // ── CHEST ──
+  {id:'db_bench',name:'Dumbbell Bench Press',muscle:'chest',muscles:['chest','triceps','front delts'],type:'compound',how:'Lie flat on a bench, dumbbells at chest level, elbows at 45° from your torso. Press up and slightly inward until arms are fully extended. Lower slowly, feeling a stretch across your chest. Keep shoulder blades retracted and feet flat on the floor throughout.',cue:'Arch your upper back slightly and keep shoulder blades pinched together. This protects your shoulders and gives your chest more surface area to press from. Don\'t let the dumbbells touch at the top — keep tension on the pecs.',alt:'db_floor_press'},
+  {id:'db_incline_press',name:'Incline Dumbbell Press',muscle:'chest',muscles:['upper chest','front delts','triceps'],type:'compound',how:'Set bench to 30–45°. Sit with dumbbells resting on upper thighs, use knees to kick them up as you lie back. Hold at chest level, elbows ~45° from torso. Press up until arms fully extended. Lower slowly, feel stretch in upper chest.',cue:'Don\'t go too steep or it becomes a shoulder press. Drive through the upper chest — imagine pushing two walls apart at the top. Keep dumbbells in line with upper chest, not over your eyes.',alt:'db_bench'},
+  {id:'db_decline_press',name:'Decline Dumbbell Press',muscle:'chest',muscles:['lower chest','triceps'],type:'compound',how:'Set bench to slight 15–30° decline. Lie back with legs secured. Hold dumbbells at sides of lower chest, press up and slightly inward. Lower slowly with control.',cue:'A steeper decline doesn\'t mean more lower chest activation — keep it subtle. Anything beyond 30° shifts emphasis away from the pecs entirely.',alt:'decline_pushup'},
+  {id:'db_flye',name:'Dumbbell Chest Flyes',muscle:'chest',muscles:['chest','front delts'],type:'isolation',how:'Lie flat on bench, arms extended over chest, palms facing each other, slight bend locked in elbows. Lower weights in a wide arc out to sides. Stop when you feel a significant chest stretch. Reverse the arc squeezing dumbbells back together. Don\'t touch them at top — stop short to keep tension.',cue:'Think of hugging a large barrel. The motion is all shoulder — your elbows stay fixed. If elbows are bending significantly, weight is too heavy. Go lighter and feel more.',alt:'db_incline_flye'},
+  {id:'db_incline_flye',name:'Incline Dumbbell Flyes',muscle:'chest',muscles:['upper chest','front delts'],type:'isolation',how:'Set bench to 30°. Lie back, press dumbbells to lockout. Slightly retract shoulder blades, unlock elbows, slowly lower laterally maintaining elbow angle. Reverse by squeezing pecs together, bring dumbbells back to start without touching.',cue:'Imagine you\'re trying to hug a tree. Go lighter than you think you need — incline flies are a feel exercise. Getting 15 clean reps with a good stretch is worth more than grinding 8 messy ones.',alt:'db_flye'},
+  {id:'db_pullover',name:'Dumbbell Pullover',muscle:'chest',muscles:['chest','lats','serratus','triceps'],type:'isolation',how:'Lie perpendicular across flat bench, shoulders resting on bench, hips dropped toward floor. Hold single dumbbell with both hands overhead, arms nearly straight with slight elbow bend. Lower behind head in arcing motion until deep stretch through chest and lats. Pull back over chest.',cue:'Arnold\'s forgotten gem. Focus on feeling the lats pull the weight back, not your arms. Keep the weight light — this is a feel and stretch exercise. The rib cage expansion you feel is the point.',alt:'db_flye'},
+  {id:'db_squeeze_press',name:'Dumbbell Squeeze Press',muscle:'chest',muscles:['inner chest','triceps','front delts'],type:'compound',how:'Lie flat on bench, press dumbbells together with palms facing each other. Squeeze them hard throughout the entire movement. Lower to chest while maintaining the squeeze, press back up. Never let the dumbbells separate.',cue:'The constant squeeze creates more inner chest activation than a standard press. Think of trying to crush the dumbbells together — that tension is what makes this exercise different.',alt:'db_bench'},
+  {id:'db_floor_press',name:'Dumbbell Floor Press',muscle:'chest',muscles:['chest','triceps'],type:'compound',how:'Lie on floor with knees bent, feet flat. Hold dumbbells at chest level. Press up until arms fully extended. Lower until triceps touch the floor lightly — this is your range limiter. Press back up.',cue:'The floor limits your range of motion, which actually reduces shoulder stress. Great option if your shoulders are feeling beat up from overhead work. Triceps do more work here than bench press.',alt:'db_bench'},
+  {id:'decline_pushup',name:'Decline Push-Ups',muscle:'chest',muscles:['lower chest','triceps','front delts'],type:'compound',how:'Place feet on a bench or box, hands on floor shoulder-width apart. Lower chest to floor with elbows at ~45° from torso. Press back up explosively. The elevated feet angle shifts emphasis to the lower chest.',cue:'If your gym has dip bars — use them and lean slightly forward to hit the lower pec over the triceps. Your chest should already be pumped from the session at this point — this is a finisher.',alt:'db_decline_press'},
+  // ── BACK ──
+  {id:'db_bent_row',name:'Dumbbell Bent-Over Row',muscle:'back',muscles:['lats','rhomboids','traps','biceps'],type:'compound',how:'Stand holding dumbbells, hinge forward until torso is ~45° to floor. Begin by driving elbows back behind body while retracting shoulder blades. Row dumbbells to lower chest, squeeze at top for 1 second. Lower with control.',cue:'Don\'t shrug at the top — this is a back exercise not a trap exercise. Think about putting your elbows in your back pockets. If you feel your biceps overworking, use a false grip (don\'t wrap thumb around dumbbell).',alt:'db_single_row'},
+  {id:'db_single_row',name:'Single-Arm Dumbbell Row',muscle:'back',muscles:['lats','rhomboids','biceps'],type:'compound',how:'Plant one knee and same-side hand on bench, other foot on floor. Hold dumbbell in free hand, arm extended. Drive elbow back toward hip, keeping it close to body. Squeeze lat at top. Lower with control through full range.',cue:'Go heavy here — this is your heaviest back exercise. The last 2 reps of each set should be a genuine fight. Your back grows from heavy pulling. Allow the shoulder to protract at the bottom for full lat stretch.',alt:'db_chest_supported_row'},
+  {id:'db_chest_supported_row',name:'Chest-Supported Dumbbell Row',muscle:'back',muscles:['lats','rhomboids','rear delts','biceps'],type:'compound',how:'Set incline bench to 45°. Sit chest-down against bench, feet planted on floor. Let arms hang straight down holding dumbbells. Squeeze shoulder blades then bend elbows to bring dumbbells toward rib cage. Reverse slowly.',cue:'This eliminates lower back fatigue and lets you focus entirely on pulling muscles. Great for people who struggle to feel their back during rows. Pause for 1 second at the top of every rep.',alt:'db_bent_row'},
+  {id:'db_rdl',name:'Romanian Deadlift (Dumbbells)',muscle:'back',muscles:['hamstrings','glutes','erector spinae','traps'],type:'compound',how:'Stand with dumbbells in front of thighs, slight knee bend. Push hips back — not down — lowering dumbbells along front of legs. Feel hamstring stretch load progressively. Drive hips forward to stand, squeezing glutes at top.',cue:'Think "close a car door with your butt" to get the hip hinge pattern right. Your knees stay soft but largely fixed. Don\'t round your lower back — if you can\'t maintain a flat back, reduce the weight or limit depth.',alt:'db_deadlift'},
+  {id:'db_deadlift',name:'Dumbbell Deadlift',muscle:'back',muscles:['erector spinae','glutes','hamstrings','traps','lats'],type:'compound',how:'Stand with dumbbells at sides, feet hip-width. Push hips back and lower dumbbells along front of legs until they reach mid-shin. Keep back flat, chest up. Drive through whole foot to stand, squeeze glutes at top.',cue:'The heaviest compound you can do with dumbbells. It trains the entire posterior chain from calves to traps. Don\'t bend your knees so much that you turn this into a squat — it\'s a hip hinge.',alt:'db_rdl'},
+  {id:'db_shrug',name:'Dumbbell Shrugs',muscle:'back',muscles:['upper traps'],type:'isolation',how:'Stand holding dumbbells at sides, arms straight. Shrug shoulders directly upward toward ears — no rolling. Squeeze traps at top, pause 1 second. Lower with control. For deeper stretch, hinge slightly at hips before lifting.',cue:'No rolling — that\'s a shoulder injury waiting to happen. Straight up, squeeze, straight down. Shrugs complement the rest of your back after deadlifts and rows have already hammered your lats and rhomboids.',alt:'db_upright_row'},
+  {id:'db_upright_row',name:'Dumbbell Upright Row',muscle:'back',muscles:['traps','front delts','medial delts','biceps'],type:'compound',how:'Stand holding dumbbells in front of thighs, overhand grip. Pull dumbbells straight up, leading with elbows, keeping them higher than wrists throughout. Raise to upper chest height. Lower with control.',cue:'Keep the dumbbells close to your body throughout. Stop at upper chest — going higher increases impingement risk. Wide grip shifts emphasis more toward delts, narrow grip toward traps.',alt:'db_shrug'},
+  {id:'db_rear_delt_flye',name:'Bent-Over Rear Delt Flyes',muscle:'back',muscles:['rear delts','rhomboids','lower traps'],type:'isolation',how:'Hinge at hips until torso is near parallel to floor. Hold dumbbells hanging, slight bend in elbows. Raise arms out to sides to shoulder height, squeezing rear delts at top. Lower with control — 3 seconds down.',cue:'Arnold called the rear delt the most neglected head. Nobody cares how heavy you rear delt fly — control and contraction matter more than load. Light weight done with perfect squeezing of the rear delt beats heavy weight every time.',alt:'db_chest_supported_row'},
+  {id:'db_t_raise',name:'Dumbbell T-Raises',muscle:'back',muscles:['rear delts','lower traps','rhomboids'],type:'isolation',how:'Stand with slight forward lean, dumbbells hanging. Raise both arms directly out to sides until forming a "T" shape at shoulder height. Squeeze shoulder blades hard at top. Lower with control.',cue:'Imagine trying to show off your shirt logo to the ceiling. Keep the movement controlled — this targets the rear delts and improves shoulder stability that your pressing work can\'t build.',alt:'db_rear_delt_flye'},
+  {id:'db_y_raise',name:'Dumbbell Y-Raises',muscle:'back',muscles:['lower traps','rear delts'],type:'isolation',how:'Stand or lie face down on incline bench. Hold light dumbbells. Raise both arms forward and out to form a "Y" shape above your head. Squeeze at top. Lower slowly.',cue:'This is a corrective movement as much as a strength exercise. The Y-raise targets the lower traps and is critical for long-term shoulder health. Keep the weights very light — these are not a strength exercise.',alt:'db_t_raise'},
+  {id:'db_pullover_back',name:'Single-Arm Dumbbell Pullover',muscle:'back',muscles:['lats','chest','serratus'],type:'isolation',how:'Lie on back on bench, holding one dumbbell in one hand in front of chest. Keep arm slightly bent. Lower dumbbell behind head while keeping arm nearly straight. Pull back to start by driving elbow toward hip.',cue:'Focus on feeling your lat pull the weight, not your arm. The stretch at the bottom is the point — don\'t rush through it. This is one of the few exercises that loads the lat in a fully stretched position.',alt:'db_pullover'},
+  // ── SHOULDERS ──
+  {id:'arnold_press',name:'Seated Arnold Press',muscle:'shoulders',muscles:['front delts','medial delts','triceps'],type:'compound',how:'Sit on bench, hold dumbbells at chin height with palms facing YOU. Press up while rotating outward — finish with palms facing forward at the top. Control the rotation back down to start.',cue:'Arnold invented this movement. The rotation hits both the front AND side delt through a greater range than a standard press. Start lighter than you think — the rotation adds difficulty. This is your primary shoulder builder.',alt:'db_shoulder_press'},
+  {id:'db_shoulder_press',name:'Dumbbell Shoulder Press',muscle:'shoulders',muscles:['front delts','medial delts','triceps'],type:'compound',how:'Sit or stand, dumbbells at shoulder height, palms facing forward, elbows at 90°. Press up until arms fully extended, don\'t let dumbbells touch. Lower slowly back to start.',cue:'Standing requires more core tension than seated. Sit for heavier loads, stand for core engagement. Don\'t let the dumbbells clang together at the top — stop just short and keep tension on the delts.',alt:'arnold_press'},
+  {id:'db_lateral_raise',name:'Dumbbell Lateral Raises',muscle:'shoulders',muscles:['medial delts'],type:'isolation',how:'Stand with dumbbells at sides, slight bend in elbows. Lead with elbows — not your hands. Raise to just above shoulder height, pause 1 second at top. Lower 3 seconds down.',cue:'15 lbs is your ceiling right now — don\'t rush past it. Lead with your elbows and imagine you\'re pouring a glass of water at the top (pinky slightly higher than thumb). This is a form exercise first and always.',alt:'db_cable_lateral'},
+  {id:'db_cable_lateral',name:'Cable Lateral Raise',muscle:'shoulders',muscles:['medial delts'],type:'isolation',how:'Stand sideways to cable, handle in opposite hand across body. Pull cable out to side in a lateral raise arc, leading with elbow. Pause at shoulder height, lower slowly.',cue:'Cable provides constant tension throughout the range — dumbbells only have tension at the top. Both are valuable. The cable version tends to feel better on the shoulder joint for many people.',alt:'db_lateral_raise'},
+  {id:'db_front_raise',name:'Dumbbell Front Raises',muscle:'shoulders',muscles:['front delts','upper chest'],type:'isolation',how:'Stand with dumbbells at thighs, palms facing down. Raise both arms forward, keeping arms straight, until shoulder height. Pause briefly. Lower slowly.',cue:'Front raises isolate the anterior delt, but be aware your front delts already get heavy work from pressing. Use these sparingly — if your pressing is solid, your front delts won\'t be a weak point.',alt:'arnold_press'},
+  {id:'db_rear_delt_raise',name:'Seated Rear Delt Raises',muscle:'shoulders',muscles:['rear delts','rhomboids'],type:'isolation',how:'Sit at edge of bench, lean forward so chest is over thighs. Hold dumbbells hanging below bench. Raise out to sides with slight elbow bend, squeezing rear delts at top. Lower 3 seconds.',cue:'Sitting removes the temptation to use momentum. The rear delt is the most neglected head of the shoulder — most people skip it and wonder why their shoulders look flat from the side.',alt:'db_rear_delt_flye'},
+  {id:'db_face_pull',name:'Dumbbell Face Pull Simulation',muscle:'shoulders',muscles:['rear delts','external rotators','traps'],type:'isolation',how:'Lie face-down on low incline bench, arms extended down holding light dumbbells. Pull dumbbells toward face — elbows out wide, hands near ears at top. Squeeze rear delts and external rotators. Lower slowly.',cue:'This simulates a cable face pull using an incline bench. It targets the external rotators — the most undertrained muscles in most programs. Critical for long-term shoulder health. Use very light weight.',alt:'db_rear_delt_raise'},
+  // ── BICEPS ──
+  {id:'db_curl',name:'Dumbbell Bicep Curl',muscle:'biceps',muscles:['biceps brachii','brachialis'],type:'isolation',how:'Stand feet shoulder-width, dumbbells at sides, palms forward. Curl toward shoulders keeping elbows pinned to sides. Supinate fully at top and squeeze. Lower 3 seconds.',cue:'No swinging — momentum is a wasted rep. Arnold said if you\'re swinging, the weight is too heavy. Slow eccentric (3 seconds down) is where most hypertrophy happens. Supinate at the top for full contraction.',alt:'db_hammer_curl'},
+  {id:'db_hammer_curl',name:'Hammer Curl',muscle:'biceps',muscles:['biceps','brachialis','brachioradialis'],type:'isolation',how:'Stand with dumbbells at sides, palms facing in (neutral grip). Curl toward shoulder keeping neutral grip throughout — don\'t rotate. Squeeze at top, lower 3 seconds.',cue:'The neutral grip hits the brachialis — the muscle underneath the bicep that adds thickness and pushes the bicep peak up. Sitting removes body English and forces strict form. Great for arm thickness.',alt:'db_curl'},
+  {id:'db_incline_curl',name:'Incline Dumbbell Curl',muscle:'biceps',muscles:['biceps long head'],type:'isolation',how:'Sit on incline bench, arm hangs behind torso at bottom. Don\'t swing forward to get the rep. Curl up with control, feel the long head stretch at the bottom fully before curling.',cue:'Arnold credited this most for his bicep peak. The arm-behind-torso position stretches the long head more than standing curls. Don\'t swing forward — if you\'re swinging, the bench angle is doing nothing.',alt:'db_concentration_curl'},
+  {id:'db_concentration_curl',name:'Concentration Curls',muscle:'biceps',muscles:['biceps peak'],type:'isolation',how:'Sit on bench, legs spread. Hold dumbbell in one hand, elbow braced on inner thigh. Zero momentum. Curl toward chest, squeeze at top for 1 full second. Switch arms.',cue:'Arnold\'s signature. An ACE study found concentration curls are the most effective exercise for bicep activation. Elbow braced on thigh means zero momentum — only the bicep can do the work. Squeeze for that full second.',alt:'db_incline_curl'},
+  {id:'db_reverse_curl',name:'Reverse Curl',muscle:'biceps',muscles:['brachialis','brachioradialis','forearms'],type:'isolation',how:'Hold dumbbells with overhand (pronated) grip, palms facing down. Curl toward shoulders keeping this overhand grip. The motion feels harder — that\'s because the bicep is in a weaker position.',cue:'The reverse grip hits the brachialis and brachioradialis more than standard curls. This builds arm thickness and forearm development that standard curls miss. Use about 70% of your normal curl weight.',alt:'db_hammer_curl'},
+  {id:'db_zottman_curl',name:'Zottman Curl',muscle:'biceps',muscles:['biceps','brachialis','brachioradialis','forearms'],type:'isolation',how:'Curl with supinated grip (palms up) to top. At peak, rotate hands to pronated grip (palms down). Lower slowly with pronated grip. Rotate back to supinated at bottom.',cue:'One exercise that trains both the curl (supinated up) and reverse curl (pronated down) patterns. The slow pronated descent builds brachialis and forearm strength while giving you the full bicep contraction on the way up.',alt:'db_curl'},
+  {id:'db_cross_body_curl',name:'Cross-Body Curl',muscle:'biceps',muscles:['biceps','brachialis'],type:'isolation',how:'Stand with dumbbells at sides. Curl one dumbbell across your body toward the opposite shoulder, keeping elbow close to body. Alternate arms.',cue:'The cross-body angle provides a slightly different stimulus than standard curls. The brachialis is more active in this position. Good variation to cycle in when standard curls feel stale.',alt:'db_hammer_curl'},
+  // ── TRICEPS ──
+  {id:'db_skull_crusher',name:'Dumbbell Skull Crushers',muscle:'triceps',muscles:['triceps long head','triceps lateral head'],type:'isolation',how:'Lie flat on bench, dumbbells start above chest with elbows pointing up. Lower slowly toward temples. Keep elbows pointing at ceiling throughout — if they flare, it becomes a press. Press back to start.',cue:'The "skull" name tells you what happens if you lose control. Keep elbows locked in and pointing at the ceiling. This targets the long head — the biggest portion of the tricep. Control every inch of the descent.',alt:'db_overhead_tri_ext'},
+  {id:'db_overhead_tri_ext',name:'Overhead Tricep Extension',muscle:'triceps',muscles:['triceps long head'],type:'isolation',how:'Hold one dumbbell overhead with both hands, arms extended. Bend elbows to lower dumbbell behind head. Keep elbows close to ears. Push back to overhead fully.',cue:'The overhead position stretches the long head of the triceps under load — research shows this stretch is superior for muscle growth compared to pushdowns. Elbows close to ears throughout — don\'t let them flare.',alt:'db_skull_crusher'},
+  {id:'db_kickback',name:'Tricep Kickbacks',muscle:'triceps',muscles:['triceps','lateral head'],type:'isolation',how:'Hinge at hips, torso near parallel to floor. Upper arm pinned to body parallel to floor, elbow at 90°. Extend arm back until fully straight. Squeeze tricep at lockout. Bend back to 90°.',cue:'Keep the upper arm completely still — only the forearm moves. The squeeze at full extension is critical. Lower weight than you think — if you have to swing to get extension, reduce it. Perfect form here.',alt:'db_skull_crusher'},
+  {id:'db_close_grip_press',name:'Close-Grip Dumbbell Press',muscle:'triceps',muscles:['triceps','inner chest','front delts'],type:'compound',how:'Lie flat on bench, hold dumbbells close together (touching or nearly touching) above chest, elbows pointing toward feet. Press up using arms to push, not chest. Keep dumbbells close together throughout.',cue:'Unlike a standard press, focus on straightening the arms using your triceps. The close grip reduces chest and shoulder involvement. Keep the dumbbells as close together as possible for the full set.',alt:'db_skull_crusher'},
+  {id:'db_tate_press',name:'Tate Press',muscle:'triceps',muscles:['triceps'],type:'isolation',how:'Lie flat on bench, dumbbells above chest, elbows flared out 90° to sides. Lower dumbbells by bending elbows — they move OUT not back. Press back by extending arms, elbows stay wide.',cue:'This is a tricep press with elbows flared wide — opposite of a close-grip press. It hits the tricep differently, especially the lateral head. Keep elbows at 90° throughout — don\'t let them drift back.',alt:'db_kickback'},
+  {id:'db_single_arm_tri_ext',name:'Single-Arm Overhead Tricep Extension',muscle:'triceps',muscles:['triceps long head'],type:'isolation',how:'Stand or sit. Hold one dumbbell overhead in one hand, elbow pointing up. Lower behind head by bending elbow. Drive back to full extension. Complete set, switch arms.',cue:'Unilateral overhead extensions expose strength imbalances between arms. The long head of the tricep makes up two-thirds of the arm\'s size — training it in the stretched overhead position is the most effective approach.',alt:'db_overhead_tri_ext'},
+  // ── QUADS ──
+  {id:'db_goblet_squat',name:'Dumbbell Goblet Squat',muscle:'quads',muscles:['quads','glutes','core'],type:'compound',how:'Hold one dumbbell vertically at chest with both hands, elbows tucked inside knees at bottom. Chest up, drive through heels to stand. Go as deep as mobility allows — ideally thighs parallel or below.',cue:'The front-loaded position acts as a counterbalance, making it easier to hit proper depth with an upright torso. This is one of the best squat variations for people who train with dumbbells and teaches proper squat mechanics.',alt:'db_squat'},
+  {id:'db_squat',name:'Dumbbell Squat',muscle:'quads',muscles:['quads','glutes','hamstrings','core'],type:'compound',how:'Hold dumbbells at sides or on shoulders. Stand feet shoulder-width, toes slightly out. Squat until thighs parallel, chest up, knees tracking over toes. Drive through heels to stand.',cue:'The goblet squat teaches mechanics — the dumbbell squat builds load. Once you have solid squat mechanics from goblet squats, load up here. Keep chest up and don\'t let knees cave in.',alt:'db_goblet_squat'},
+  {id:'db_lunge',name:'Walking Dumbbell Lunges',muscle:'quads',muscles:['quads','glutes','hamstrings','calves'],type:'compound',how:'Hold dumbbells at sides, full stride forward, back knee nearly touches floor. Keep torso upright. Drive through front heel to step forward. Alternate legs walking forward.',cue:'The walking motion adds a balance challenge over stationary lunges. Keep your torso upright — don\'t lean forward. Drive through the heel of the front foot, not the toes.',alt:'db_reverse_lunge'},
+  {id:'db_reverse_lunge',name:'Reverse Lunge',muscle:'quads',muscles:['quads','glutes','hamstrings'],type:'compound',how:'Stand with dumbbells at sides. Step backward with one foot, lower back knee toward floor. Front thigh parallel to floor. Drive through front heel to return to standing.',cue:'Reverse lunges are easier on the knee than forward lunges because you\'re stepping back — less forward shear force on the knee joint. Great option if forward lunges cause knee discomfort.',alt:'db_lunge'},
+  {id:'db_step_up',name:'Dumbbell Step-Ups',muscle:'quads',muscles:['quads','glutes','core'],type:'compound',how:'Use a bench or box. Step up driving through the heel of the working leg — don\'t push off the back foot. Full extension at top, controlled step down.',cue:'Unilateral work fixes left/right strength imbalances that compound lifts hide. Drive through the heel of the working leg only. If you feel your back foot helping, the box is too high or weight is too heavy.',alt:'db_lunge'},
+  {id:'db_lateral_lunge',name:'Lateral Lunge',muscle:'quads',muscles:['quads','adductors','glutes'],type:'compound',how:'Stand with dumbbells at sides, feet together. Step wide to one side, push hips back and bend that knee while leaving other leg straight. Drive off the bent leg to return.',cue:'Multi-planar movement — most leg training is forward/back. Lateral lunges train your adductors and the gluteus medius (outer glute) that standard squats and lunges underwork. Knee and toes pointing same direction.',alt:'db_lunge'},
+  {id:'db_sumo_squat',name:'Dumbbell Sumo Squat',muscle:'quads',muscles:['inner quads','adductors','glutes'],type:'compound',how:'Stand with feet wider than shoulder-width, toes turned out 45°. Hold one heavy dumbbell vertically between legs with both hands. Squat until thighs parallel. Drive through heels to stand, squeeze glutes.',cue:'Wide stance and turned-out toes shift emphasis to the inner quad and adductors more than a standard squat. The sumo squat also allows more upright torso position, making it easier on the lower back.',alt:'db_goblet_squat'},
+  // ── HAMSTRINGS ──
+  {id:'db_rdl_ham',name:'Dumbbell Romanian Deadlift',muscle:'hamstrings',muscles:['hamstrings','glutes','erector spinae'],type:'compound',how:'Hold dumbbells at thighs, slight knee bend that stays fixed. Push hips back as you hinge forward, lowering dumbbells along front of legs. Feel hamstring stretch load fully. Drive hips forward to stand.',cue:'Hip hinge not a squat — your knees stay soft but largely fixed. Feel the hamstring stretch at the bottom. The stretch is the point. Drive hips forward (not up) to stand. Squeeze glutes hard at top.',alt:'db_stiff_leg_dl'},
+  {id:'db_stiff_leg_dl',name:'Stiff-Leg Deadlift',muscle:'hamstrings',muscles:['hamstrings','glutes','lower back'],type:'compound',how:'Like the RDL but with knees nearly locked. Hold dumbbells, hinge at hips with legs nearly straight. Lower until you feel a strong hamstring stretch. Drive hips forward to stand.',cue:'More hamstring isolation than the RDL because the near-locked knees prevent the quads from assisting. Keep the back flat — rounding compromises the stretch and loads the spine poorly.',alt:'db_rdl_ham'},
+  {id:'db_nordic_ham',name:'Nordic Hamstring Curl (Dumbbell assisted)',muscle:'hamstrings',muscles:['hamstrings'],type:'isolation',how:'Kneel on a mat, secure ankles under a bench or have someone hold them. Hold a dumbbell to chest for counterweight. Lower body slowly forward by extending knees, resisting with hamstrings. Use hands to catch yourself at bottom if needed, push back up.',cue:'One of the most effective hamstring exercises. The eccentric (lowering) phase is the key — the slower you go, the more hamstring damage (and therefore growth) you create. Use the dumbbell as counterweight to manage difficulty.',alt:'db_rdl_ham'},
+  {id:'db_good_morning',name:'Dumbbell Good Morning',muscle:'hamstrings',muscles:['hamstrings','erector spinae','glutes'],type:'compound',how:'Hold dumbbells at shoulders or behind neck. Stand with slight knee bend. Hinge at hips — push them back, lower chest toward floor. Feel hamstring stretch. Drive hips forward to stand.',cue:'This movement looks simple but teaches the hip hinge pattern in a new way. The weight is on your back/shoulders, which forces your erectors to work hard. Keep a neutral spine — don\'t round.',alt:'db_rdl_ham'},
+  // ── GLUTES ──
+  {id:'db_hip_thrust',name:'Dumbbell Hip Thrust',muscle:'glutes',muscles:['glutes','hamstrings'],type:'compound',how:'Sit on floor with upper back against bench. Place dumbbell on hip crease. Drive hips up until body forms a straight line from knees to shoulders. Squeeze glutes hard at top. Lower slowly.',cue:'The hip thrust is the most direct glute exercise you can do. The full hip extension at the top is where the glute contracts hardest. Pause for 1 second at the top and squeeze — don\'t just pump up and down.',alt:'db_glute_bridge'},
+  {id:'db_glute_bridge',name:'Dumbbell Glute Bridge',muscle:'glutes',muscles:['glutes','hamstrings'],type:'compound',how:'Lie on back, knees bent, feet flat. Place dumbbell on hip crease. Drive hips up by squeezing glutes. Body forms straight line from knees to shoulders at top. Lower slowly.',cue:'Same movement as hip thrust but lying on the floor. Less range of motion than the hip thrust, but great for beginners. The squeeze at the top matters more than how high you go.',alt:'db_hip_thrust'},
+  {id:'db_cable_pullthrough',name:'Cable Pull-Through',muscle:'glutes',muscles:['glutes','hamstrings'],type:'compound',how:'Face away from cable, rope handle between legs. Hinge back until you feel glute stretch, then drive hips forward explosively to stand. Squeeze glutes hard at lockout.',cue:'Drive the hips through to the lockout — the hard glute squeeze at the top is the whole point, not how far you bend. Keep a neutral spine; this is a hip hinge, not a squat. No cable? Sub a dumbbell sumo squat, 3×15.',alt:'db_hip_thrust'},
+  {id:'db_donkey_kickback',name:'Dumbbell Donkey Kickback',muscle:'glutes',muscles:['glutes'],type:'isolation',how:'Get on hands and knees on a mat. Place dumbbell behind one knee, flex that knee to hold it. Drive that heel straight back and up until leg is parallel to floor. Squeeze glute at top. Lower slowly.',cue:'Pure glute isolation. The dumbbell adds resistance to the kickback motion. Squeeze at the top for 1 second before lowering. Keep hips level — don\'t rotate to get more range.',alt:'db_hip_thrust'},
+  {id:'db_curtsy_lunge',name:'Curtsy Lunge',muscle:'glutes',muscles:['glutes','outer quads','adductors'],type:'compound',how:'Stand with dumbbells at sides. Step one foot back and across behind your body (like a curtsy). Lower down until front thigh is near parallel. Drive through front heel to stand.',cue:'The crossing pattern uniquely activates the gluteus medius — the muscle that gives your glutes a rounder shape from the side. This is the most neglected glute movement and one of the most effective.',alt:'db_reverse_lunge'},
+  // ── CALVES ──
+  {id:'db_calf_raise',name:'Dumbbell Calf Raises',muscle:'calves',muscles:['gastrocnemius','soleus'],type:'isolation',how:'Stand holding dumbbells at sides. Rise on balls of feet, pause 1 second at top. Lower fully — use a step for full range of motion (heels dropping below step level). Repeat.',cue:'Arnold trained calves obsessively after having them pointed out as a weakness. High reps and full range of motion — not heavy weight. The pause at the top is essential. Calves respond to volume, not ego weight.',alt:'db_seated_calf'},
+  {id:'db_seated_calf',name:'Seated Calf Raise',muscle:'calves',muscles:['soleus'],type:'isolation',how:'Sit on bench, dumbbells balanced on thighs just above knees. Place balls of feet on a step or raised surface. Lower heels for full stretch, raise as high as possible, pause at top.',cue:'The seated position bends the knee which takes the gastrocnemius out of the movement — isolating the soleus, the deeper calf muscle. You\'ll need less weight than standing calf raises. Both variations complement each other.',alt:'db_calf_raise'},
+  {id:'db_single_leg_calf',name:'Single-Leg Calf Raise',muscle:'calves',muscles:['gastrocnemius','soleus'],type:'isolation',how:'Hold one dumbbell in one hand for balance (or hold wall), one foot raised. Rise on ball of standing foot, pause at top, lower fully past platform level for deep stretch.',cue:'Unilateral calf raises expose strength and size imbalances between calves. You\'ll get a deeper contraction training one at a time. Most people have a stronger and a weaker calf — this fixes that.',alt:'db_calf_raise'},
+  // ── CORE ──
+  {id:'db_crunch',name:'Weighted Crunch',muscle:'core',muscles:['rectus abdominis'],type:'isolation',how:'Lie on back, knees bent, feet flat. Hold dumbbell to chest or behind head. Crunch upper body toward knees using abs, not neck. Squeeze abs at top. Lower slowly.',cue:'Don\'t pull on your neck — your hands are there for support. The movement is small — you\'re flexing the spine, not doing a sit-up. Squeeze the abs at the top like you\'re trying to touch your ribcage to your pelvis.',alt:'db_leg_raise'},
+  {id:'db_leg_raise',name:'Leg Raises',muscle:'core',muscles:['lower abs','hip flexors'],type:'isolation',how:'Lie flat, lower back pressed down. Hold dumbbells above chest or grip bench behind head. Raise legs to 90° keeping them straight. Lower slowly without touching floor.',cue:'Press your lower back into the floor — don\'t let it arch. The lower abs are engaged when you resist the legs from pulling the pelvis into anterior tilt. Control the lowering phase — that\'s where the work happens.',alt:'db_crunch'},
+  {id:'db_russian_twist',name:'Russian Twist',muscle:'core',muscles:['obliques','transverse abdominis'],type:'isolation',how:'Sit on floor, lean back to ~45°, feet off floor, hold one dumbbell with both hands. Rotate side to side, touching dumbbell to floor on each side.',cue:'The rotation targets the obliques — the muscles that give your waist definition. Keep feet off the ground for added core demand. Don\'t just move your arms — rotate your entire torso.',alt:'db_wood_chop'},
+  {id:'db_wood_chop',name:'Dumbbell Wood Chop',muscle:'core',muscles:['obliques','shoulders','lats'],type:'compound',how:'Hold one dumbbell with both hands. Start high on one side (above shoulder), swing diagonally across body and down to opposite knee in a chopping motion. Hips rotate with the movement.',cue:'A full rotational movement that trains your obliques through an athletic range of motion. Hips and shoulders rotate together — don\'t just move your arms. This is a multi-joint, multi-plane exercise.',alt:'db_russian_twist'},
+  {id:'db_plank',name:'Plank',muscle:'core',muscles:['transverse abdominis','rectus abdominis','obliques'],type:'isolation',how:'Forearms and toes on floor, body in a straight line from head to heels. Hips level — don\'t let them sag or pike. Squeeze glutes, brace core, breathe normally.',cue:'Think of your body as a rigid plank of wood. Squeeze glutes AND brace core — both together make the plank significantly harder and more effective. If you\'re shaking, you\'re doing it right.',alt:'db_crunch'},
+  {id:'db_renegade_row',name:'Renegade Row',muscle:'core',muscles:['core','lats','triceps','chest'],type:'compound',how:'Start in high plank position, hands on dumbbells. Perform a push-up, then row one dumbbell toward hip while balancing on the other hand and feet. Hips stay square. Alternate sides.',cue:'The anti-rotation demand on your core is what makes this elite. Your abs have to fight against the rotating force of the row. Use hex dumbbells for stability. The narrower your foot stance, the harder the core challenge.',alt:'db_plank'},
+  {id:'db_farmers_carry',name:'Farmer\'s Carry',muscle:'core',muscles:['core','traps','grip','calves'],type:'compound',how:'Hold heavy dumbbells at sides, stand tall, walk forward for distance or time. Keep shoulders back, core braced, head neutral. Small controlled steps.',cue:'One of the most underrated exercises. Heavy carries build full-body stability, grip strength, and core endurance simultaneously. Walk as far as possible before setting down — the goal is to not put them down.',alt:'db_plank'},
+];
+// ─────────────────────────────────────────────
+// BODYWEIGHT / CALISTHENICS BANK
+// ─────────────────────────────────────────────
+const BODYWEIGHT_BANK = [
+  // ── CHEST ──
+  {id:'bw_incline_pushup',name:"Incline Push-Up",muscle:'chest',muscles:["chest","triceps","front delts"],type:'compound',difficulty:'beginner',how:"Place your hands on a raised surface — a counter, desk, or sturdy chair — with your body in a straight line from head to heels. Lower your chest to the edge, then press back up. The higher the surface, the easier the rep.",cue:"The incline takes weight off your hands so you can groove clean reps and full range. Keep a straight line — don't let the hips sag. As it gets easy, use a lower surface.",alt:'bw_pushup',easier:"Wall push-up (hands on a wall)",harder:"Standard push-up on the floor"},
+  {id:'bw_pushup',name:"Push-Up",muscle:'chest',muscles:["chest","triceps","front delts"],type:'compound',difficulty:'beginner',how:"Hands slightly wider than your shoulders, body in a straight rigid line. Lower until your chest is just above the floor with elbows about 45 degrees from your torso, then press back to full lockout.",cue:"Squeeze your glutes and brace your core so the whole body moves as one plank. Keep the elbows tucked around 45 degrees, not flared out to 90.",alt:'bw_incline_pushup',easier:"Incline or knees push-up",harder:"Decline (feet-elevated) push-up"},
+  {id:'bw_wide_pushup',name:"Wide Push-Up",muscle:'chest',muscles:["chest","front delts"],type:'compound',difficulty:'beginner',how:"Set your hands wider than a standard push-up. Lower your chest between your hands and press back up. The wider base biases the chest over the triceps.",cue:"Don't go so wide that it stresses the shoulders — a bit wider than standard is plenty. Feel the stretch across the chest at the bottom of each rep.",alt:'bw_pushup',easier:"Incline wide push-up",harder:"Archer push-up"},
+  {id:'bw_decline_pushup',name:"Decline Push-Up",muscle:'chest',muscles:["upper chest","front delts","triceps"],type:'compound',difficulty:'intermediate',how:"Put your feet on a bench or step with hands on the floor. Lower your chest and press up. The downward angle shifts the load onto the upper chest and shoulders.",cue:"The higher your feet, the more this becomes a shoulder press. Keep the core tight so the lower back doesn't arch as you fatigue.",alt:'bw_pushup',easier:"Standard push-up",harder:"Pike push-up (feet higher still)"},
+  {id:'bw_archer_pushup',name:"Archer Push-Up",muscle:'chest',muscles:["chest","triceps","front delts"],type:'compound',difficulty:'advanced',how:"From a wide push-up, shift your weight to one side as you lower while the other arm stays straight out to the side. Press up and alternate sides — each rep loads mostly one arm.",cue:"A stepping stone to the one-arm push-up. The straight 'archer' arm only assists — push with the bent one. Keep your hips square to the floor.",alt:'bw_pushup',easier:"Wide push-up",harder:"One-arm push-up"},
+  {id:'bw_pseudo_planche_pushup',name:"Pseudo Planche Push-Up",muscle:'chest',muscles:["chest","front delts","triceps"],type:'compound',difficulty:'advanced',how:"In a push-up, turn your hands so the fingers point toward your feet and lean your shoulders forward past your hands. Lower and press while holding that forward lean.",cue:"The forward lean dumps huge load onto the chest and front delts and builds straight-arm strength toward the planche. Protract the shoulders — push the floor away from you.",alt:'bw_decline_pushup',easier:"Standard push-up",harder:"Tuck planche / planche lean"},
+  {id:'bw_explosive_pushup',name:"Explosive / Clap Push-Up",muscle:'chest',muscles:["chest","triceps","front delts"],type:'compound',difficulty:'advanced',how:"Lower under control, then press up so explosively that your hands leave the floor (clap optional). Land softly with bent elbows and flow straight into the next rep.",cue:"Power work — quality over quantity. Only the up-phase is explosive; absorb the landing with soft elbows. End the set the instant your push-off slows.",alt:'bw_pushup',easier:"Standard push-up",harder:"Clap-to-chest push-up"},
+  // ── BACK ──
+  {id:'bw_inverted_row',name:"Inverted Row",muscle:'back',muscles:["lats","rhomboids","traps","biceps"],type:'compound',difficulty:'intermediate',how:"Lie under a sturdy table edge or a low bar, grip it overhand with a straight body and heels on the floor. Pull your chest to the edge by driving the elbows back, squeeze the shoulder blades, then lower under control.",cue:"The horizontal pull most home setups can manage. The more horizontal your body, the harder it is — bend the knees to scale it down. Squeeze the shoulder blades; don't just yank with the arms.",alt:'bw_doorway_row',easier:"Bend knees / more upright torso",harder:"Feet elevated, body fully horizontal"},
+  {id:'bw_doorway_row',name:"Doorway Row",muscle:'back',muscles:["lats","rhomboids","biceps"],type:'compound',difficulty:'beginner',how:"Face an open doorframe, grip both sides at chest height, put your toes near the base and lean back with straight arms. Pull your chest toward the frame, then lower back to a straight-arm lean.",cue:"A true no-equipment back option. Step your feet forward to make it harder, back to make it easier. Lead with the elbows and keep the chest proud.",alt:'bw_inverted_row',easier:"Feet further back / more upright",harder:"Single-arm doorway row"},
+  {id:'bw_towel_row',name:"Towel Door Row",muscle:'back',muscles:["lats","rhomboids","biceps"],type:'compound',difficulty:'beginner',how:"Loop a strong towel over the top of a securely latched door, holding both ends. Sit back with straight arms and pull yourself up toward the door, squeezing your back, then lower slowly.",cue:"Test the door and towel before you trust them with full weight. This trains the same horizontal pull as a row — drive the elbows toward your hips.",alt:'bw_doorway_row',easier:"More upright stance",harder:"Lean back further / single arm"},
+  {id:'bw_pullup',name:"Pull-Up",muscle:'back',muscles:["lats","rhomboids","biceps","core"],type:'compound',difficulty:'advanced',how:"Hang from a bar with an overhand grip a little wider than your shoulders. Pull your chest toward the bar by driving the elbows down until your chin clears it, then lower all the way to a dead hang.",cue:"The king of pulling. Start every rep from a full hang and pull the elbows down and back. No bar? Use the inverted row. Can't do one yet? Train slow negatives.",alt:'bw_inverted_row',easier:"Negatives / band-assisted / inverted row",harder:"Weighted or archer pull-up"},
+  {id:'bw_chinup',name:"Chin-Up",muscle:'back',muscles:["lats","biceps","rhomboids"],type:'compound',difficulty:'intermediate',how:"Hang from a bar with an underhand (palms toward you) grip about shoulder-width. Pull until your chin clears the bar, then lower to a full hang.",cue:"The underhand grip lets the biceps assist, so most people are stronger here than on pull-ups — a great way to earn your first bar pull-up.",alt:'bw_pullup',easier:"Negatives / band-assisted",harder:"Weighted chin-up"},
+  {id:'bw_scapular_pull',name:"Scapular Pull-Up",muscle:'back',muscles:["lower traps","lats","rhomboids"],type:'isolation',difficulty:'intermediate',how:"Hang from a bar with straight arms. Without bending the elbows, pull your shoulder blades down and together to raise your body a few inches, then relax back to the hang.",cue:"This teaches the scapular control that makes pull-ups possible and keeps the shoulders healthy. Small range, big payoff — think 'put your shoulder blades in your back pockets'.",alt:'bw_pullup',easier:"Scapular rows on a low bar or table",harder:"Full pull-up"},
+  {id:'bw_superman',name:"Superman",muscle:'back',muscles:["lower back","glutes","rear delts"],type:'isolation',difficulty:'beginner',how:"Lie face down with your arms extended overhead. Lift your arms, chest, and legs off the floor at the same time, squeeze, then lower under control.",cue:"Trains the spinal erectors and the whole back chain with zero equipment. Lift with the back muscles, not by cranking the neck — keep your gaze on the floor.",alt:'bw_reverse_snow_angel',easier:"Lift arms and legs separately",harder:"Pause and hold at the top"},
+  {id:'bw_reverse_snow_angel',name:"Reverse Snow Angel",muscle:'back',muscles:["rear delts","lower traps","rhomboids"],type:'isolation',difficulty:'beginner',how:"Lie face down, arms by your sides with palms down and chest slightly lifted. Sweep your arms overhead along the floor and back, like a snow angel, keeping them just off the ground.",cue:"A corrective gem for the rear delts and lower traps that pressing never touches. Keep the arms low and the movement slow — control beats range here.",alt:'bw_superman',easier:"Smaller range of motion",harder:"Prone Y-T-W raises"},
+  // ── SHOULDERS ──
+  {id:'bw_pike_pushup',name:"Pike Push-Up",muscle:'shoulders',muscles:["front delts","medial delts","triceps"],type:'compound',difficulty:'intermediate',how:"From a downward-dog position (hips high, body in an inverted V), bend your elbows to lower the crown of your head toward the floor, then press back up.",cue:"The vertical pressing path makes this your main bodyweight shoulder builder. Keep the hips high and stacked over the shoulders — the more vertical, the more delt.",alt:'bw_elevated_pike_pushup',easier:"Bend the knees / hands elevated",harder:"Elevate the feet (closer to a handstand)"},
+  {id:'bw_elevated_pike_pushup',name:"Elevated Pike Push-Up",muscle:'shoulders',muscles:["front delts","medial delts","triceps"],type:'compound',difficulty:'advanced',how:"Same as the pike push-up but with your feet up on a box or bench so the torso is nearly vertical. Lower your head toward the floor between your hands and press up.",cue:"The closest you'll get to a handstand push-up without going upside down. Keep the forearms vertical and the elbows tracking forward for the best carryover.",alt:'bw_pike_pushup',easier:"Floor pike push-up",harder:"Wall handstand push-up"},
+  {id:'bw_wall_handstand_hold',name:"Wall Handstand Hold",muscle:'shoulders',muscles:["front delts","medial delts","core"],type:'isolation',difficulty:'intermediate',how:"Kick up into a handstand with your heels resting against a wall. Hold a stacked position — hands, shoulders, and hips in a line — and breathe.",cue:"Builds the straight-arm shoulder strength and balance every advanced press needs. Push the floor away to keep the shoulders 'tall'. Come down the moment your form breaks.",alt:'bw_wall_walk',easier:"Pike hold / partial wall walk",harder:"Wall handstand push-up"},
+  {id:'bw_wall_walk',name:"Wall Walk",muscle:'shoulders',muscles:["front delts","core","triceps"],type:'compound',difficulty:'intermediate',how:"Start in a push-up with your feet against the base of a wall. Walk your feet up the wall while walking your hands back toward it, climbing toward a handstand, then reverse back down.",cue:"A full-body shoulder and core builder that teaches the handstand position safely. Move slowly and keep the core braced so your back doesn't overarch.",alt:'bw_wall_handstand_hold',easier:"Walk only partway up",harder:"Hold a wall handstand at the top"},
+  {id:'bw_handstand_pushup',name:"Wall Handstand Push-Up",muscle:'shoulders',muscles:["front delts","medial delts","triceps"],type:'compound',difficulty:'advanced',how:"Kick into a wall-supported handstand. Bend the elbows to lower your head toward the floor, then press back to full extension.",cue:"The bodyweight overhead press. Earn it with pike and elevated-pike work first. Lower under control to a folded towel and keep the elbows from flaring wide.",alt:'bw_elevated_pike_pushup',easier:"Elevated pike push-up",harder:"Deficit or freestanding handstand push-up"},
+  {id:'bw_shoulder_tap',name:"Plank Shoulder Taps",muscle:'shoulders',muscles:["front delts","core"],type:'isolation',difficulty:'beginner',how:"In a high plank with a slightly wide stance, tap one hand to the opposite shoulder, replace it, then tap with the other hand. Keep the hips from rocking.",cue:"An anti-rotation move that builds shoulder stability and core control. The goal is to keep the hips dead still — the slower you tap, the harder it works.",alt:'bw_plank',easier:"Wider feet / from the knees",harder:"Feet together / add a push-up"},
+  // ── BICEPS ──
+  {id:'bw_underhand_inverted_row',name:"Underhand Inverted Row",muscle:'biceps',muscles:["biceps","lats","rhomboids"],type:'compound',difficulty:'intermediate',how:"Set up under a table edge or low bar with an underhand (palms-up) grip. Pull your chest to the bar leading with a hard biceps and back squeeze, then lower slowly.",cue:"The supinated grip throws more load onto the biceps than an overhand row — about as close to a bodyweight curl as you'll get. Keep the elbows tucked and squeeze at the top.",alt:'bw_chinup',easier:"More upright torso",harder:"Feet elevated, body horizontal"},
+  {id:'bw_door_curl',name:"Isometric Door Curl",muscle:'biceps',muscles:["biceps"],type:'isolation',difficulty:'beginner',how:"Stand close to a doorframe and grip the edge at elbow height, palm up, elbow at your side. Pull hard as if curling and lean your weight back, holding the contraction — or let your body lower and curl back up.",cue:"Bodyweight biceps isolation is limited, so this leans on a hard contraction and your own bodyweight. Keep the elbow pinned to your side and squeeze for the full count.",alt:'bw_underhand_inverted_row',easier:"Less lean / shorter holds",harder:"Single arm, more weight on the pull"},
+  // ── TRICEPS ──
+  {id:'bw_diamond_pushup',name:"Diamond Push-Up",muscle:'triceps',muscles:["triceps","inner chest","front delts"],type:'compound',difficulty:'intermediate',how:"Form a diamond with your thumbs and index fingers under your chest. Lower with the elbows tucked close to your sides, then press up.",cue:"The narrow hand position shifts the work to the triceps. Keep the elbows brushing past your ribs, not flaring out, to keep the load on the arms.",alt:'bw_bench_dip',easier:"Diamond push-up on the knees or an incline",harder:"Feet-elevated diamond push-up"},
+  {id:'bw_bench_dip',name:"Bench / Chair Dip",muscle:'triceps',muscles:["triceps","front delts"],type:'compound',difficulty:'beginner',how:"Place your hands on the edge of a bench or chair behind you, legs out front and hips off the edge. Bend the elbows to lower your hips toward the floor, then press back up to lockout.",cue:"Keep the elbows pointing straight back, not flaring out, to protect the shoulders. Bend your knees to make it easier, or extend / elevate the legs to make it harder.",alt:'bw_parallel_dip',easier:"Bend the knees, feet close in",harder:"Feet elevated / weight on the lap"},
+  {id:'bw_parallel_dip',name:"Parallel Bar Dip",muscle:'chest',muscles:["chest","triceps","front delts"],type:'compound',difficulty:'advanced',how:"Support yourself on parallel bars (or two sturdy surfaces) with arms locked. Lower by bending the elbows until your shoulders are just below them, then press back to lockout.",cue:"Stay fairly upright to bias the triceps, or lean forward to bias the lower chest. Don't sink past a comfortable shoulder stretch. A huge upper-body builder.",alt:'bw_bench_dip',easier:"Bench dips / band-assisted dips",harder:"Weighted dips"},
+  {id:'bw_bodyweight_skullcrusher',name:"Bodyweight Tricep Extension",muscle:'triceps',muscles:["triceps"],type:'isolation',difficulty:'intermediate',how:"Grip a waist-height bar or sturdy table edge, walk your feet back, and lean in with a straight body. Bending only at the elbows, lower your forehead toward the bar, then extend the arms to push back up.",cue:"A bodyweight skull crusher — keep the upper arms still and the elbows pointing forward so only the triceps work. Walk the feet back to make it harder.",alt:'bw_diamond_pushup',easier:"More upright / higher bar",harder:"Lower bar, more horizontal body"},
+  // ── QUADS ──
+  {id:'bw_squat',name:"Bodyweight Squat",muscle:'quads',muscles:["quads","glutes","core"],type:'compound',difficulty:'beginner',how:"Feet shoulder-width, toes slightly out. Push your hips back and bend the knees to lower until your thighs are at least parallel, chest up, then drive through your heels to stand.",cue:"The foundation of all leg training. Keep the knees tracking over the toes and your weight through the mid-foot and heels. Go as deep as your mobility allows with a flat back.",alt:'bw_split_squat',easier:"Sit down to a box or chair",harder:"Jump squat or split squat"},
+  {id:'bw_split_squat',name:"Split Squat",muscle:'quads',muscles:["quads","glutes","hamstrings"],type:'compound',difficulty:'beginner',how:"Stand in a long staggered stance. Lower straight down until the back knee nearly touches the floor and the front thigh is parallel, then drive up through the front heel. Finish all reps, then switch legs.",cue:"A stationary lunge that builds single-leg strength with less balance demand. Keep the torso upright and most of the weight on the front leg.",alt:'bw_bulgarian_split_squat',easier:"Hold a wall for balance",harder:"Bulgarian split squat (back foot raised)"},
+  {id:'bw_bulgarian_split_squat',name:"Bulgarian Split Squat",muscle:'quads',muscles:["quads","glutes","hamstrings"],type:'compound',difficulty:'intermediate',how:"Rest the top of your back foot on a bench or chair behind you, front foot a stride ahead. Lower until the front thigh is parallel, then drive up through the front heel.",cue:"One of the best scalable single-leg builders. Most of your weight stays on the front foot — the back leg just balances. A slight forward lean hits more glute, upright hits more quad.",alt:'bw_split_squat',easier:"Lower the back-foot surface / hold support",harder:"Slow tempo or a jump variation"},
+  {id:'bw_reverse_lunge',name:"Reverse Lunge",muscle:'quads',muscles:["quads","glutes","hamstrings"],type:'compound',difficulty:'beginner',how:"From standing, step one foot back and lower until the back knee nearly touches the floor, then drive through the front heel to return to standing. Alternate or finish one side at a time.",cue:"Easier on the knees than forward lunges because there's less forward shear. Keep the torso tall and step back far enough that the front shin stays roughly vertical.",alt:'bw_walking_lunge',easier:"Hold support / shorter range",harder:"Walking or jumping lunges"},
+  {id:'bw_walking_lunge',name:"Walking Lunge",muscle:'quads',muscles:["quads","glutes","hamstrings","calves"],type:'compound',difficulty:'intermediate',how:"Step forward into a lunge until both knees are about 90 degrees, then drive through the front heel and bring the back foot through into the next lunge, walking forward.",cue:"Adds a balance and stability challenge over stationary lunges. Keep the torso upright and push through the front heel, not the toes.",alt:'bw_reverse_lunge',easier:"Stationary reverse lunge",harder:"Add a knee drive or hold weight"},
+  {id:'bw_wall_sit',name:"Wall Sit",muscle:'quads',muscles:["quads","glutes"],type:'isolation',difficulty:'beginner',how:"Slide your back down a wall until your hips and knees are at 90 degrees with your thighs parallel to the floor. Hold, keeping your back flat to the wall and weight in your heels.",cue:"A pure isometric quad burner — no movement, just time. Keep breathing and the knees stacked over the ankles. Add seconds to your hold each week.",alt:'bw_squat',easier:"Higher hips / shorter holds",harder:"Single-leg wall sit / longer holds"},
+  {id:'bw_jump_squat',name:"Jump Squat",muscle:'quads',muscles:["quads","glutes","calves"],type:'compound',difficulty:'intermediate',how:"Drop into a squat, then explode straight up off both feet. Land softly with bent knees to absorb the impact and immediately sink into the next rep.",cue:"Power and conditioning in one. Soft, quiet landings protect the knees — if you can't land softly, you've done enough reps.",alt:'bw_squat',easier:"Bodyweight squat",harder:"Tuck jumps or single-leg hops"},
+  {id:'bw_cossack_squat',name:"Cossack Squat",muscle:'quads',muscles:["quads","adductors","glutes"],type:'compound',difficulty:'intermediate',how:"Stand wide. Shift your weight to one side and squat down over that leg while the other stays straight with toes up, then push back to center and switch sides.",cue:"A lateral-plane squat that builds the inner thighs and hip mobility most training ignores. Keep the heel of the working leg down and the chest up.",alt:'bw_split_squat',easier:"Hold support / partial depth",harder:"Full depth, slower tempo"},
+  {id:'bw_shrimp_squat',name:"Shrimp Squat",muscle:'quads',muscles:["quads","glutes"],type:'compound',difficulty:'advanced',how:"Stand on one leg, bend the other behind you and hold the foot with the same-side hand. Squat down until the raised knee lightly touches the floor, then drive back up.",cue:"The last stop before the pistol squat, with a shorter range. It demands serious single-leg strength, balance, and mobility — build up with Bulgarian split squats first.",alt:'bw_pistol_squat',easier:"Step-downs / Bulgarian split squat",harder:"Pistol squat"},
+  {id:'bw_pistol_squat',name:"Pistol Squat",muscle:'quads',muscles:["quads","glutes","core"],type:'compound',difficulty:'advanced',how:"Standing on one leg, extend the other straight out in front. Squat all the way down on the standing leg, keeping the free leg off the floor, then stand back up.",cue:"The benchmark of single-leg strength, balance, and mobility. Build to it with box pistols and assisted reps. Keep the heel planted and the chest forward to stay balanced.",alt:'bw_shrimp_squat',easier:"Box pistol / hold a support",harder:"Deficit pistol / add weight"},
+  {id:'bw_step_up',name:"Step-Up",muscle:'quads',muscles:["quads","glutes","core"],type:'compound',difficulty:'beginner',how:"Face a knee-height step, bench, or sturdy stair. Plant one whole foot on it and drive through that heel to stand fully on top, then lower under control. Don't push off the bottom foot.",cue:"Great for fixing left/right imbalances. Drive through the heel of the top leg only — if the bottom foot is helping, lower the step.",alt:'bw_reverse_lunge',easier:"Lower step",harder:"Higher step / slow lower / add a knee drive"},
+  // ── HAMSTRINGS ──
+  {id:'bw_nordic_curl',name:"Nordic Hamstring Curl",muscle:'hamstrings',muscles:["hamstrings"],type:'isolation',difficulty:'advanced',how:"Kneel tall with your ankles anchored under something solid (or held). Keeping a straight line from knees to head, lower your torso forward as slowly as you can using the hamstrings, then push off the floor with your hands to help back up.",cue:"One of the most effective hamstring builders there is — the slow lowering is the whole point. Catch yourself with your hands and assist on the way up until you can resist the full range.",alt:'bw_sliding_leg_curl',easier:"Shorter range / more hand assistance",harder:"No hands, full slow negative"},
+  {id:'bw_sliding_leg_curl',name:"Sliding Leg Curl",muscle:'hamstrings',muscles:["hamstrings","glutes"],type:'isolation',difficulty:'intermediate',how:"Lie on your back with heels on towels or sliders on a smooth floor and your hips lifted into a bridge. Slide your heels out until the legs are nearly straight, then pull them back toward your hips — all while keeping the hips up.",cue:"Keeps tension on the hamstrings through both the slide-out and the curl-back. Keep your hips high the entire set — don't let your butt touch down.",alt:'bw_nordic_curl',easier:"Both legs, smaller range",harder:"Single-leg slides"},
+  {id:'bw_single_leg_rdl',name:"Single-Leg RDL (Bodyweight)",muscle:'hamstrings',muscles:["hamstrings","glutes","core"],type:'compound',difficulty:'beginner',how:"Stand on one leg with a soft knee. Hinge at the hip, reaching your chest forward and the free leg back until your body forms a straight line parallel to the floor, then return to standing.",cue:"Trains the hinge pattern and balance with zero equipment. Push the hips back and feel the stretch in the standing-leg hamstring — keep the back flat.",alt:'bw_hamstring_walkout',easier:"Touch a wall or chair for balance",harder:"Slow tempo / hold a weight"},
+  {id:'bw_hamstring_walkout',name:"Hamstring Bridge Walkout",muscle:'hamstrings',muscles:["hamstrings","glutes"],type:'isolation',difficulty:'intermediate',how:"Lie on your back in a glute bridge with the hips up. Keeping the hips lifted, walk your heels out step by step until the legs are almost straight, then walk them back in.",cue:"A no-slider way to load the hamstrings eccentrically. The further your feet travel from your hips, the harder the hamstrings fight to keep the bridge up.",alt:'bw_sliding_leg_curl',easier:"Walk out a shorter distance",harder:"Single-leg walkouts"},
+  // ── GLUTES ──
+  {id:'bw_glute_bridge',name:"Glute Bridge",muscle:'glutes',muscles:["glutes","hamstrings"],type:'isolation',difficulty:'beginner',how:"Lie on your back, knees bent and feet flat. Drive through your heels to lift the hips until your body is a straight line from knees to shoulders, squeeze the glutes hard at the top, then lower.",cue:"The squeeze at the top matters more than how high you go. Push through the heels and tuck the pelvis to keep the work in the glutes, not the lower back.",alt:'bw_single_leg_glute_bridge',easier:"Shorter range",harder:"Single-leg bridge / elevated hip thrust"},
+  {id:'bw_single_leg_glute_bridge',name:"Single-Leg Glute Bridge",muscle:'glutes',muscles:["glutes","hamstrings"],type:'isolation',difficulty:'intermediate',how:"Set up in a glute bridge but extend one leg straight. Drive through the planted heel to lift the hips level, squeeze, and lower under control. Finish the side, then switch.",cue:"Doubling the load on one glute exposes and fixes side-to-side imbalances. Keep the hips level — don't let the working side dip.",alt:'bw_hip_thrust_bw',easier:"Two-leg bridge",harder:"Shoulders-elevated single-leg hip thrust"},
+  {id:'bw_hip_thrust_bw',name:"Elevated Hip Thrust",muscle:'glutes',muscles:["glutes","hamstrings"],type:'compound',difficulty:'intermediate',how:"Rest your upper back on a couch or bench with feet flat on the floor. Drive your hips up until your torso is parallel to the floor, squeeze the glutes at the top, then lower with control.",cue:"The raised back gives a bigger range than a floor bridge for a stronger contraction. Tuck the chin, keep the ribs down, and finish each rep with a hard squeeze and a 1-second pause.",alt:'bw_glute_bridge',easier:"Floor glute bridge",harder:"Single-leg / pause reps"},
+  {id:'bw_donkey_kick',name:"Donkey Kick",muscle:'glutes',muscles:["glutes"],type:'isolation',difficulty:'beginner',how:"On your hands and knees, keep one knee bent at 90 degrees and drive that foot toward the ceiling until the thigh is in line with your torso. Squeeze the glute at the top, then lower without touching down.",cue:"Pure glute isolation. Keep your back flat and hips square — don't twist to gain height. The squeeze at the top is the rep.",alt:'bw_fire_hydrant',easier:"Smaller range",harder:"Add a top hold or a band"},
+  {id:'bw_fire_hydrant',name:"Fire Hydrant",muscle:'glutes',muscles:["glutes"],type:'isolation',difficulty:'beginner',how:"On your hands and knees, keep the knee bent and lift one leg out to the side until the thigh is about parallel to the floor, then lower under control.",cue:"Targets the gluteus medius — the side-glute that builds shape and stabilizes the hips. Brace the core so only the hip moves, not your whole torso.",alt:'bw_donkey_kick',easier:"Smaller range",harder:"Add a top hold or a band"},
+  {id:'bw_frog_pump',name:"Frog Pump",muscle:'glutes',muscles:["glutes"],type:'isolation',difficulty:'beginner',how:"Lie on your back with the soles of your feet together and knees out wide (butterfly). Drive your hips up by squeezing the glutes, then lower.",cue:"The turned-out feet bias the glutes hard while taking the hamstrings and quads out of it. Pump with a strong squeeze at the top — these respond to high reps.",alt:'bw_glute_bridge',easier:"Smaller range",harder:"Pause at the top / higher reps"},
+  {id:'bw_curtsy_lunge_bw',name:"Curtsy Lunge",muscle:'glutes',muscles:["glutes","quads","adductors"],type:'compound',difficulty:'beginner',how:"From standing, step one foot back and across behind the other (like a curtsy) and lower until the front thigh is near parallel, then drive back to standing.",cue:"The crossing path lights up the gluteus medius for rounder-looking glutes from the side. Keep the front knee tracking over the foot and the chest up.",alt:'bw_reverse_lunge',easier:"Shorter, shallower step",harder:"Slow tempo / hold weight"},
+  // ── CALVES ──
+  {id:'bw_calf_raise',name:"Standing Calf Raise",muscle:'calves',muscles:["gastrocnemius","soleus"],type:'isolation',difficulty:'beginner',how:"Stand with the balls of your feet on the edge of a step, heels hanging off. Drop the heels for a deep stretch, then rise up as high as you can onto your toes and pause.",cue:"Calves respond to full range and high reps, not speed. Get a full stretch at the bottom and a hard squeeze at the top of every rep.",alt:'bw_single_leg_calf_raise',easier:"Flat ground / hold support",harder:"Single-leg calf raise"},
+  {id:'bw_single_leg_calf_raise',name:"Single-Leg Calf Raise",muscle:'calves',muscles:["gastrocnemius","soleus"],type:'isolation',difficulty:'intermediate',how:"Balance on one foot with the ball of your foot on a step, holding a wall for balance. Lower the heel for a full stretch, then rise onto your toes and squeeze. Switch legs.",cue:"Bodyweight is plenty of load when it's all on one calf. Train both sides evenly — most people have a weaker side that this will expose.",alt:'bw_calf_raise',easier:"Two-leg calf raise",harder:"Slow tempo / pause at the top"},
+  // ── CORE ──
+  {id:'bw_plank',name:"Plank",muscle:'core',muscles:["transverse abdominis","rectus abdominis","obliques"],type:'isolation',difficulty:'beginner',how:"On your forearms and toes, hold your body in a straight line from head to heels. Brace the abs, squeeze the glutes, and hold without letting the hips sag or pike up.",cue:"Think of your body as one rigid plank. Squeezing the glutes and bracing the abs together makes it far more effective. Quality time under tension beats a saggy long hold.",alt:'bw_hollow_hold',easier:"From the knees / hands elevated",harder:"Shoulder taps / longer holds"},
+  {id:'bw_side_plank',name:"Side Plank",muscle:'core',muscles:["obliques","transverse abdominis"],type:'isolation',difficulty:'beginner',how:"On one forearm, stack your feet and lift your hips so your body is a straight line from head to feet. Hold with the hips high, then switch sides.",cue:"The best way to train the obliques and lateral core without crunching the spine. Drive the bottom hip up toward the ceiling and don't let it drift down.",alt:'bw_plank',easier:"Bottom knee down",harder:"Lift the top leg / add reach-throughs"},
+  {id:'bw_hollow_hold',name:"Hollow Hold",muscle:'core',muscles:["rectus abdominis","hip flexors"],type:'isolation',difficulty:'intermediate',how:"Lie on your back, press the lower back into the floor, and lift your shoulders and straight legs a few inches off the ground with your arms overhead. Hold this dished shape.",cue:"The foundation of gymnastics core strength. The lower back must stay glued to the floor — if it arches, bend the knees or raise the arms and legs to reduce leverage.",alt:'bw_dead_bug',easier:"Tuck the knees / arms by your sides",harder:"Hollow rocks / longer holds"},
+  {id:'bw_dead_bug',name:"Dead Bug",muscle:'core',muscles:["transverse abdominis","rectus abdominis"],type:'isolation',difficulty:'beginner',how:"Lie on your back with arms reaching to the ceiling and knees bent over the hips. Slowly extend the opposite arm and leg toward the floor without arching your back, then return and switch sides.",cue:"A safe, spine-friendly way to learn deep core bracing. Keep the lower back pressed flat the whole time — move slowly and only as far as you can control.",alt:'bw_hollow_hold',easier:"Move just the legs / smaller range",harder:"Straight-leg extensions / slow tempo"},
+  {id:'bw_leg_raise',name:"Lying Leg Raise",muscle:'core',muscles:["lower abs","hip flexors"],type:'isolation',difficulty:'beginner',how:"Lie flat with your lower back pressed down, hands under your hips if needed. Keeping the legs straight, raise them to vertical, then lower slowly without letting them touch the floor or your back arch.",cue:"Control the lowering phase — that's where the lower abs work hardest. The moment your lower back lifts off the floor you've gone too far; shorten the range.",alt:'bw_reverse_crunch',easier:"Bend the knees / smaller range",harder:"Hanging leg raise"},
+  {id:'bw_hanging_leg_raise',name:"Hanging Leg Raise",muscle:'core',muscles:["lower abs","hip flexors","grip"],type:'isolation',difficulty:'advanced',how:"Hang from a bar. Without swinging, raise your legs in front of you — knees bent to start, straight to progress — until your thighs pass parallel, then lower under control.",cue:"EMG research ranks this among the best for the lower abs, and it builds grip too. Kill the swing by curling the pelvis up rather than just lifting the legs.",alt:'bw_leg_raise',easier:"Hanging knee raises",harder:"Toes-to-bar / straight legs"},
+  {id:'bw_reverse_crunch',name:"Reverse Crunch",muscle:'core',muscles:["lower abs"],type:'isolation',difficulty:'beginner',how:"Lie on your back with knees bent over your hips. Curl your pelvis up to lift the hips a few inches off the floor toward your ribs, then lower with control.",cue:"A small, precise move — you're rolling the pelvis, not throwing the legs. Think 'pull your hips toward your ribcage' and don't use momentum.",alt:'bw_leg_raise',easier:"Smaller range",harder:"Straight-leg reverse crunch / add a hold"},
+  {id:'bw_bicycle_crunch',name:"Bicycle Crunch",muscle:'core',muscles:["obliques","rectus abdominis"],type:'isolation',difficulty:'beginner',how:"Lie on your back, hands by your ears. Bring one knee in while rotating the opposite elbow toward it, extending the other leg, then switch in a steady pedaling rhythm.",cue:"Research consistently ranks this among the top oblique exercises. Rotate from the torso to bring elbow and knee together — don't yank on your neck.",alt:'bw_russian_twist_bw',easier:"Slower tempo / feet higher",harder:"Slow, full-extension reps"},
+  {id:'bw_v_up',name:"V-Up",muscle:'core',muscles:["rectus abdominis","hip flexors"],type:'isolation',difficulty:'intermediate',how:"Lie flat with your arms overhead. Lift your straight legs and torso at the same time, reaching your hands toward your feet to form a V, then lower under control.",cue:"A full-range rectus-abs builder that hits upper and lower at once. Keep the legs straight and reach — if your back rounds harshly, regress to tuck-ups.",alt:'bw_hollow_hold',easier:"Tuck-ups / alternating V-ups",harder:"Slow tempo / hold the top"},
+  {id:'bw_flutter_kick',name:"Flutter Kicks",muscle:'core',muscles:["lower abs","hip flexors"],type:'isolation',difficulty:'beginner',how:"Lie on your back with legs straight and a few inches off the floor, lower back pressed down. Make small, quick alternating up-and-down kicks.",cue:"Keep the lower back glued to the floor — raise the kick height if it starts to arch. Small, controlled kicks keep constant tension on the lower abs.",alt:'bw_leg_raise',easier:"Higher legs / bent knees",harder:"Lower legs / longer sets"},
+  {id:'bw_mountain_climber',name:"Mountain Climber",muscle:'core',muscles:["core","hip flexors","front delts"],type:'compound',difficulty:'beginner',how:"From a high plank, drive one knee toward your chest, then quickly switch legs, running your knees in and out while keeping the shoulders over your hands.",cue:"Core stability plus conditioning. Keep the hips low and level — don't let them pike up — and brace the core so the shoulders stay steady.",alt:'bw_plank',easier:"Slow, deliberate steps",harder:"Faster pace / cross-body knees"},
+  {id:'bw_russian_twist_bw',name:"Russian Twist",muscle:'core',muscles:["obliques","transverse abdominis"],type:'isolation',difficulty:'beginner',how:"Sit on the floor, lean back to about 45 degrees and lift your feet. Rotate your torso to tap the floor or your hands on each side, turning from the waist.",cue:"Rotate the whole torso, not just the arms, to hit the obliques. Keep the chest up and the feet off the floor for a bigger challenge.",alt:'bw_bicycle_crunch',easier:"Feet on the floor / smaller range",harder:"Feet elevated / slow tempo"},
+];
+DUMBBELL_BANK.forEach(e => { e.equip = 'dumbbell'; });
+BODYWEIGHT_BANK.forEach(e => { e.equip = 'bodyweight'; });
+// ─────────────────────────────────────────────
+// DATA LAYER — aggregates the curated built-in bank with web sources
+// (free-exercise-db, pluggable for more), normalizes to one schema,
+// merges keeping the most complete record, and caches offline.
+// ─────────────────────────────────────────────
+const EQUIP_LABELS = { dumbbell:'Dumbbells', bodyweight:'Bodyweight', barbell:'Barbell', machine:'Machines', cable:'Cable', kettlebell:'Kettlebells', bands:'Bands', other:'Other' };
+const EQUIP_ORDER = ['dumbbell','bodyweight','barbell','machine','cable','kettlebell','bands','other'];
+// Movement-pattern tags drive injury-aware filtering in the generator
+function tagPatterns(name, category, muscle){
+  const n = (name || '').toLowerCase();
+  const p = new Set();
+  if (category === 'plyometrics' || /\b(jump|hop|plyo|box jump|skater|bound|clap)\b/.test(n)) p.add('jumping');
+  if (/\b(pistol|sissy|shrimp|jump squat|jumping lunge|box jump)\b/.test(n)) p.add('deep-knee');
+  if (/\b(overhead|military|shoulder press|push press|pike|handstand|snatch|jerk|upright row|behind the neck|arnold press)\b/.test(n)) p.add('overhead');
+  if (/\b(deadlift|good morning|romanian|stiff[- ]?leg|bent[- ]?over|barbell row|pendlay|clean|hyperextension|back extension|superman)\b/.test(n)) p.add('hinge');
+  if (/\b(deadlift|squat|good morning|clean|snatch|barbell row)\b/.test(n)) p.add('spinal-load');
+  if (/\b(skull ?crusher|\bdip\b|close[- ]?grip|french press|push[- ]?up|planche|kickback)\b/.test(n)) p.add('elbow-stress');
+  return [...p];
+}
+// Built-in coaching entries → unified schema (these stay the highest-quality records)
+const BUILTIN_BANK = [...DUMBBELL_BANK, ...BODYWEIGHT_BANK].map(e => ({
+  id: e.id, name: e.name, muscle: e.muscle, muscles: e.muscles ? e.muscles.slice() : [],
+  type: e.type, equip: e.equip, difficulty: e.difficulty || 'intermediate',
+  how: e.how || '', cue: e.cue || '', alt: e.alt || '', easier: e.easier || '', harder: e.harder || '',
+  images: [], category: 'strength', source: 'builtin', patterns: tagPatterns(e.name, 'strength', e.muscle)
+}));
+// EXERCISE_BANK is mutable: starts as the built-in set, replaced by the aggregate after load.
+let EXERCISE_BANK = BUILTIN_BANK.slice();
+// ── free-exercise-db adapter (public domain, keyless, CORS via CDN) ──
+const FEDB_EQUIP = { 'dumbbell':'dumbbell','barbell':'barbell','e-z curl bar':'barbell','kettlebells':'kettlebell','cable':'cable','machine':'machine','bands':'bands','body only':'bodyweight','medicine ball':'other','exercise ball':'other','foam roll':'other','other':'other' };
+const FEDB_MUSCLE = { abdominals:'core', abductors:'glutes', adductors:'quads', biceps:'biceps', calves:'calves', chest:'chest', forearms:'biceps', glutes:'glutes', hamstrings:'hamstrings', lats:'back', 'lower back':'back', 'middle back':'back', neck:'back', quadriceps:'quads', shoulders:'shoulders', traps:'back', triceps:'triceps' };
+const FEDB_IMG = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+function normalizeFedb(r){
+  if (!r || !r.name) return null;
+  const cat = r.category || 'strength';
+  if (cat === 'stretching' || cat === 'cardio') return null; // resistance pool only
+  const prim = (r.primaryMuscles || []).map(m => FEDB_MUSCLE[m]).filter(Boolean);
+  const sec = (r.secondaryMuscles || []).map(m => FEDB_MUSCLE[m]).filter(Boolean);
+  const muscle = prim[0] || sec[0];
+  if (!muscle) return null;
+  const equip = FEDB_EQUIP[r.equipment] || 'other';
+  const type = r.mechanic === 'compound' ? 'compound' : r.mechanic === 'isolation' ? 'isolation' : ((r.secondaryMuscles || []).length >= 2 ? 'compound' : 'isolation');
+  const difficulty = r.level === 'expert' ? 'advanced' : (r.level || 'intermediate');
+  return {
+    id: 'fedb_' + (r.id || r.name).replace(/[^a-zA-Z0-9_-]/g, '_'),
+    name: r.name, muscle, muscles: [...new Set([...(r.primaryMuscles || []), ...(r.secondaryMuscles || [])])],
+    type, equip, difficulty,
+    how: (r.instructions || []).join(' '), cue: '', alt: '', easier: '', harder: '',
+    images: (r.images || []).map(p => FEDB_IMG + p), category: cat, source: 'free-exercise-db',
+    patterns: tagPatterns(r.name, cat, muscle)
+  };
+}
+const FEDB_URLS = [
+  'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/dist/exercises.json',
+  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json'
+];
+async function fetchJSON(urls){
+  for (const u of (Array.isArray(urls) ? urls : [urls])){
+    try { const r = await fetch(u, {mode:'cors'}); if (r.ok) return await r.json(); } catch(e) {}
+  }
+  return null;
+}
+async function sourceFedb(){
+  const raw = await fetchJSON(FEDB_URLS);
+  return Array.isArray(raw) ? raw.map(normalizeFedb).filter(Boolean) : [];
+}
+// Adapter registry — add more sources here (a wger or backend-proxied ExerciseDB adapter
+// would slot in the same way and merge automatically).
+const DATA_SOURCES = [{ id:'free-exercise-db', label:'free-exercise-db', fetch: sourceFedb }];
+// ── merge / dedupe keeping the most complete record ──
+function exKey(name){ return (name || '').toLowerCase().replace(/[^a-z0-9]+/g, '').replace(/s$/, ''); }
+function completeness(e){
+  let s = 0;
+  if (e.source === 'builtin') s += 5;
+  if (e.cue) s += 2;
+  if ((e.how || '').length > 60) s += 1;
+  if (e.images && e.images.length) s += 1;
+  if (e.equip && e.equip !== 'other') s += 1;
+  if (e.difficulty) s += 1;
+  return s;
+}
+function mergeBanks(arrays){
+  const map = new Map();
+  arrays.forEach(arr => arr.forEach(e => {
+    if (!e) return;
+    const k = exKey(e.name);
+    const cur = map.get(k);
+    if (!cur){ map.set(k, e); return; }
+    const keep = completeness(e) > completeness(cur) ? e : cur;
+    const drop = keep === e ? cur : e;
+    if ((!keep.images || !keep.images.length) && drop.images && drop.images.length) keep.images = drop.images;
+    if (!keep.cue && drop.cue) keep.cue = drop.cue;
+    map.set(k, keep);
+  }));
+  return [...map.values()];
+}
+// ── IndexedDB cache ──
+function idbOpen(){
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('golden_era', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('kv');
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+async function idbGet(key){
+  try { const db = await idbOpen(); return await new Promise((res, rej) => { const t = db.transaction('kv','readonly').objectStore('kv').get(key); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); }
+  catch(e){ return null; }
+}
+async function idbSet(key, val){
+  try { const db = await idbOpen(); return await new Promise((res, rej) => { const t = db.transaction('kv','readwrite').objectStore('kv').put(val, key); t.onsuccess = () => res(true); t.onerror = () => rej(t.error); }); }
+  catch(e){ return false; }
+}
+// ── orchestrator ──
+const DATA = { status:'idle', count: BUILTIN_BANK.length, sources:['builtin'], ts:0, loading:false };
+const DATA_TTL = 7 * 24 * 60 * 60 * 1000;
+async function loadExerciseData(opts){
+  opts = opts || {};
+  if (DATA.loading) return;
+  DATA.loading = true;
+  try {
+    if (!opts.force){
+      const cached = await idbGet('exercises_v2');
+      if (cached && cached.data && cached.data.length){
+        EXERCISE_BANK = cached.data;
+        DATA.status = 'cached'; DATA.count = cached.data.length; DATA.sources = cached.sources || ['builtin']; DATA.ts = cached.ts || 0;
+        afterDataLoaded();
+        if (Date.now() - (cached.ts || 0) < DATA_TTL){ DATA.loading = false; return; }
+      }
+    }
+    DATA.status = 'loading'; renderDataStatus();
+    const arrays = [BUILTIN_BANK];
+    const used = ['builtin'];
+    for (const src of DATA_SOURCES){
+      const got = await src.fetch();
+      if (got && got.length){ arrays.push(got); used.push(src.id); }
+    }
+    const fetchedAny = used.length > 1;
+    const merged = mergeBanks(arrays);
+    EXERCISE_BANK = merged;
+    DATA.status = fetchedAny ? 'online' : (EXERCISE_BANK.length > BUILTIN_BANK.length ? 'cached' : 'offline');
+    DATA.count = merged.length; DATA.sources = used; DATA.ts = Date.now();
+    if (fetchedAny) await idbSet('exercises_v2', { data: merged, sources: used, ts: DATA.ts });
+    afterDataLoaded();
+  } catch(e){
+    DATA.status = 'offline'; afterDataLoaded();
+  } finally { DATA.loading = false; }
+}
+function afterDataLoaded(){
+  renderDataStatus();
+  if (currentScreen === 'bank') renderBank();
+  if (currentScreen === 'random') renderGenEquip();
+}
+function refreshExerciseData(){ showToast('Syncing exercise data…', ''); loadExerciseData({ force:true }); }
+function renderDataStatus(){
+  const el = document.getElementById('dataStatus');
+  if (!el) return;
+  const map = { idle:'built-in only', loading:'syncing…', online:'synced from the web', cached:'cached', offline:'offline — built-in only' };
+  const when = (DATA.ts && DATA.status !== 'loading') ? ' · ' + new Date(DATA.ts).toLocaleDateString() : '';
+  const srcs = DATA.sources && DATA.sources.length > 1 ? DATA.sources.join(' + ') : 'built-in';
+  el.innerHTML = `<span class="ds-dot ds-${DATA.status}"></span><span class="ds-text">${EXERCISE_BANK.length} exercises · ${map[DATA.status] || ''}${when}<br><span class="ds-src">sources: ${esc(srcs)}</span></span><button class="btn btn-ghost btn-sm ds-btn" onclick="refreshExerciseData()" ${DATA.status==='loading'?'disabled':''}>↻ Sync</button>`;
+}
+function presentEquip(){
+  const set = new Set(EXERCISE_BANK.map(e => e.equip));
+  return EQUIP_ORDER.filter(id => set.has(id));
+}
+// ─────────────────────────────────────────────
+// ARNOLD PROGRAM DATA
+// ─────────────────────────────────────────────
+const ARNOLD_PROGRAM = {
+  id: 'arnold_golden_era',
+  name: 'The Golden Era Program',
+  desc: 'Arnold-inspired 6-day hypertrophy split built on antagonist supersets, pyramid loading, and mind-muscle connection.',
+  locked: true,
+  days: [
+    {
+      name: 'Chest + Back',
+      shortName: 'Mon · Thu',
+      warmup: ['Arm circles — 30 sec forward, 30 sec back','Light dumbbell rear delt flyes (10 lbs) — 2 × 15','Cat-cow — 10 reps slow','Light dumbbell bench press (20 lbs) — 1 × 15'],
+      blocks: [
+        {tag:'Block A · Superset',title:'Primary Compound Pair',rest:'90 sec after A2',exercises:[
+          {id:'bench',label:'A1',name:'Dumbbell Bench Press',muscle:'Chest · Primary',sets:[{reps:'12',weight:'35 lbs',rpe:'7'},{reps:'10',weight:'40 lbs',rpe:'8'},{reps:'8',weight:'45 lbs',rpe:'8–9'},{reps:'6',weight:'45 lbs',rpe:'9'}],note:'Wide grip. Lower until full chest stretch. Squeeze pecs at top.',alt:'Dumbbell Floor Press'},
+          {superset:true},
+          {id:'row',label:'A2',name:'Dumbbell Bent-Over Row',muscle:'Back · Lats',sets:[{reps:'12',weight:'40 lbs',rpe:'7'},{reps:'10',weight:'40 lbs',rpe:'8'},{reps:'10',weight:'40 lbs',rpe:'8'},{reps:'10',weight:'40 lbs',rpe:'8'}],note:'Hinge to 45°, pull to lower chest, squeeze lat 1 second at top.',alt:'Chest-Supported Row'},
+        ]},
+        {tag:'Block B · Superset',title:'Upper Chest + Lat Width',rest:'90 sec after B2',exercises:[
+          {id:'incline',label:'B1',name:'Incline Dumbbell Press',muscle:'Upper Chest',sets:[{reps:'12',weight:'30 lbs',rpe:'7'},{reps:'10',weight:'35 lbs',rpe:'8'},{reps:'10',weight:'35 lbs',rpe:'8'},{reps:'8',weight:'35 lbs',rpe:'8–9'}],note:'30–45° bench. Drive through upper chest.',alt:'Incline Dumbbell Flyes'},
+          {superset:true},
+          {id:'pullover',label:'B2',name:'Dumbbell Pullover',muscle:'Lats · Chest',sets:[{reps:'12',weight:'25 lbs',rpe:'7–8'},{reps:'12',weight:'25 lbs',rpe:'7–8'},{reps:'12',weight:'25 lbs',rpe:'7–8'},{reps:'12',weight:'25 lbs',rpe:'7–8'}],note:'Arnold\'s forgotten gem. Feel the rib cage stretch.',alt:'Single-Arm Pullover'},
+        ]},
+        {tag:'Block C · Superset',title:'Isolation Finishers',rest:'60 sec after C2',exercises:[
+          {id:'flyes',label:'C1',name:'Dumbbell Chest Flyes',muscle:'Chest Width',sets:[{reps:'12–15',weight:'20 lbs',rpe:'7'},{reps:'12–15',weight:'20 lbs',rpe:'7'},{reps:'12–15',weight:'20 lbs',rpe:'7'}],note:'Deep stretch at bottom. Squeeze at top. Ego kills the pump here.',alt:'Floor Flyes'},
+          {superset:true},
+          {id:'cablepull',label:'C2',name:'Cable Straight-Arm Pulldown',muscle:'Lat Isolation',sets:[{reps:'12–15',weight:'Light stack',rpe:'7–8'},{reps:'12–15',weight:'Light stack',rpe:'7–8'},{reps:'12–15',weight:'Light stack',rpe:'7–8'}],note:'Arms nearly straight. Drive elbows toward hips.',alt:'Single-Arm DB Row 40 lbs'},
+        ]},
+        {tag:'Block D · Finisher',title:'Lower Chest',rest:'',exercises:[
+          {id:'decpush',label:'D',name:'Decline Push-Ups',muscle:'Lower Chest',sets:[{reps:'12–15',weight:'BW',rpe:'9'},{reps:'12–15',weight:'BW',rpe:'9'},{reps:'12–15',weight:'BW',rpe:'9'}],note:'Feet on bench. Your chest should be pumped by now.',alt:'Dips (lean forward)'},
+        ]},
+      ]
+    },
+    {
+      name: 'Shoulders + Arms',
+      shortName: 'Tue · Fri',
+      warmup: ['Shoulder rotations — 10 forward, 10 back each arm','Lateral raises (5 lbs) — 2 × 15, very slow','Wrist circles — 30 sec each direction','Light dumbbell curl (10 lbs) — 1 × 15'],
+      blocks: [
+        {tag:'Block A · Primary',title:'Arnold Press — His Invention',rest:'90 sec between sets',exercises:[
+          {id:'arnoldpress',label:'A',name:'Seated Arnold Press',muscle:'Front + Medial Delts',sets:[{reps:'12',weight:'25 lbs',rpe:'7'},{reps:'10',weight:'30 lbs',rpe:'8'},{reps:'8',weight:'30 lbs',rpe:'8–9'},{reps:'8',weight:'30 lbs',rpe:'9'}],note:'Start palms facing you. Rotate outward as you press. More range = more delt.',alt:'Dumbbell Shoulder Press'},
+        ]},
+        {tag:'Block B · Superset',title:'Lateral + Rear Delt',rest:'60 sec after B2',exercises:[
+          {id:'lateral',label:'B1',name:'Dumbbell Lateral Raises',muscle:'Side Delts',sets:[{reps:'12',weight:'12–15 lbs',rpe:'7–8'},{reps:'12',weight:'12–15 lbs',rpe:'7–8'},{reps:'12',weight:'12–15 lbs',rpe:'7–8'},{reps:'12',weight:'12–15 lbs',rpe:'7–8'}],note:'Lead with elbows. 15 lbs is ceiling for now.',alt:'Cable Lateral Raise'},
+          {superset:true},
+          {id:'reardelt',label:'B2',name:'Bent-Over Rear Delt Flyes',muscle:'Rear Delts',sets:[{reps:'12–15',weight:'10–12 lbs',rpe:'7–8'},{reps:'12–15',weight:'10–12 lbs',rpe:'7–8'},{reps:'12–15',weight:'10–12 lbs',rpe:'7–8'},{reps:'12–15',weight:'10–12 lbs',rpe:'7–8'}],note:'Most neglected head. Hinge at hips, slight elbow bend.',alt:'Seated Rear Delt Raises'},
+        ]},
+        {tag:'Block C · Superset',title:'Biceps + Triceps — The Arnold Arm Pump',rest:'60 sec after C2',exercises:[
+          {id:'curl',label:'C1',name:'Dumbbell Bicep Curl',muscle:'Biceps',sets:[{reps:'12',weight:'25 lbs',rpe:'7'},{reps:'10',weight:'30 lbs',rpe:'8'},{reps:'10',weight:'30 lbs',rpe:'8'},{reps:'10',weight:'30 lbs',rpe:'8'}],note:'No swinging. 3 seconds down. Supinate fully at top.',alt:'Hammer Curl'},
+          {superset:true},
+          {id:'pushdown',label:'C2',name:'Cable Tricep Pushdown',muscle:'Triceps',sets:[{reps:'12',weight:'Mod. stack',rpe:'8'},{reps:'12',weight:'Mod. stack',rpe:'8'},{reps:'12',weight:'Mod. stack',rpe:'8'},{reps:'12',weight:'Mod. stack',rpe:'8'}],note:'Elbows pinned. Full extension. Alt: Overhead Ext 4×12 @ 30–35 lbs.',alt:'Overhead Tricep Extension 30 lbs'},
+        ]},
+        {tag:'Block D · Superset',title:'Peak + Long Head Isolation',rest:'60 sec after D2',exercises:[
+          {id:'inclinecurl',label:'D1',name:'Incline Dumbbell Curl',muscle:'Bicep Peak',sets:[{reps:'10 ea.',weight:'20 lbs',rpe:'8'},{reps:'10 ea.',weight:'20 lbs',rpe:'8'},{reps:'10 ea.',weight:'20 lbs',rpe:'8'}],note:'Arm hangs behind torso — stretches long head. Arnold\'s secret weapon.',alt:'Cross-Body Curl'},
+          {superset:true},
+          {id:'skull',label:'D2',name:'Dumbbell Skull Crushers',muscle:'Tricep Long Head',sets:[{reps:'12',weight:'20 lbs ea.',rpe:'8'},{reps:'12',weight:'20 lbs ea.',rpe:'8'},{reps:'12',weight:'20 lbs ea.',rpe:'8'}],note:'Elbows at ceiling throughout. Lower to temples.',alt:'Tate Press'},
+        ]},
+        {tag:'Block E · Signature',title:'Concentration Curls',rest:'',exercises:[
+          {id:'concurl',label:'E',name:'Concentration Curls',muscle:'Bicep Peak · Isolation',sets:[{reps:'12 ea.',weight:'20–25 lbs',rpe:'8–9'},{reps:'12 ea.',weight:'20–25 lbs',rpe:'8–9'},{reps:'12 ea.',weight:'20–25 lbs',rpe:'8–9'}],note:'Elbow braced on thigh. Zero momentum. 1 second squeeze. Leave it all here.',alt:'Zottman Curl'},
+        ]},
+      ]
+    },
+    {
+      name: 'Legs + Core',
+      shortName: 'Wed · Sat',
+      warmup: ['Bodyweight squats — 2 × 15, slow and controlled','Hip circles — 10 each direction','Leg swings — 10 forward/back each leg','Glute bridges — 2 × 15, squeeze at top'],
+      blocks: [
+        {tag:'Block A · Primary',title:'Squat — Non-Negotiable',rest:'90 sec between sets',exercises:[
+          {id:'goblet',label:'A',name:'Dumbbell Goblet Squat',muscle:'Quads · Glutes · Core',sets:[{reps:'12',weight:'35 lbs',rpe:'7'},{reps:'10',weight:'45 lbs',rpe:'8'},{reps:'8',weight:'50 lbs',rpe:'8–9'},{reps:'6',weight:'50 lbs',rpe:'9'}],note:'Elbows inside knees at bottom. Drive through heels.',alt:'Dumbbell Sumo Squat'},
+        ]},
+        {tag:'Block B · Superset',title:'Posterior Chain',rest:'90 sec after B2',exercises:[
+          {id:'rdl',label:'B1',name:'Romanian Deadlift (DB)',muscle:'Hamstrings · Glutes',sets:[{reps:'10',weight:'40 lbs ea.',rpe:'8'},{reps:'10',weight:'40 lbs ea.',rpe:'8'},{reps:'10',weight:'40 lbs ea.',rpe:'8'},{reps:'10',weight:'40 lbs ea.',rpe:'8'}],note:'Hip hinge. Feel the hamstring load. Drive hips forward to stand.',alt:'Stiff-Leg Deadlift'},
+          {superset:true},
+          {id:'lunge',label:'B2',name:'Walking Dumbbell Lunges',muscle:'Quads · Glutes',sets:[{reps:'10 ea.',weight:'25 lbs ea.',rpe:'7–8'},{reps:'10 ea.',weight:'25 lbs ea.',rpe:'7–8'},{reps:'10 ea.',weight:'25 lbs ea.',rpe:'7–8'},{reps:'10 ea.',weight:'25 lbs ea.',rpe:'7–8'}],note:'Full stride, back knee nearly touches floor. Torso upright.',alt:'Reverse Lunge'},
+        ]},
+        {tag:'Block C · Superset',title:'Glute + Unilateral',rest:'60 sec after C2',exercises:[
+          {id:'pullthrough',label:'C1',name:'Cable Pull-Through',muscle:'Glutes · Hamstrings',sets:[{reps:'15',weight:'Light stack',rpe:'7–8'},{reps:'15',weight:'Light stack',rpe:'7–8'},{reps:'15',weight:'Light stack',rpe:'7–8'}],note:'Drive hips through. Hard squeeze at top. Sub: Sumo squat 3×15.',alt:'DB Hip Thrust'},
+          {superset:true},
+          {id:'stepup',label:'C2',name:'Dumbbell Step-Ups',muscle:'Quads · Glutes',sets:[{reps:'12 ea.',weight:'20–25 lbs ea.',rpe:'7'},{reps:'12 ea.',weight:'20–25 lbs ea.',rpe:'7'},{reps:'12 ea.',weight:'20–25 lbs ea.',rpe:'7'}],note:'Drive through heel of working leg only.',alt:'Curtsy Lunge'},
+        ]},
+        {tag:'Block D · Calves',title:'Arnold\'s Weak Point Obsession',rest:'',exercises:[
+          {id:'calf',label:'D',name:'Dumbbell Calf Raises',muscle:'Gastrocnemius · Soleus',sets:[{reps:'20–25',weight:'40 lbs ea.',rpe:'8'},{reps:'20–25',weight:'40 lbs ea.',rpe:'8'},{reps:'20–25',weight:'40 lbs ea.',rpe:'8'},{reps:'20–25',weight:'40 lbs ea.',rpe:'8'}],note:'Use a step for full range. 1 sec pause at top.',alt:'Single-Leg Calf Raise'},
+        ]},
+        {tag:'Block E · Core',title:'Arnold Always Finished With Abs',rest:'60 sec between rounds',exercises:[
+          {id:'crunch',label:'E1',name:'Crunches',muscle:'Abs',sets:[{reps:'25',weight:'BW',rpe:'8'},{reps:'25',weight:'BW',rpe:'8'},{reps:'25',weight:'BW',rpe:'8'}],note:'No neck pulling. Squeeze abs at top.',alt:'Weighted Crunch'},
+          {id:'legraise',label:'E2',name:'Leg Raises',muscle:'Lower Abs',sets:[{reps:'15',weight:'BW',rpe:'8'},{reps:'15',weight:'BW',rpe:'8'},{reps:'15',weight:'BW',rpe:'8'}],note:'Lower back pressed to floor throughout.',alt:'Russian Twist'},
+          {id:'plank',label:'E3',name:'Plank',muscle:'Core Stability',sets:[{reps:'40 sec',weight:'BW',rpe:'8'},{reps:'40 sec',weight:'BW',rpe:'8'},{reps:'40 sec',weight:'BW',rpe:'8'}],note:'Squeeze glutes AND brace core. Don\'t let hips sag.',alt:'Renegade Row'},
+        ]},
+      ]
+    }
+  ]
+};
+// ─────────────────────────────────────────────
+// STATE & STORAGE
+// ─────────────────────────────────────────────
+let currentScreen = 'programs';
+let activeProgramId = 'arnold_golden_era';
+let currentDayIdx = 0;
+let sessionLog = {};
+let selectedMuscles = [];
+let generatedWorkout = [];
+let addExTargetDay = null;
+let dayExercises = {};
+let chartExId = null;
+let bankEquip = 'dumbbell';
+let genEquip = ['dumbbell'];
+let genInjuries = [];
+let generatedMeta = null;
+let generatedPlan = [];
+// Escape any user-supplied string before inserting into innerHTML
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Pull the first number out of a free-text log value (e.g. "50 lbs" -> 50)
+function parseNum(s){ if(s==null) return null; const m=String(s).match(/-?\d+(?:\.\d+)?/); return m?parseFloat(m[0]):null; }
+// Parse a rest string like "90 sec" or "2 min" into seconds
+function parseRest(str){ if(!str) return 90; const sec=str.match(/(\d+)\s*sec/i); if(sec) return parseInt(sec[1],10); const min=str.match(/(\d+)\s*min/i); if(min) return parseInt(min[1],10)*60; const n=str.match(/(\d+)/); return n?parseInt(n[1],10):90; }
+function getPrograms() {
+  try { return JSON.parse(localStorage.getItem('ge_programs') || '[]'); } catch(e) { return []; }
+}
+function savePrograms(p) { try { localStorage.setItem('ge_programs', JSON.stringify(p)); } catch(e){} }
+function getActiveProgramId() { return localStorage.getItem('ge_active') || 'arnold_golden_era'; }
+function setActiveProgramId(id) { localStorage.setItem('ge_active', id); activeProgramId = id; }
+function getSessionLog(progId, dayIdx) {
+  try { return JSON.parse(localStorage.getItem(`ge_log_${progId}_${dayIdx}`) || '{}'); } catch(e) { return {}; }
+}
+function saveSessionLog(progId, dayIdx, log) {
+  try { localStorage.setItem(`ge_log_${progId}_${dayIdx}`, JSON.stringify(log)); } catch(e){}
+}
+function getHistory() { try { return JSON.parse(localStorage.getItem('ge_history') || '[]'); } catch(e) { return []; } }
+function saveHistory(h) { try { localStorage.setItem('ge_history', JSON.stringify(h)); } catch(e){} }
+function getActiveProgram() {
+  if (activeProgramId === 'arnold_golden_era') return ARNOLD_PROGRAM;
+  const progs = getPrograms();
+  return progs.find(p => p.id === activeProgramId) || ARNOLD_PROGRAM;
+}
+function getProgramById(id) {
+  if (id === 'arnold_golden_era') return ARNOLD_PROGRAM;
+  return getPrograms().find(p => p.id === id) || null;
+}
+// Most recent completed session for this program + day, or null
+function getLastSession(progId, dayIdx) {
+  const hist = getHistory();
+  for (const h of hist) { if (h.progId === progId && h.dayIdx === dayIdx) return h; }
+  return null;
+}
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const idx = ['programs','tracker','bank','random','history'].indexOf(name);
+  if (idx >= 0) document.querySelectorAll('.bnav-btn')[idx].classList.add('active');
+  currentScreen = name;
+  if (name === 'programs') renderPrograms();
+  if (name === 'tracker') { activeProgramId = getActiveProgramId(); sessionLog = getSessionLog(activeProgramId, currentDayIdx); renderTracker(); }
+  if (name === 'bank') renderBank();
+  if (name === 'random') renderGenEquip();
+  if (name === 'history') renderHistory();
+}
+// ─────────────────────────────────────────────
+// PROGRAMS SCREEN
+// ─────────────────────────────────────────────
+function renderPrograms() {
+  const grid = document.getElementById('programGrid');
+  const userProgs = getPrograms();
+  const active = getActiveProgramId();
+  let html = '';
+  // Arnold program
+  const arnoldActive = active === 'arnold_golden_era';
+  html += `<div class="program-card ${arnoldActive?'active-program':''}">
+    <div class="pc-header">
+      <div class="pc-info">
+        <div class="pc-name">The Golden Era Program</div>
+        <div class="pc-meta">6-day · Arnold-inspired · Chest/Back, Shoulders/Arms, Legs/Core</div>
+      </div>
+      ${arnoldActive ? '<div class="pc-active-badge">Active</div>' : '<div class="pc-badge">Built-in</div>'}
+    </div>
+    <div class="pc-actions">
+      ${!arnoldActive ? `<button class="btn btn-gold btn-sm" onclick="activateProgram('arnold_golden_era')">Set Active</button>` : ''}
+      <button class="btn btn-outline btn-sm" onclick="activateProgram('arnold_golden_era');showScreen('tracker')">Open Tracker</button>
+    </div>
+  </div>`;
+  userProgs.forEach(prog => {
+    const isActive = active === prog.id;
+    html += `<div class="program-card ${isActive?'active-program':''}">
+      <div class="pc-header">
+        <div class="pc-info">
+          <div class="pc-name">${esc(prog.name)}</div>
+          <div class="pc-meta">${esc(prog.desc || '')} · ${prog.days.length}-day split</div>
+        </div>
+        ${isActive ? '<div class="pc-active-badge">Active</div>' : ''}
+      </div>
+      <div class="pc-actions">
+        ${!isActive ? `<button class="btn btn-gold btn-sm" onclick="activateProgram('${prog.id}')">Set Active</button>` : ''}
+        <button class="btn btn-outline btn-sm" onclick="activateProgram('${prog.id}');showScreen('tracker')">Open Tracker</button>
+        <button class="btn btn-red btn-sm" onclick="deleteProgram('${prog.id}')">Delete</button>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+function activateProgram(id) {
+  setActiveProgramId(id);
+  currentDayIdx = 0;
+  sessionLog = getSessionLog(id, 0);
+  renderPrograms();
+  showToast('Program activated', 'success');
+}
+function deleteProgram(id) {
+  if (!confirm('Delete this program and all its logged data?')) return;
+  const progs = getPrograms().filter(p => p.id !== id);
+  savePrograms(progs);
+  if (activeProgramId === id) setActiveProgramId('arnold_golden_era');
+  renderPrograms();
+}
+// ─────────────────────────────────────────────
+// DATA BACKUP & RESTORE
+// ─────────────────────────────────────────────
+function exportData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('ge_') === 0) data[k] = localStorage.getItem(k);
+  }
+  const payload = { _app: 'golden-era', _version: 1, _exported: new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `GoldenEra_Backup_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Backup downloaded ✓', 'success');
+}
+function importData(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const data = (parsed && parsed.data) ? parsed.data : parsed;
+      if (!data || typeof data !== 'object') throw new Error('bad');
+      const keys = Object.keys(data).filter(k => k.indexOf('ge_') === 0);
+      if (keys.length === 0) { showToast('No Golden Era data in that file', 'error'); input.value = ''; return; }
+      if (!confirm('Restore this backup? It will overwrite your current programs and history in this browser.')) { input.value = ''; return; }
+      Object.keys(localStorage).filter(k => k.indexOf('ge_') === 0).forEach(k => localStorage.removeItem(k));
+      keys.forEach(k => localStorage.setItem(k, data[k]));
+      activeProgramId = getActiveProgramId();
+      currentDayIdx = 0;
+      sessionLog = getSessionLog(activeProgramId, 0);
+      showToast('Backup restored ✓', 'success');
+      showScreen('programs');
+    } catch (err) {
+      showToast('Invalid backup file', 'error');
+    } finally {
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+// ─────────────────────────────────────────────
+// CREATE PROGRAM MODAL
+// ─────────────────────────────────────────────
+function showCreateModal() {
+  dayExercises = {};
+  document.getElementById('newProgName').value = '';
+  document.getElementById('newProgDesc').value = '';
+  document.getElementById('createModal').classList.add('visible');
+  buildDaySlots();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('visible');
+}
+function buildDaySlots() {
+  const n = parseInt(document.getElementById('newProgDays').value, 10);
+  const dayNames = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6'];
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    html += `<div class="day-slot" id="daySlot_${i}">
+      <div class="day-slot-hdr">
+        <input class="form-input" style="width:60%;font-size:12px;padding:5px 8px;" id="dayName_${i}" placeholder="${dayNames[i]} (e.g. Chest + Back)">
+        <button class="btn btn-ghost btn-sm" onclick="openAddExModal(${i})">+ Add Exercise</button>
+      </div>
+      <div class="added-exercises" id="dayExercises_${i}"></div>
+    </div>`;
+  }
+  document.getElementById('dayBuilder').innerHTML = html;
+  // Re-render any exercises already added (e.g. after changing day count)
+  for (let i = 0; i < n; i++) renderDayExercises(i);
+}
+function openAddExModal(dayIdx) {
+  addExTargetDay = dayIdx;
+  document.getElementById('addExSearch').value = '';
+  renderAddExList();
+  document.getElementById('addExModal').classList.add('visible');
+}
+function renderAddExList() {
+  const q = document.getElementById('addExSearch').value.toLowerCase();
+  const filtered = EXERCISE_BANK.filter(e => !q || e.name.toLowerCase().includes(q) || e.muscle.includes(q));
+  let html = '';
+  filtered.slice(0, 30).forEach(ex => {
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="addExToDay('${ex.id}')">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(ex.name)}</div>
+        <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase">${esc(ex.muscle)}</div>
+      </div>
+      <div style="color:var(--gold);font-size:20px;padding:0 4px;">+</div>
+    </div>`;
+  });
+  document.getElementById('addExList').innerHTML = html;
+}
+// Look the exercise up by id — avoids any string-escaping issues with names like "Farmer's Carry"
+function addExToDay(id) {
+  const ex = EXERCISE_BANK.find(e => e.id === id);
+  if (!ex) return;
+  const d = addExTargetDay;
+  if (!dayExercises[d]) dayExercises[d] = [];
+  if (dayExercises[d].find(e => e.id === id)) { showToast('Already added', ''); return; }
+  dayExercises[d].push({id: ex.id, name: ex.name, muscle: ex.muscle});
+  renderDayExercises(d);
+  closeModal('addExModal');
+}
+function renderDayExercises(d) {
+  const container = document.getElementById(`dayExercises_${d}`);
+  if (!container) return;
+  let html = '';
+  (dayExercises[d] || []).forEach((ex, i) => {
+    html += `<div class="added-ex">
+      <span>${esc(ex.name)} <span style="color:var(--text-dim);font-size:10px">(${esc(ex.muscle)})</span></span>
+      <span class="remove-ex" onclick="removeExFromDay(${d},${i})">×</span>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+function removeExFromDay(d, i) {
+  dayExercises[d].splice(i, 1);
+  renderDayExercises(d);
+}
+function saveNewProgram() {
+  const name = document.getElementById('newProgName').value.trim();
+  const desc = document.getElementById('newProgDesc').value.trim();
+  const n = parseInt(document.getElementById('newProgDays').value, 10);
+  if (!name) { showToast('Add a program name', 'error'); return; }
+  const days = [];
+  for (let i = 0; i < n; i++) {
+    const dayName = document.getElementById(`dayName_${i}`)?.value.trim() || `Day ${i+1}`;
+    const exs = (dayExercises[i] || []).map((e, idx) => {
+      const bankEx = EXERCISE_BANK.find(b => b.id === e.id);
+      return {
+        id: e.id,
+        label: String.fromCharCode(65 + idx),
+        name: e.name,
+        muscle: e.muscle,
+        sets: [{reps:'10',weight:'—',rpe:'8'},{reps:'10',weight:'—',rpe:'8'},{reps:'10',weight:'—',rpe:'8'}],
+        note: bankEx ? bankEx.cue : ''
+      };
+    });
+    days.push({
+      name: dayName,
+      shortName: dayName.length > 12 ? dayName.substring(0,12)+'...' : dayName,
+      warmup: ['5 min light cardio or movement prep','Dynamic stretches for target muscles'],
+      blocks: exs.length > 0 ? [{tag:'Main Work',title:dayName,rest:'60–90 sec between sets',exercises:exs}] : []
+    });
+  }
+  const prog = { id: 'prog_' + Date.now(), name, desc, days };
+  const progs = getPrograms();
+  progs.push(prog);
+  savePrograms(progs);
+  dayExercises = {};
+  closeModal('createModal');
+  renderPrograms();
+  showToast('Program saved!', 'success');
+}
+// ─────────────────────────────────────────────
+// TRACKER
+// ─────────────────────────────────────────────
+function renderTracker() {
+  const prog = getActiveProgram();
+  if (!prog) { document.getElementById('trackerContent').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim)">No active program. Go to Programs to select one.</div>'; return; }
+  if (currentDayIdx >= prog.days.length) currentDayIdx = 0;
+  let dayHtml = '';
+  const hasRestDay = prog.days.some(d => d.rest);
+  prog.days.forEach((d, i) => {
+    dayHtml += `<div class="day-tab ${d.rest?'restday ':''}${i===currentDayIdx?'active':''}" onclick="switchTrackerDay(${i},this)">
+      <div class="day-tab-name">${esc(d.shortName || d.name)}</div>
+      <div class="day-tab-focus">${esc(d.name.length > 14 ? d.name.substring(0,14)+'…' : d.name)}</div>
+    </div>`;
+  });
+  if (!hasRestDay) dayHtml += `<div class="day-tab rest-tab"><div class="day-tab-name">Rest</div><div class="day-tab-focus">Recovery</div></div>`;
+  document.getElementById('daySelector').innerHTML = dayHtml;
+  renderTrackerDay();
+}
+function switchTrackerDay(idx, el) {
+  saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
+  currentDayIdx = idx;
+  sessionLog = getSessionLog(activeProgramId, idx);
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderTrackerDay();
+}
+function renderTrackerDay() {
+  const prog = getActiveProgram();
+  const day = prog.days[currentDayIdx];
+  const content = document.getElementById('trackerContent');
+  if (day.rest) {
+    content.innerHTML = `<div class="session-bar">
+      <div>
+        <div class="session-title">Rest <span>Day</span></div>
+        <div class="session-meta">${esc(prog.name)}</div>
+      </div>
+    </div>
+    <div class="rest-day-card">
+      <h3>Recovery Day</h3>
+      <p>No lifting today — this is where the growth actually happens. Keep it light and let your body rebuild.</p>
+      <ul>
+        <li>Take a walk or do 20–30 min of easy cardio</li>
+        <li>Stretch or foam-roll any tight areas</li>
+        <li>Hydrate and aim for 7–9 hours of sleep</li>
+        <li>Get some protein in to support recovery</li>
+      </ul>
+    </div>`;
+    return;
+  }
+  const last = getLastSession(activeProgramId, currentDayIdx);
+  const lastLog = last ? last.log : {};
+  let html = '';
+  // Session bar
+  const safeName = esc(day.name);
+  const nameHtml = safeName.replace('+', '<span>+</span>');
+  html += `<div class="session-bar">
+    <div>
+      <div class="session-title">${nameHtml}</div>
+      <div class="session-meta">${esc(prog.name)}</div>
+    </div>
+    <div class="session-acts">
+      <button class="btn btn-ghost" onclick="startRest(90)">⏱ Rest</button>
+      <button class="btn btn-ghost" onclick="clearTrackerDay()">↺ Reset</button>
+      <button class="btn btn-green btn-sm" onclick="finishSession()">✓ Log</button>
+    </div>
+  </div>`;
+  // Progress
+  const total = countSets(day), filled = countFilled(day);
+  const pct = total > 0 ? Math.round((filled/total)*100) : 0;
+  html += `<div class="prog-wrap">
+    <div class="prog-label">Progress</div>
+    <div class="prog-track"><div class="prog-fill" id="progFill" style="width:${pct}%"></div></div>
+    <div class="prog-count" id="progCount">${filled}/${total}</div>
+  </div>`;
+  // Complete banner
+  if (sessionLog.__completed) {
+    html += `<div class="complete-banner visible"><div class="complete-text">✓ Session logged</div><button class="btn btn-outline btn-sm" onclick="startNextSession()">↺ New session</button><button class="btn btn-green btn-sm" onclick="exportPDF()">⬇ Export PDF</button></div>`;
+  }
+  // Last session reference
+  if (last) {
+    html += `<div class="last-session-bar">↩ Last session: <b>${esc(last.date)}</b> — your previous numbers show in grey in each field and under every exercise. Aim to beat them.</div>`;
+  }
+  // Warmup
+  if (day.warmup?.length) {
+    html += `<div class="warmup-card"><div class="warmup-label">⚡ Warm-Up · 5 min</div>`;
+    day.warmup.forEach(w => { html += `<div class="warmup-item">${esc(w)}</div>`; });
+    html += `</div>`;
+  }
+  // Blocks
+  day.blocks.forEach(block => {
+    const restBtn = block.rest ? `<button class="btn-rt-start" onclick="startRest(${parseRest(block.rest)})" title="Start rest timer">⏱</button>` : '';
+    html += `<div class="block"><div class="block-hdr"><div class="block-tag">${esc(block.tag)}</div><div class="block-title">${esc(block.title)}</div>${block.rest?`<div class="block-rest"><span>🕐 ${esc(block.rest)}</span>${restBtn}</div>`:''}</div>`;
+    block.exercises.forEach(ex => {
+      if (ex.superset) { html += `<div class="ss-div"><div class="ss-line"></div><div class="ss-label">↕ Superset — 30 sec ↕</div><div class="ss-line"></div></div>`; return; }
+      html += `<div class="exercise"><div class="ex-hdr"><div><div class="ex-name">${esc(ex.label)} — ${esc(ex.name)}</div><div class="ex-muscle-tag">${esc(ex.muscle)}</div></div><div class="ex-set-count">${ex.sets.length} SETS</div></div>`;
+      html += `<div class="sets-con"><div class="set-row"><div></div><div class="set-col"><div class="col-lbl">Reps</div></div><div class="set-col"><div class="col-lbl">Prescribed</div></div><div class="set-col"><div class="col-lbl">Actual</div></div></div>`;
+      ex.sets.forEach((s, si) => {
+        const key = `${ex.id}_${si}`;
+        const val = sessionLog[key] || '';
+        const isFilled = val.trim().length > 0 ? 'filled' : '';
+        const lastVal = lastLog[key];
+        const ph = (lastVal && String(lastVal).trim()) ? 'last: ' + esc(String(lastVal).trim()) : 'e.g. 50 lbs';
+        html += `<div class="set-row">
+          <div class="set-num-lbl">${si+1}</div>
+          <div class="set-col"><div class="presc-val">${esc(s.reps)}</div></div>
+          <div class="set-col"><div class="presc-val">${esc(s.weight)}</div></div>
+          <div class="set-col"><input type="text" class="log-input ${isFilled}" placeholder="${ph}" value="${esc(val)}" data-key="${key}" oninput="handleLog(this)"></div>
+        </div>`;
+      });
+      html += `</div>`;
+      // Last-session per-set summary (placeholders disappear once you type, so show it explicitly too)
+      if (last) {
+        const lr = ex.sets.map((s, si) => { const v = lastLog[`${ex.id}_${si}`]; return (v && String(v).trim()) ? esc(String(v).trim()) : '·'; });
+        if (lr.some(x => x !== '·')) html += `<div class="last-ref">↩ Last: <b>${lr.join('</b>  ·  <b>')}</b></div>`;
+      }
+      // Notes
+      const nk = `${ex.id}_notes`;
+      html += `<textarea class="notes-input" placeholder="Notes (how it felt, form, adjustments...)" data-key="${nk}" oninput="handleLog(this)">${esc(sessionLog[nk]||'')}</textarea>`;
+      // Alt exercise
+      if (ex.alt) html += `<div class="alt-wrap"><div class="alt-label">Alternative</div><div class="alt-name">${esc(ex.alt)}</div></div>`;
+      // Coach note
+      if (ex.note) html += `<div class="coach-note">${esc(ex.note)}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  content.innerHTML = html;
+}
+function handleLog(el) {
+  const key = el.dataset.key;
+  sessionLog[key] = el.value;
+  el.classList.toggle('filled', el.value.trim().length > 0);
+  saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
+  updateProgress();
+}
+function updateProgress() {
+  const prog = getActiveProgram();
+  const day = prog.days[currentDayIdx];
+  const total = countSets(day), filled = countFilled(day);
+  const pct = total > 0 ? Math.round((filled/total)*100) : 0;
+  const fill = document.getElementById('progFill');
+  const count = document.getElementById('progCount');
+  if (fill) fill.style.width = pct + '%';
+  if (count) count.textContent = `${filled}/${total}`;
+}
+function countSets(day) {
+  let n = 0;
+  day.blocks.forEach(b => b.exercises.forEach(ex => { if (!ex.superset) n += ex.sets.length; }));
+  return n;
+}
+function countFilled(day) {
+  let n = 0;
+  day.blocks.forEach(b => b.exercises.forEach(ex => {
+    if (!ex.superset) ex.sets.forEach((s, si) => {
+      const v = sessionLog[`${ex.id}_${si}`];
+      if (v && v.trim()) n++;
+    });
+  }));
+  return n;
+}
+function clearTrackerDay() {
+  if (!confirm('Reset this session? This clears the input fields (your saved history is kept).')) return;
+  sessionLog = {};
+  saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
+  renderTrackerDay();
+}
+function startNextSession() {
+  if (!confirm('Start a fresh session for this day? Your logged history is saved; the input fields will clear so you can chase last session\'s numbers.')) return;
+  sessionLog = {};
+  saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
+  renderTrackerDay();
+  showToast('Fresh session started', 'success');
+}
+function finishSession() {
+  const filled = countFilled(getActiveProgram().days[currentDayIdx]);
+  if (filled === 0) { showToast('Log at least one set first', 'error'); return; }
+  const prog = getActiveProgram();
+  const day = prog.days[currentDayIdx];
+  const now = new Date();
+  const entry = {
+    progName: prog.name, dayName: day.name,
+    date: now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}),
+    ts: now.getTime(), log: JSON.parse(JSON.stringify(sessionLog)),
+    progId: activeProgramId, dayIdx: currentDayIdx
+  };
+  const hist = getHistory();
+  hist.unshift(entry);
+  if (hist.length > 80) hist.pop();
+  saveHistory(hist);
+  sessionLog.__completed = true;
+  saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
+  if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+  renderTrackerDay();
+  showToast('Session logged! ✓', 'success');
+}
+// ─────────────────────────────────────────────
+// EXERCISE BANK
+// ─────────────────────────────────────────────
+function renderBank() {
+  renderDataStatus();
+  renderEquipTabs();
+  filterBank();
+}
+function renderEquipTabs() {
+  const el = document.getElementById('equipTabs');
+  if (!el) return;
+  const present = presentEquip();
+  if (present.length && !present.includes(bankEquip)) bankEquip = present[0];
+  el.innerHTML = present.map(id => {
+    const n = EXERCISE_BANK.filter(e => e.equip === id).length;
+    return `<div class="equip-tab ${bankEquip===id?'active':''}" onclick="setBankEquip('${id}')">${esc(EQUIP_LABELS[id]||id)} <span class="equip-count">${n}</span></div>`;
+  }).join('');
+}
+function setBankEquip(id) {
+  bankEquip = id;
+  renderEquipTabs();
+  filterBank();
+}
+function filterBank() {
+  const q = (document.getElementById('bankSearch')?.value || '').toLowerCase();
+  const muscle = document.getElementById('bankFilter')?.value || '';
+  const filtered = EXERCISE_BANK.filter(e => {
+    if (e.equip !== bankEquip) return false;
+    const matchQ = !q || e.name.toLowerCase().includes(q) || e.muscle.includes(q);
+    const matchM = !muscle || e.muscle === muscle;
+    return matchQ && matchM;
+  });
+  if (filtered.length === 0) {
+    document.getElementById('exerciseList').innerHTML = `<div class="bank-empty">No exercises match this filter. Try a different muscle or search.</div>`;
+    return;
+  }
+  const muscleColors = {chest:'#E74C3C',back:'#3498DB',shoulders:'#E67E22',biceps:'#9B59B6',triceps:'#1ABC9C',quads:'#F39C12',hamstrings:'#D35400',glutes:'#8E44AD',calves:'#27AE60',core:'#2980B9'};
+  const label = EQUIP_LABELS[bankEquip] || bankEquip;
+  let html = `<div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin-bottom:10px;">${filtered.length} ${esc(String(label).toLowerCase())} exercises</div>`;
+  filtered.forEach(ex => {
+    const mc = muscleColors[ex.muscle] || '#888';
+    const diffBadge = ex.difficulty ? `<div class="diff-badge diff-${ex.difficulty}">${esc(ex.difficulty)}</div>` : '';
+    const srcChip = (ex.source && ex.source !== 'builtin')
+      ? `<div class="src-chip" title="pulled from ${esc(ex.source)}">web</div>`
+      : `<div class="src-chip src-builtin" title="curated coaching entry">★</div>`;
+    const thumb = (ex.images && ex.images.length)
+      ? `<img class="ex-thumb" src="${esc(ex.images[0])}" alt="" loading="lazy" onerror="this.style.display='none'">` : '';
+    const prog = (ex.easier || ex.harder) ? `<div class="progression">
+          ${ex.easier?`<div class="prog-step"><b>↓ Easier</b>${esc(ex.easier)}</div>`:''}
+          ${ex.harder?`<div class="prog-step"><b>↑ Harder</b>${esc(ex.harder)}</div>`:''}
+        </div>` : '';
+    html += `<div class="ex-card">
+      <div class="ex-card-header" onclick="toggleExCard('${ex.id}')">
+        <div style="flex:1">
+          <div class="ex-card-name">${esc(ex.name)}</div>
+          <div class="ex-card-muscle" style="color:${mc}">${esc(ex.muscle)} · ${esc(EQUIP_LABELS[ex.equip]||ex.equip)}</div>
+        </div>
+        <div class="ex-badges">
+          ${srcChip}
+          ${diffBadge}
+          <div class="${ex.type==='compound'?'type-compound':'type-isolation'} ex-card-type">${esc(ex.type)}</div>
+        </div>
+      </div>
+      <div class="ex-card-body" id="exbody_${ex.id}">
+        ${thumb}
+        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;">
+          ${ex.muscles.map(m=>`<span class="muscle-tag">${esc(m)}</span>`).join('')}
+        </div>
+        ${ex.how ? `<div class="ex-how"><div class="ex-how-title">How to do it</div><div class="ex-how-text">${esc(ex.how)}</div></div>` : ''}
+        ${ex.cue ? `<div class="ex-cue">💡 ${esc(ex.cue)}</div>` : ''}
+        ${prog}
+      </div>
+    </div>`;
+  });
+  document.getElementById('exerciseList').innerHTML = html;
+}
+function toggleExCard(id) {
+  const body = document.getElementById('exbody_' + id);
+  if (body) body.classList.toggle('open');
+}
+// ─────────────────────────────────────────────
+// RANDOM GENERATOR
+// ─────────────────────────────────────────────
+function toggleMuscle(el, muscle) {
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) {
+    if (!selectedMuscles.includes(muscle)) selectedMuscles.push(muscle);
+  } else {
+    selectedMuscles = selectedMuscles.filter(m => m !== muscle);
+  }
+}
+function renderGenEquip() {
+  const el = document.getElementById('genEquip');
+  if (!el) return;
+  const present = presentEquip();
+  genEquip = genEquip.filter(id => present.includes(id));
+  if (genEquip.length === 0) genEquip = present.filter(id => id === 'dumbbell' || id === 'bodyweight');
+  if (genEquip.length === 0) genEquip = present.slice(0, 1);
+  const presetsEl = document.getElementById('genEquipPresets');
+  if (presetsEl) presetsEl.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="presetEquip('gym')">Full gym</button><button class="btn btn-ghost btn-sm" onclick="presetEquip('home')">Home</button><button class="btn btn-ghost btn-sm" onclick="presetEquip('bw')">Bodyweight</button>`;
+  el.innerHTML = present.map(id => `<div class="equip-pill ${genEquip.includes(id) ? 'selected' : ''}" onclick="toggleGenEquip('${id}')">${esc(EQUIP_LABELS[id] || id)}</div>`).join('');
+}
+function presetEquip(kind) {
+  const present = presentEquip();
+  if (kind === 'gym') genEquip = present.slice();
+  else if (kind === 'home') genEquip = present.filter(id => ['dumbbell','bodyweight','bands','kettlebell'].includes(id));
+  else genEquip = present.filter(id => id === 'bodyweight');
+  if (genEquip.length === 0) genEquip = present.slice(0, 1);
+  renderGenEquip();
+}
+function toggleGenEquip(id) {
+  if (genEquip.includes(id)) genEquip = genEquip.filter(x => x !== id);
+  else genEquip.push(id);
+  renderGenEquip();
+}
+function toggleInjury(el, id) {
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) { if (!genInjuries.includes(id)) genInjuries.push(id); }
+  else genInjuries = genInjuries.filter(x => x !== id);
+}
+// Goal-based set/rep/rest schemes; experience nudges the set count
+const GOAL_SCHEME = {
+  hypertrophy: { sets: 4, reps: '8–12',  rest: '60–90 sec', label: 'Hypertrophy' },
+  strength:    { sets: 5, reps: '3–6',   rest: '2–3 min',   label: 'Strength' },
+  fatloss:     { sets: 3, reps: '12–15', rest: '30–45 sec', label: 'Fat loss' },
+  endurance:   { sets: 3, reps: '15–20', rest: '30–45 sec', label: 'Endurance' }
+};
+const INJURY_PATTERNS = { knees:['jumping','deep-knee'], lower_back:['hinge','spinal-load'], shoulders:['overhead'], elbows:['elbow-stress'] };
+const INJURY_LABELS = { knees:'Knees', lower_back:'Lower back', shoulders:'Shoulders', elbows:'Elbows/wrists' };
+function injuryExcludedPatterns(injuries){
+  const set = new Set();
+  (injuries || []).forEach(i => (INJURY_PATTERNS[i] || []).forEach(p => set.add(p)));
+  return set;
+}
+function allowedByExperience(ex, exp){
+  if (exp === 'advanced') return true;
+  return ex.difficulty !== 'advanced'; // beginner + intermediate skip advanced movements
+}
+// ── SMART SPLIT BUILDER ──
+// Spread selected muscles across training days so the SAME muscle group never lands
+// on consecutive training days when avoidable (muscles want ~48–72h to recover).
+const GEN_MUSCLE_ORDER = ['chest','shoulders','triceps','back','biceps','quads','hamstrings','glutes','calves','core'];
+function genCap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+const SPLIT_CATS = {
+  push: ['chest','shoulders','triceps'],
+  pull: ['back','biceps'],
+  legs: ['quads','hamstrings','glutes','calves'],
+  core: ['core']
+};
+const CAT_PRIORITY = ['legs','push','pull','core'];
+// Sub-focus variants used to differentiate repeated days of the same category
+const CAT_VARIANTS = {
+  push: [['chest','triceps'], ['shoulders','triceps'], ['chest','shoulders','triceps']],
+  pull: [['back','biceps'], ['back'], ['back','biceps']],
+  legs: [['quads','calves'], ['hamstrings','glutes'], ['quads','hamstrings','glutes','calves']],
+  core: [['core']]
+};
+function musclesIn(cat, selected){ return SPLIT_CATS[cat].filter(m => selected.includes(m)); }
+function orderMuscles(list){ return GEN_MUSCLE_ORDER.filter(m => list.includes(m)); }
+function dayLabel(cats, muscles){
+  const set = new Set(cats);
+  if (set.has('push') && set.has('pull')) return 'Upper Body';
+  if (set.has('legs') && set.size > 1) return 'Lower Body';
+  if (cats.length === 1){
+    const c = cats[0];
+    if (c === 'legs'){
+      const q = muscles.includes('quads'), p = muscles.includes('hamstrings') || muscles.includes('glutes');
+      if (q && !p) return 'Legs · Quads';
+      if (p && !q) return 'Legs · Posterior';
+      return 'Legs';
+    }
+    if (c === 'push'){
+      const ch = muscles.includes('chest'), sh = muscles.includes('shoulders');
+      if (ch && !sh) return 'Push · Chest';
+      if (sh && !ch) return 'Push · Shoulders';
+      return 'Push';
+    }
+    if (c === 'pull') return 'Pull';
+    if (c === 'core') return 'Core';
+  }
+  return muscles.map(genCap).join(' + ');
+}
+// Muscles for the n-th occurrence of a category — cycles variants so repeats differ
+function variantMuscles(cat, occ, total, selected){
+  const inCat = musclesIn(cat, selected);
+  if (total <= 1) return orderMuscles(inCat);
+  const variants = CAT_VARIANTS[cat] || [SPLIT_CATS[cat]];
+  for (let step = 0; step < variants.length; step++){
+    const v = variants[(occ + step) % variants.length].filter(m => selected.includes(m));
+    if (v.length) return orderMuscles(v);
+  }
+  return orderMuscles(inCat);
+}
+// Order days so the same category is never adjacent (incl. cycle wrap-around) when possible.
+// Slot-fill method: place the most frequent category first into every other slot (0,2,4,…
+// then 1,3,5,…). Guarantees no two equal neighbours whenever a category isn't over-represented.
+function arrangeNoAdjacent(units){
+  if (units.length <= 1) return units.slice();
+  const byCat = {};
+  units.forEach(u => { (byCat[u.cat] = byCat[u.cat] || []).push(u); });
+  const cats = Object.keys(byCat).sort((a,b) => byCat[b].length - byCat[a].length);
+  const n = units.length;
+  const res = new Array(n);
+  let pos = 0;
+  for (const c of cats){
+    for (const u of byCat[c]){
+      res[pos] = u;
+      pos += 2;
+      if (pos >= n) pos = 1;
+    }
+  }
+  return res;
+}
+// Build T training days, spaced so muscle groups aren't worked on back-to-back days
+function buildSplit(selected, T){
+  const present = CAT_PRIORITY.filter(c => musclesIn(c, selected).length > 0);
+  if (present.length === 0) return [];
+  if (T <= 1) return [{ label: 'Full Body', muscles: orderMuscles(selected) }];
+  let primary = present.filter(c => c !== 'core');
+  if (primary.length === 0) primary = present.slice();
+  const coreSelected = present.includes('core');
+
+  // Fewer days than primary categories → merge into Upper / Lower so nothing is dropped
+  if (T < primary.length){
+    const upper = orderMuscles([...musclesIn('push', selected), ...musclesIn('pull', selected)]);
+    const lower = orderMuscles([...musclesIn('legs', selected), ...musclesIn('core', selected)]);
+    let groups = [];
+    if (upper.length) groups.push({ cats: ['push','pull'], muscles: upper });
+    if (lower.length) groups.push({ cats: ['legs'], muscles: lower });
+    while (groups.length < T) groups.push({ cats: ['push','pull'], muscles: upper.length ? upper : lower });
+    return groups.slice(0, T).map(g => ({ label: dayLabel(g.cats, g.muscles), muscles: g.muscles }));
+  }
+
+  // Each primary category gets ≥1 day; spare days go to the biggest groups (legs/push earn 2nd days)
+  const counts = {}; primary.forEach(c => counts[c] = 1);
+  const reserveCore = coreSelected && !primary.includes('core');
+  let extra = T - primary.length - (reserveCore ? 1 : 0);
+  const bySize = primary.slice().sort((a,b) =>
+    musclesIn(b, selected).length - musclesIn(a, selected).length ||
+    CAT_PRIORITY.indexOf(a) - CAT_PRIORITY.indexOf(b));
+  let gi = 0, guard = 0;
+  while (extra > 0 && guard++ < 60){
+    const c = bySize[gi % bySize.length];
+    if (counts[c] < 3){ counts[c]++; extra--; }
+    gi++;
+  }
+  let units = [];
+  primary.forEach(c => { for (let k = 0; k < counts[c]; k++) units.push({ cat: c }); });
+  if (reserveCore && units.length < T) units.push({ cat: 'core' });
+  while (units.length < T){ const c = bySize[0]; counts[c]++; units.push({ cat: c }); }
+  units = units.slice(0, T);
+  units = arrangeNoAdjacent(units);
+
+  const occ = {};
+  const days = units.map(u => {
+    const n = (occ[u.cat] = (occ[u.cat] || 0)); occ[u.cat]++;
+    return { cats: [u.cat], muscles: variantMuscles(u.cat, n, counts[u.cat] || 1, selected) };
+  });
+  // attach core to the lightest day if it's selected but never got its own day
+  if (coreSelected && !days.some(d => d.cats[0] === 'core')){
+    let light = days[0];
+    days.forEach(d => { if (d.muscles.length < light.muscles.length) light = d; });
+    if (!light.muscles.includes('core')) light.muscles = orderMuscles([...light.muscles, 'core']);
+  }
+  return days.map(d => ({ label: dayLabel(d.cats, d.muscles), muscles: d.muscles }));
+}
+// Evenly interleave T training + R rest days into a repeating cycle
+function interleaveCycle(T, R) {
+  const total = T + R, seq = [];
+  let placed = 0;
+  for (let i = 0; i < total; i++) {
+    const target = Math.round((i + 1) * T / total);
+    if (placed < target) { seq.push('train'); placed++; }
+    else seq.push('rest');
+  }
+  return seq;
+}
+// Pick exercises for one day, honouring equipment, experience, and injury limitations
+function pickDayExercises(dayMuscles, count, equipList, opts) {
+  opts = opts || {};
+  const banned = injuryExcludedPatterns(opts.injuries);
+  const pool = EXERCISE_BANK.filter(e =>
+    equipList.includes(e.equip) &&
+    dayMuscles.includes(e.muscle) &&
+    allowedByExperience(e, opts.exp) &&
+    !(e.patterns || []).some(p => banned.has(p))
+  );
+  if (pool.length === 0) return [];
+  // prefer curated coaching entries, keep variety by shuffling within each tier
+  const builtin = pool.filter(e => e.source === 'builtin').sort(() => Math.random() - 0.5);
+  const web = pool.filter(e => e.source !== 'builtin').sort(() => Math.random() - 0.5);
+  const ordered = [...builtin, ...web];
+  const picked = [];
+  dayMuscles.forEach(m => {
+    if (picked.length >= count) return;
+    const ex = ordered.find(e => e.muscle === m && !picked.includes(e));
+    if (ex) picked.push(ex);
+  });
+  ordered.forEach(e => { if (picked.length < count && !picked.includes(e)) picked.push(e); });
+  return picked.slice(0, count);
+}
+function generateWeeklyPlan() {
+  if (genEquip.length === 0) { showToast('Pick at least one piece of equipment', 'error'); return; }
+  if (selectedMuscles.length === 0) { showToast('Select at least one muscle group', 'error'); return; }
+  const T = parseInt(document.getElementById('genTrainDays').value, 10);
+  const R = parseInt(document.getElementById('genRestDays').value, 10);
+  const count = parseInt(document.getElementById('genCount').value, 10);
+  const goal = document.getElementById('genGoal').value;
+  const exp = document.getElementById('genExp').value;
+  generatedMeta = { goal, exp, injuries: genInjuries.slice(), equip: genEquip.slice() };
+  const split = buildSplit(selectedMuscles, T);
+  if (split.length === 0) { showToast('No muscles selected', 'error'); return; }
+  const training = split.map(d => ({
+    label: d.label,
+    muscles: d.muscles,
+    exercises: pickDayExercises(d.muscles, count, genEquip, { exp, injuries: generatedMeta.injuries })
+  }));
+  if (training.every(d => d.exercises.length === 0)) {
+    showToast('No exercises fit this equipment + limitations — loosen the filters', 'error'); return;
+  }
+  const seq = interleaveCycle(T, R);
+  let ti = 0;
+  generatedPlan = seq.map(slot => slot === 'train'
+    ? Object.assign({type: 'train'}, training[ti++])
+    : {type: 'rest'});
+  renderPlanResult();
+}
+function renderPlanResult() {
+  if (generatedPlan.length === 0) return;
+  const T = generatedPlan.filter(d => d.type === 'train').length;
+  const R = generatedPlan.length - T;
+  const meta = generatedMeta || {};
+  const scheme = GOAL_SCHEME[meta.goal] || GOAL_SCHEME.hypertrophy;
+  const equipNames = (meta.equip || genEquip).map(id => EQUIP_LABELS[id] || id).join(' + ');
+  const injNames = (meta.injuries || []).map(i => INJURY_LABELS[i] || i);
+  let html = `<div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.06em;margin-bottom:10px;color:var(--text)">Your <span style="color:var(--gold)">Plan</span></div>`;
+  html += `<div class="plan-summary">${scheme.label} · ${genCap(meta.exp || '')} · ${generatedPlan.length}-day cycle (${T} training / ${R} rest)<br>${scheme.sets} sets × ${scheme.reps} reps · ${scheme.rest} rest · equipment: ${esc(equipNames)}${injNames.length ? '<br>avoiding: ' + esc(injNames.join(', ')) : ''}</div>`;
+  generatedPlan.forEach((d, i) => {
+    if (d.type === 'rest') {
+      html += `<div class="plan-day rest"><div class="plan-day-hdr"><div class="plan-day-num">Day ${i+1}</div><div class="plan-day-label">Rest Day</div><div class="plan-day-cat">Recovery</div></div></div>`;
+      return;
+    }
+    html += `<div class="plan-day"><div class="plan-day-hdr"><div class="plan-day-num">Day ${i+1}</div><div class="plan-day-label">${esc(d.label)}</div><div class="plan-day-cat">${d.exercises.length} exercises</div></div>`;
+    if (d.exercises.length === 0) {
+      html += `<div class="plan-rest-msg">No matching exercises for these muscles with the current filters.</div>`;
+    } else {
+      d.exercises.forEach(ex => {
+        html += `<div class="plan-ex"><span>${esc(ex.name)}</span><span class="pe-m">${esc(ex.muscle)} · ${esc(EQUIP_LABELS[ex.equip] || ex.equip)}</span></div>`;
+      });
+    }
+    html += `</div>`;
+  });
+  html += `<div class="gen-actions">
+    <button class="btn btn-gold" onclick="savePlan()">💾 Save as Program</button>
+    <button class="btn btn-outline" onclick="generateWeeklyPlan()">🎲 Regenerate</button>
+    <button class="btn btn-ghost" onclick="discardGenerated()">Discard</button>
+  </div>`;
+  document.getElementById('genResult').innerHTML = html;
+}
+function makePlanSets(ex, goal, exp) {
+  const sc = GOAL_SCHEME[goal] || GOAL_SCHEME.hypertrophy;
+  const n = Math.max(2, Math.min(6, sc.sets + (exp === 'beginner' ? -1 : exp === 'advanced' ? 1 : 0)));
+  const weight = ex.equip === 'bodyweight' ? 'BW' : '—';
+  return Array.from({length: n}, () => ({ reps: sc.reps, weight, rpe: '8' }));
+}
+function savePlan() {
+  if (generatedPlan.length === 0) return;
+  const name = prompt('Name this plan:', 'My Weekly Plan');
+  if (!name) return;
+  const meta = generatedMeta || {};
+  const scheme = GOAL_SCHEME[meta.goal] || GOAL_SCHEME.hypertrophy;
+  const days = generatedPlan.map((d, i) => {
+    if (d.type === 'rest') {
+      return {name: 'Rest Day', shortName: `Day ${i+1}`, rest: true, warmup: [], blocks: []};
+    }
+    const exs = d.exercises.map((ex, idx) => ({
+      id: ex.id,
+      label: String.fromCharCode(65 + idx),
+      name: ex.name,
+      muscle: ex.muscle,
+      sets: makePlanSets(ex, meta.goal, meta.exp),
+      note: ex.cue || (ex.how ? ex.how.slice(0, 220) : ''),
+      alt: ''
+    }));
+    return {
+      name: d.label,
+      shortName: `Day ${i+1}`,
+      warmup: ['5 min light cardio or movement prep','Dynamic stretches for the day\'s muscles'],
+      blocks: exs.length > 0 ? [{tag:'Main Work', title:d.label, rest:`${scheme.rest} between sets`, exercises:exs}] : []
+    };
+  });
+  const desc = `${scheme.label} · ${genCap(meta.exp || '')} · generated plan`;
+  const prog = { id: 'plan_' + Date.now(), name, desc, days };
+  const progs = getPrograms();
+  progs.push(prog);
+  savePrograms(progs);
+  document.getElementById('genResult').innerHTML = '';
+  generatedPlan = []; generatedMeta = null;
+  showToast('Plan saved to Programs!', 'success');
+  showScreen('programs');
+}
+function discardGenerated() {
+  generatedPlan = [];
+  document.getElementById('genResult').innerHTML = '';
+}
+// ─────────────────────────────────────────────
+// HISTORY + PROGRESS
+// ─────────────────────────────────────────────
+function renderHistory() {
+  renderProgressPanel();
+  const hist = getHistory();
+  const list = document.getElementById('historyList');
+  if (hist.length === 0) {
+    list.innerHTML = '<div class="history-empty">No sessions logged yet. Complete a session in the Tracker to see it here.</div>';
+    return;
+  }
+  let html = '';
+  hist.forEach((entry, idx) => {
+    let summary = '';
+    const prog = getProgramById(entry.progId);
+    if (prog && prog.days[entry.dayIdx]) {
+      const day = prog.days[entry.dayIdx];
+      day.blocks.forEach(b => b.exercises.forEach(ex => {
+        if (!ex.superset) {
+          const actuals = ex.sets.map((s,si) => { const v = entry.log[`${ex.id}_${si}`]; return (v && String(v).trim()) ? String(v).trim() : null; }).filter(Boolean);
+          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(ex.name)}:</strong> ${esc(actuals.join(', '))}<br>`;
+        }
+      }));
+    }
+    html += `<div class="history-entry">
+      <div class="history-entry-hdr">
+        <div><div class="history-day-name">${esc(entry.dayName)}</div><div style="font-size:10px;color:var(--text-muted);margin-top:1px">${esc(entry.progName)}</div></div>
+        <div class="history-date">${esc(entry.date)}</div>
+      </div>
+      <div class="history-entry-body">${summary || 'No weights logged.'}</div>
+      <div class="history-entry-acts">
+        <button class="btn btn-ghost" onclick="exportHistoryPDF(${idx})">⬇ Export PDF</button>
+        <button class="btn btn-red" onclick="deleteHistoryEntry(${idx})">✕ Delete</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+// Build { exId: {name, points:[{ts,top,date}]} } from numeric history data, chronological
+function buildProgressData() {
+  const hist = getHistory().slice().sort((a,b) => a.ts - b.ts);
+  const map = {};
+  hist.forEach(entry => {
+    const prog = getProgramById(entry.progId);
+    if (!prog || !prog.days[entry.dayIdx]) return;
+    prog.days[entry.dayIdx].blocks.forEach(b => b.exercises.forEach(ex => {
+      if (ex.superset) return;
+      let top = null;
+      ex.sets.forEach((s, si) => { const v = parseNum(entry.log[`${ex.id}_${si}`]); if (v != null) top = (top == null) ? v : Math.max(top, v); });
+      if (top != null) {
+        if (!map[ex.id]) map[ex.id] = {name: ex.name, points: []};
+        map[ex.id].points.push({ts: entry.ts, top, date: entry.date});
+      }
+    }));
+  });
+  return map;
+}
+function renderProgressPanel() {
+  const map = buildProgressData();
+  const ids = Object.keys(map).filter(id => map[id].points.length >= 1);
+  const panel = document.getElementById('progressPanel');
+  if (ids.length === 0) { panel.innerHTML = ''; return; }
+  ids.sort((a,b) => map[a].name.localeCompare(map[b].name));
+  const sel = (chartExId && ids.includes(chartExId)) ? chartExId : ids[0];
+  chartExId = sel;
+  const opts = ids.map(id => `<option value="${id}" ${id===sel?'selected':''}>${esc(map[id].name)} (${map[id].points.length})</option>`).join('');
+  panel.innerHTML = `<div class="progress-panel">
+    <div class="pp-head">
+      <div class="pp-title">📈 Top-Set <span>Progress</span></div>
+      <select class="filter-select" id="chartExercise" onchange="onChartSelect()">${opts}</select>
+    </div>
+    <canvas id="progChart"></canvas>
+    <div class="pp-hint" id="ppHint"></div>
+  </div>`;
+  renderChart();
+}
+function onChartSelect() {
+  chartExId = document.getElementById('chartExercise').value;
+  renderChart();
+}
+function renderChart() {
+  const canvas = document.getElementById('progChart');
+  if (!canvas) return;
+  const map = buildProgressData();
+  const data = map[chartExId];
+  drawLineChart(canvas, data ? data.points : []);
+}
+function drawLineChart(canvas, points) {
+  const hint = document.getElementById('ppHint');
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || 300;
+  const cssH = 180;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+  if (!points || points.length === 0) { if (hint) hint.textContent = 'No numeric data yet — log some weights to see your trend.'; return; }
+  const padL = 38, padR = 14, padT = 14, padB = 24;
+  const plotW = cssW - padL - padR, plotH = cssH - padT - padB;
+  const vals = points.map(p => p.top);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { min -= 5; max += 5; }
+  const padV = (max - min) * 0.12; min -= padV; max += padV;
+  const n = points.length;
+  const xAt = i => n === 1 ? padL + plotW/2 : padL + (plotW * i/(n-1));
+  const yAt = v => padT + plotH * (1 - (v - min)/(max - min));
+  // grid + y labels
+  ctx.strokeStyle = '#2C2C2C'; ctx.fillStyle = '#888'; ctx.font = '9px monospace'; ctx.lineWidth = 1; ctx.textAlign = 'left';
+  for (let g = 0; g <= 3; g++) {
+    const val = min + (max - min) * g/3, yy = yAt(val);
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(cssW - padR, yy); ctx.stroke();
+    ctx.fillText(String(Math.round(val)), 4, yy + 3);
+  }
+  // area + line
+  ctx.beginPath();
+  points.forEach((p, i) => { const xx = xAt(i), yy = yAt(p.top); if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy); });
+  ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.lineTo(xAt(n-1), padT + plotH); ctx.lineTo(xAt(0), padT + plotH); ctx.closePath();
+  ctx.fillStyle = 'rgba(201,168,76,0.08)'; ctx.fill();
+  // points
+  ctx.fillStyle = '#E8C96A';
+  points.forEach((p, i) => { const xx = xAt(i), yy = yAt(p.top); ctx.beginPath(); ctx.arc(xx, yy, 3, 0, Math.PI*2); ctx.fill(); });
+  // x labels
+  const fmt = ts => { const d = new Date(ts); return (d.getMonth()+1) + '/' + d.getDate(); };
+  ctx.fillStyle = '#888'; ctx.font = '8px monospace';
+  if (n === 1) { ctx.textAlign = 'center'; ctx.fillText(fmt(points[0].ts), xAt(0), cssH - 8); }
+  else { ctx.textAlign = 'left'; ctx.fillText(fmt(points[0].ts), padL, cssH - 8); ctx.textAlign = 'right'; ctx.fillText(fmt(points[n-1].ts), cssW - padR, cssH - 8); }
+  ctx.textAlign = 'left';
+  // hint text
+  if (hint) {
+    const first = vals[0], lastV = vals[n-1], diff = Math.round((lastV - first) * 10) / 10;
+    if (n < 2) hint.textContent = `Top set: ${lastV}. Log another session to see your trend.`;
+    else {
+      const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '■');
+      hint.textContent = `${arrow} ${diff > 0 ? '+' : ''}${diff} on your top set across ${n} sessions  (${first} → ${lastV}).`;
+    }
+  }
+}
+function deleteHistoryEntry(idx) {
+  if (!confirm('Delete this session record?')) return;
+  const hist = getHistory();
+  hist.splice(idx, 1);
+  saveHistory(hist);
+  renderHistory();
+}
+// ─────────────────────────────────────────────
+// REST TIMER
+// ─────────────────────────────────────────────
+let restInterval = null, restRemaining = 0, restPaused = false;
+function startRest(seconds) {
+  restRemaining = Math.max(1, Math.round(seconds || 90));
+  restPaused = false;
+  const t = document.getElementById('restTimer');
+  if (t) { t.classList.add('show'); t.classList.remove('ending'); }
+  updatePauseBtn();
+  runRest();
+}
+function runRest() {
+  clearInterval(restInterval);
+  updateRestDisplay();
+  restInterval = setInterval(() => {
+    if (restPaused) return;
+    restRemaining--;
+    updateRestDisplay();
+    const t = document.getElementById('restTimer');
+    if (restRemaining <= 5 && restRemaining > 0 && t) t.classList.add('ending');
+    if (restRemaining <= 0) { clearInterval(restInterval); restInterval = null; restDone(); }
+  }, 1000);
+}
+function updateRestDisplay() {
+  const r = Math.max(restRemaining, 0);
+  const m = Math.floor(r / 60), s = r % 60;
+  const d = document.getElementById('rtDisplay');
+  if (d) d.textContent = m + ':' + String(s).padStart(2, '0');
+}
+function togglePause() {
+  if (restRemaining <= 0) { startRest(90); return; }
+  restPaused = !restPaused;
+  updatePauseBtn();
+}
+function updatePauseBtn() {
+  const b = document.getElementById('rtPause');
+  if (b) b.textContent = restPaused ? '▶' : '❚❚';
+}
+function addRest(sec) {
+  restRemaining = Math.max(0, restRemaining + sec);
+  const t = document.getElementById('restTimer');
+  if (t) { t.classList.add('show'); t.classList.remove('ending'); }
+  if (!restInterval && restRemaining > 0) { restPaused = false; updatePauseBtn(); runRest(); }
+  updateRestDisplay();
+}
+function closeRest() {
+  clearInterval(restInterval); restInterval = null; restRemaining = 0; restPaused = false;
+  const t = document.getElementById('restTimer');
+  if (t) t.classList.remove('show', 'ending');
+}
+function restDone() {
+  const d = document.getElementById('rtDisplay');
+  if (d) d.textContent = 'GO';
+  beep();
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  showToast('Rest complete — next set', 'success');
+  setTimeout(() => {
+    if (restRemaining <= 0) {
+      const t = document.getElementById('restTimer');
+      if (t) t.classList.remove('show', 'ending');
+    }
+  }, 2500);
+}
+function beep() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ac = new AC();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.001, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3, ac.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.4);
+    o.start(); o.stop(ac.currentTime + 0.45);
+  } catch (e) {}
+}
+// ─────────────────────────────────────────────
+// PDF EXPORT
+// ─────────────────────────────────────────────
+function exportPDF(entryOverride) {
+  const { jsPDF } = window.jspdf || {};
+  if (!jsPDF) { showToast('PDF library loading...', ''); return; }
+  let prog, day, log, dateStr;
+  if (entryOverride) {
+    const p = getProgramById(entryOverride.progId) || ARNOLD_PROGRAM;
+    prog = p; day = p.days[entryOverride.dayIdx]; log = entryOverride.log;
+    dateStr = entryOverride.date;
+  } else {
+    prog = getActiveProgram(); day = prog.days[currentDayIdx]; log = sessionLog;
+    dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  }
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W = 210, margin = 16, colW = W - margin*2;
+  let y = 0;
+  const addPage = () => { doc.addPage(); y = 16; };
+  const checkY = n => { if (y + n > 275) addPage(); };
+  doc.setFillColor(10,10,10); doc.rect(0,0,W,36,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(201,168,76);
+  doc.text((prog.name || 'Workout').toUpperCase(), margin, 14);
+  doc.setFontSize(10); doc.setTextColor(180,180,180);
+  doc.text(day.name.toUpperCase(), margin, 21);
+  doc.setFontSize(8); doc.setTextColor(120,120,120);
+  doc.text(dateStr, margin, 28);
+  doc.text('Golden Era', W-margin, 28, {align:'right'});
+  doc.setDrawColor(201,168,76); doc.setLineWidth(0.5); doc.line(margin,33,W-margin,33);
+  y = 42;
+  if (day.warmup?.length) {
+    doc.setFillColor(20,30,45); doc.rect(margin,y,colW,6,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(100,160,220);
+    doc.text('WARM-UP', margin+3, y+4); y += 8;
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(140,140,140);
+    day.warmup.forEach(w => { doc.text(`— ${w}`, margin+3, y); y += 4.5; });
+    y += 3;
+  }
+  day.blocks.forEach(block => {
+    checkY(18);
+    doc.setFillColor(25,25,25); doc.rect(margin,y,colW,7,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(201,168,76);
+    doc.text(block.tag.toUpperCase(), margin+3, y+5);
+    doc.setTextColor(220,220,220); doc.setFontSize(8);
+    doc.text(block.title, margin+65, y+5);
+    y += 9;
+    block.exercises.forEach(ex => {
+      if (ex.superset) {
+        checkY(6);
+        doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(150,120,60);
+        doc.setLineDash([2,2]); doc.setDrawColor(90,72,32); doc.setLineWidth(0.3);
+        doc.line(margin+10,y+2,W-margin-10,y+2); doc.setLineDash([]);
+        doc.text('SUPERSET', W/2, y+2, {align:'center'}); y += 6; return;
+      }
+      checkY(14);
+      doc.setFillColor(30,30,30); doc.rect(margin,y,colW,6,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(235,235,235);
+      doc.text(`${ex.label} — ${ex.name}`, margin+3, y+4.3);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,100,100);
+      doc.text(ex.muscle, W-margin-3, y+4.3, {align:'right'});
+      y += 7;
+      const c1=margin+4,c2=margin+26,c3=margin+76,c4=margin+130;
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(100,100,100);
+      doc.text('SET',c1,y); doc.text('REPS',c2,y); doc.text('PRESCRIBED',c3,y); doc.text('ACTUAL USED',c4,y);
+      y+=1; doc.setDrawColor(50,50,50); doc.setLineWidth(0.2); doc.line(margin,y,W-margin,y); y+=4;
+      ex.sets.forEach((s,si) => {
+        checkY(7);
+        const key=`${ex.id}_${si}`; const actual=(log[key]&&typeof log[key]==='string')?log[key]:'—';
+        if(si%2===0){doc.setFillColor(18,18,18);doc.rect(margin,y-3,colW,6,'F');}
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,100); doc.text(String(si+1),c1,y);
+        doc.setTextColor(200,200,200); doc.text(s.reps,c2,y); doc.text(s.weight,c3,y);
+        if(actual!=='—'&&actual.trim()){doc.setFont('helvetica','bold');doc.setTextColor(46,204,113);doc.text(actual,c4,y);}
+        else{doc.setTextColor(70,70,70);doc.text('—',c4,y);}
+        y+=6;
+      });
+      const nk=`${ex.id}_notes`; const notes=log[nk];
+      if(notes&&notes.trim()){checkY(8);doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(130,130,130);const lines=doc.splitTextToSize(`Notes: ${notes}`,colW-6);lines.forEach(l=>{checkY(5);doc.text(l,margin+3,y);y+=4.5;});}
+      y+=4;
+    });
+    y+=3;
+  });
+  const pages=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pages;i++){
+    doc.setPage(i); doc.setDrawColor(50,50,50); doc.setLineWidth(0.3); doc.line(margin,285,W-margin,285);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(80,80,80);
+    doc.text(`Golden Era · ${day.name} · ${dateStr}`,margin,290);
+    doc.text(`${i}/${pages}`,W-margin,290,{align:'right'});
+  }
+  const fn = `GoldenEra_${day.name.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(fn);
+  showToast('PDF downloaded ✓','success');
+}
+function exportHistoryPDF(idx) {
+  const hist = getHistory();
+  if (hist[idx]) exportPDF(hist[idx]);
+}
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+let toastTimer;
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type}`; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+activeProgramId = getActiveProgramId();
+sessionLog = getSessionLog(activeProgramId, 0);
+renderPrograms();
+window.addEventListener('resize', () => { if (currentScreen === 'history') renderChart(); });
+// Kick off the aggregating data layer: load cache, then sync from the web in the background.
+loadExerciseData();
+</script>
+<script>
+// Register the service worker (enables offline use + installability when hosted over https/localhost)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
