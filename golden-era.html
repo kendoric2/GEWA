@@ -62,6 +62,11 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .pc-badge{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);background:var(--gold-bg);border:1px solid var(--gold-dim);padding:2px 8px;border-radius:2px;text-transform:uppercase;white-space:nowrap;}
 .pc-active-badge{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--black);background:var(--gold);padding:2px 8px;border-radius:2px;text-transform:uppercase;}
 .pc-actions{display:flex;gap:6px;padding:8px 16px;border-top:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;}
+.var-toggle{display:flex;align-items:center;gap:6px;padding:8px 16px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.var-lbl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-right:2px;}
+.var-pill{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.05em;padding:5px 12px;border-radius:14px;border:1px solid var(--border-light);background:var(--surface3);color:var(--text-muted);cursor:pointer;transition:.15s;}
+.var-pill:hover{color:var(--text);border-color:var(--text-muted);}
+.var-pill.on{background:var(--gold);border-color:var(--gold);color:var(--black);font-weight:700;}
 /* CREATE BUTTONS */
 .create-row{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
 /* DATA / BACKUP */
@@ -1125,7 +1130,68 @@ const OLDSCHOOL_VOLUME = {
 };
 // Built-in program registry (the Programs screen renders these in order)
 const BUILTIN_PROGRAMS = [ARNOLD_PROGRAM, MASS_POWER, OLYMPIA_SPLIT, CLASSIC_PPL, OLDSCHOOL_VOLUME];
-function getBuiltinProgram(id){ return BUILTIN_PROGRAMS.find(p => p.id === id) || null; }
+// ── PROGRAM VARIANTS ──
+// Each built-in has two versions, swapped at render time via a central name map.
+// The 4 full-equipment programs get an Original ⇄ Dumbbell-only toggle; Golden Era
+// (already dumbbell) gets the reverse: Dumbbell ⇄ Barbell. Each variant is its own
+// id ('mass_power' vs 'mass_power#1') so they track history/PRs separately.
+ARNOLD_PROGRAM.variants = ['Dumbbell','Barbell']; ARNOLD_PROGRAM.swapKind = 'toBB';
+[MASS_POWER, OLYMPIA_SPLIT, CLASSIC_PPL, OLDSCHOOL_VOLUME].forEach(p => { p.variants = ['Original','Dumbbell']; p.swapKind = 'toDB'; });
+const SWAP_MAPS = {
+  toDB: {
+    'Deadlift':'Dumbbell Romanian Deadlift', 'Barbell Row':'Dumbbell Bent-Over Row', 'Bent-Over Row':'Dumbbell Bent-Over Row',
+    'Lat Pulldown':'Single-Arm Dumbbell Row', 'Weighted Pull-Up':'Single-Arm Dumbbell Row', 'Seated Cable Row':'Chest-Supported Dumbbell Row',
+    'Cable Row':'Chest-Supported Dumbbell Row', 'Chest-Supported Row':'Chest-Supported Dumbbell Row', 'Straight-Arm Pulldown':'Dumbbell Pullover',
+    'Barbell Curl':'Dumbbell Bicep Curl', 'EZ-Bar Curl':'Dumbbell Bicep Curl', 'Cable Curl':'Hammer Curl',
+    'Back Squat':'Dumbbell Goblet Squat', 'Leg Press':'Dumbbell Bulgarian Split Squat', 'Leg Extension':'Dumbbell Step-Ups',
+    'Lying Leg Curl':'Dumbbell Stiff-Leg Deadlift', 'Romanian Deadlift':'Dumbbell Romanian Deadlift',
+    'Standing Calf Raise':'Dumbbell Calf Raises', 'Seated Calf Raise':'Seated Dumbbell Calf Raise',
+    'Barbell Bench Press':'Dumbbell Bench Press', 'Incline Barbell Press':'Incline Dumbbell Press',
+    'Cable Fly':'Dumbbell Flye', 'Cable Crossover':'Dumbbell Flye', 'Chest Dip':'Decline Dumbbell Press',
+    'Close-Grip Bench Press':'Close-Grip Dumbbell Press', 'Rope Pushdown':'Overhead Dumbbell Extension',
+    'Triceps Pushdown':'Overhead Dumbbell Extension', 'Overhead Cable Extension':'Overhead Dumbbell Extension',
+    'Skull Crusher':'Dumbbell Skull Crushers', 'Overhead Press':'Seated Dumbbell Press', 'Barbell Shrug':'Dumbbell Shrug',
+    'Upright Row':'Dumbbell Upright Row', 'Lateral Raise':'Dumbbell Lateral Raise', 'Walking Lunge':'Walking Dumbbell Lunges'
+  },
+  toBB: {
+    'Dumbbell Bench Press':'Barbell Bench Press', 'Dumbbell Bent-Over Row':'Barbell Row', 'Incline Dumbbell Press':'Incline Barbell Press',
+    'Dumbbell Pullover':'Straight-Arm Pulldown', 'Dumbbell Chest Flyes':'Cable Fly', 'Decline Push-Ups':'Chest Dip',
+    'Seated Arnold Press':'Barbell Overhead Press', 'Dumbbell Lateral Raises':'Cable Lateral Raise', 'Bent-Over Rear Delt Flyes':'Reverse Pec Deck',
+    'Dumbbell Bicep Curl':'Barbell Curl', 'Incline Dumbbell Curl':'EZ-Bar Curl', 'Dumbbell Skull Crushers':'EZ-Bar Skull Crusher',
+    'Concentration Curls':'Cable Curl', 'Dumbbell Goblet Squat':'Back Squat', 'Romanian Deadlift':'Barbell Romanian Deadlift',
+    'Walking Dumbbell Lunges':'Barbell Lunge', 'Dumbbell Step-Ups':'Barbell Step-Up', 'Dumbbell Calf Raises':'Standing Calf Raise'
+  }
+};
+function swapName(name, kind){
+  const m = String(name).match(/^(.*?)(\s*\([^)]*\))?\s*$/);
+  const baseN = (m && m[1]) ? m[1].trim() : name;
+  let suffix = (m && m[2]) ? m[2] : '';
+  if (/\b(db|dumbbell|barbell|bb|ez)\b/i.test(suffix)) suffix = ''; // drop equipment tags like "(DB)"
+  const repl = (SWAP_MAPS[kind] || {})[baseN];
+  return repl ? (repl + suffix) : name;
+}
+function parseProgId(id){ const i = String(id).indexOf('#'); return i < 0 ? {base: id, v: 0} : {base: String(id).slice(0, i), v: parseInt(String(id).slice(i+1), 10) || 0}; }
+function programVariant(prog, v, fullId){
+  const id = fullId || prog.id;
+  if (!prog.variants || v === 0) return Object.assign({}, prog, {id});
+  const kind = prog.swapKind;
+  const days = prog.days.map(d => Object.assign({}, d, {
+    blocks: d.blocks.map(b => Object.assign({}, b, {
+      exercises: b.exercises.map(ex => {
+        if (ex.superset) return ex;
+        const nm = swapName(ex.name, kind);
+        return nm === ex.name ? ex : Object.assign({}, ex, {name: nm});
+      })
+    }))
+  }));
+  return Object.assign({}, prog, {id, name: prog.name + ' · ' + (prog.variants[v] || ''), days});
+}
+function getBuiltinProgram(id){
+  const {base, v} = parseProgId(id);
+  const p = BUILTIN_PROGRAMS.find(x => x.id === base);
+  return p ? programVariant(p, v, id) : null;
+}
+function openProgram(base){ const ap = parseProgId(getActiveProgramId()); if (ap.base !== base) activateProgram(base); showScreen('tracker'); }
 // ─────────────────────────────────────────────
 // STATE & STORAGE
 // ─────────────────────────────────────────────
@@ -1303,19 +1369,26 @@ function renderPrograms() {
   const userProgs = getPrograms();
   const active = getActiveProgramId();
   let html = '';
+  const ap = parseProgId(active);
   BUILTIN_PROGRAMS.forEach(prog => {
-    const isActive = active === prog.id;
-    html += `<div class="program-card ${isActive?'active-program':''}">
+    const isActiveProg = ap.base === prog.id;
+    const variants = prog.variants || ['Original'];
+    const pills = variants.map((lab, vi) => {
+      const fullId = vi === 0 ? prog.id : prog.id + '#' + vi;
+      const on = (isActiveProg && ap.v === vi) ? 'on' : '';
+      return `<button class="var-pill ${on}" onclick="activateProgram('${fullId}')">${esc(lab)}</button>`;
+    }).join('');
+    html += `<div class="program-card ${isActiveProg?'active-program':''}">
       <div class="pc-header">
         <div class="pc-info">
           <div class="pc-name">${esc(prog.name)}</div>
           <div class="pc-meta">${esc(prog.meta || (prog.days.length + '-day'))}</div>
         </div>
-        ${isActive ? '<div class="pc-active-badge">Active</div>' : '<div class="pc-badge">Built-in</div>'}
+        ${isActiveProg ? '<div class="pc-active-badge">Active</div>' : '<div class="pc-badge">Built-in</div>'}
       </div>
+      ${variants.length > 1 ? `<div class="var-toggle"><span class="var-lbl">Version</span>${pills}</div>` : ''}
       <div class="pc-actions">
-        ${!isActive ? `<button class="btn btn-gold btn-sm" onclick="activateProgram('${prog.id}')">Set Active</button>` : ''}
-        <button class="btn btn-outline btn-sm" onclick="activateProgram('${prog.id}');showScreen('tracker')">Open Tracker</button>
+        <button class="btn btn-outline btn-sm" onclick="openProgram('${prog.id}')">Open Tracker</button>
       </div>
     </div>`;
   });
