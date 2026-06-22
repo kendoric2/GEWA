@@ -166,6 +166,7 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .stp-input{flex:1;min-width:0;width:100%;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);background:var(--surface3);border:1px solid var(--border-light);border-radius:4px;outline:none;height:30px;padding:0 2px;-webkit-appearance:none;}
 .stp-input:focus{border-color:var(--gold);background:var(--surface2);}
 .stp-input::placeholder{color:var(--text-dim);}
+.set-bw{display:flex;align-items:center;justify-content:center;height:30px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;color:var(--text-dim);background:var(--surface2);border:1px dashed var(--border-light);border-radius:4px;}
 .set-done{width:32px;height:30px;border-radius:4px;border:1px solid var(--border-light);background:var(--surface3);color:var(--text-dim);font-size:14px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;}
 .set-done.on{background:var(--green);border-color:var(--green);color:var(--black);font-weight:700;}
 .set-row2.done .set-n{color:var(--green);}
@@ -1334,6 +1335,10 @@ function recordExercise(name, rawSets){
   return {pr:isPR};
 }
 // progression suggestion for an exercise given its prescribed reps
+// Bodyweight moves hide the weight field — but loadable ones (dips, pull/chin-ups) keep an optional one.
+const BW_LOADABLE = /\b(dips?|pull-?ups?|chin-?ups?|muscle-?ups?)\b/i;
+function exIsBwPrescribed(ex){ return ex.sets && ex.sets.length && ex.sets.every(s => /^\s*bw\s*$/i.test(String(s.weight))); }
+function exHideWeight(ex){ return exIsBwPrescribed(ex) && !BW_LOADABLE.test(ex.name || '') && !/dumbbell|barbell|machine|cable|kettlebell/i.test(ex.name || ''); }
 function suggestProgression(ex){
   const rec = exRecord(ex.name);
   if(!rec || !rec.sets || !rec.sets.length) return {first:true};
@@ -1756,10 +1761,18 @@ function renderTrackerDay() {
       // after the second (or any non-superset exercise) it's the full block rest.
       const ssNext = block.exercises[exIdx + 1];
       const restSec = (ssNext && ssNext.superset) ? 30 : parseRest(block.rest);
-      html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>reps</span><span>weight (${unitLabel()})</span><span></span></div>`;
+      const hideW = exHideWeight(ex);
+      html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>reps</span><span>${hideW ? 'bodyweight' : 'weight (' + esc(unitLabel()) + ')'}</span><span></span></div>`;
       ex.sets.forEach((s, si) => {
         const cur = curSet(ex.id, si);
         const rowFilled = (cur.done || cur.w != null || cur.r != null) ? 'done' : '';
+        const weightCell = hideW
+          ? `<div class="set-bw">BW</div>`
+          : `<div class="stepper">
+            <button class="stp-btn" onclick="stepW('${ex.id}',${si},-${WEIGHT_STEP})" tabindex="-1">−</button>
+            <input class="stp-input" id="w_${ex.id}_${si}" inputmode="decimal" placeholder="–" value="${dispNum(cur.w)}" data-k="${ex.id}|${si}" oninput="setWeightInput(this)">
+            <button class="stp-btn" onclick="stepW('${ex.id}',${si},${WEIGHT_STEP})" tabindex="-1">+</button>
+          </div>`;
         html += `<div class="set-row2 ${rowFilled}" id="row_${ex.id}_${si}">
           <div class="set-n">${si+1}</div>
           <div class="set-presc">${esc(s.reps)}<span>${esc(s.weight)}</span></div>
@@ -1768,11 +1781,7 @@ function renderTrackerDay() {
             <input class="stp-input" id="r_${ex.id}_${si}" inputmode="numeric" placeholder="–" value="${cur.r!=null?cur.r:''}" data-k="${ex.id}|${si}" oninput="setRepInput(this)">
             <button class="stp-btn" onclick="stepR('${ex.id}',${si},1)" tabindex="-1">+</button>
           </div>
-          <div class="stepper">
-            <button class="stp-btn" onclick="stepW('${ex.id}',${si},-${WEIGHT_STEP})" tabindex="-1">−</button>
-            <input class="stp-input" id="w_${ex.id}_${si}" inputmode="decimal" placeholder="–" value="${dispNum(cur.w)}" data-k="${ex.id}|${si}" oninput="setWeightInput(this)">
-            <button class="stp-btn" onclick="stepW('${ex.id}',${si},${WEIGHT_STEP})" tabindex="-1">+</button>
-          </div>
+          ${weightCell}
           <button class="set-done ${cur.done?'on':''}" id="d_${ex.id}_${si}" onclick="toggleDone('${ex.id}',${si},${restSec})" title="Mark set done">✓</button>
         </div>`;
       });
