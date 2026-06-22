@@ -1,8 +1,10 @@
 /* Golden Era — service worker
    Precaches the app shell for offline launch and runtime-caches the CDN
    resources (fonts, jsPDF, the exercise dataset) so the app works offline
-   after the first online visit. Bump CACHE to ship an update. */
-const CACHE = 'golden-era-v1';
+   after the first online visit. The page is network-first, so installed apps
+   auto-update on the next online launch — no version bump needed for content
+   changes. (Still bump CACHE if you change this service worker or the shell.) */
+const CACHE = 'golden-era-v2';
 const SHELL = [
   './',
   './index.html',
@@ -35,7 +37,22 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Same-origin (the app shell): cache-first, fall back to network, then to index.html
+  // Page loads: NETWORK-FIRST so the installed app grabs the latest version on
+  // every online launch, falling back to the cached shell when offline.
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put('./index.html', copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match('./index.html').then(c => c || caches.match('./')))
+    );
+    return;
+  }
+
+  // Other same-origin assets (icons, manifest): cache-first.
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(req).then(cached => cached || fetch(req)
@@ -44,7 +61,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => undefined)
       )
     );
     return;
