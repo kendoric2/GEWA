@@ -1606,7 +1606,7 @@ function renderTrackerDay() {
   day.blocks.forEach(block => {
     const restBtn = block.rest ? `<button class="btn-rt-start" onclick="startRest(${parseRest(block.rest)})" title="Start rest timer">⏱</button>` : '';
     html += `<div class="block"><div class="block-hdr"><div class="block-tag">${esc(block.tag)}</div><div class="block-title">${esc(block.title)}</div>${block.rest?`<div class="block-rest"><span>🕐 ${esc(block.rest)}</span>${restBtn}</div>`:''}</div>`;
-    block.exercises.forEach(ex => {
+    block.exercises.forEach((ex, exIdx) => {
       if (ex.superset) { html += `<div class="ss-div"><div class="ss-line"></div><div class="ss-label">↕ Superset — 30 sec ↕</div><div class="ss-line"></div></div>`; return; }
       html += `<div class="exercise"><div class="ex-hdr"><div><div class="ex-name">${esc(ex.label)} — ${esc(ex.name)}</div><div class="ex-muscle-tag">${esc(ex.muscle)}</div></div><div class="ex-set-count">${ex.sets.length} SETS</div></div>`;
       const sug = suggestProgression(ex);
@@ -1617,7 +1617,10 @@ function renderTrackerDay() {
       } else if (sug.text) {
         html += `<div class="suggest">▲ ${esc(sug.text)}</div>`;
       }
-      const restSec = parseRest(block.rest);
+      // Superset timing: after the FIRST exercise of a pair, rest is the short 30s transition;
+      // after the second (or any non-superset exercise) it's the full block rest.
+      const ssNext = block.exercises[exIdx + 1];
+      const restSec = (ssNext && ssNext.superset) ? 30 : parseRest(block.rest);
       html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>reps</span><span>weight (${unitLabel()})</span><span></span></div>`;
       ex.sets.forEach((s, si) => {
         const cur = curSet(ex.id, si);
