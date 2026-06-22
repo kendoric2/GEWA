@@ -802,6 +802,7 @@ function presentEquip(){
 const ARNOLD_PROGRAM = {
   id: 'arnold_golden_era',
   name: 'The Golden Era Program',
+  meta: '6-day · Arnold-inspired · antagonist supersets',
   desc: 'Arnold-inspired 6-day hypertrophy split built on antagonist supersets, pyramid loading, and mind-muscle connection.',
   locked: true,
   days: [
@@ -889,6 +890,197 @@ const ARNOLD_PROGRAM = {
   ]
 };
 // ─────────────────────────────────────────────
+// MASS & POWER — Ronnie-style powerbuilding (heavy compound + high-volume back-off)
+// ─────────────────────────────────────────────
+const MASS_POWER = {
+  id: 'mass_power',
+  name: 'Mass & Power',
+  meta: '5-day · powerbuilding · heavy compounds + volume',
+  desc: 'Powerbuilding in the mass-monster mould: open every session with a heavy compound, then chase size with high-volume back-off work. Scaled to real working sets.',
+  locked: true,
+  days: [
+    { name: 'Back + Biceps', shortName: 'Day 1', warmup: ["5 min row or incline walk","Band pull-aparts — 2 × 20","Light lat pulldowns — 2 × 15"], blocks: [
+      {tag:'Block A · Heavy', title:'Strength Anchor', rest:'2–3 min', exercises:[
+        {id:'dl', label:'A', name:"Deadlift", muscle:"Back · Posterior Chain", sets:[{reps:'8',weight:'Moderate',rpe:'7'},{reps:'5',weight:'Heavy',rpe:'8'},{reps:'4',weight:'Heavy',rpe:'9'},{reps:'4',weight:'Heavy',rpe:'9'}], note:"Brace hard, neutral spine, drive the floor away. Leave the ego, keep the form.", alt:"Rack Pull"} ]},
+      {tag:'Block B · Volume', title:'Width & Thickness', rest:'90 sec', exercises:[
+        {id:'bbrow', label:'B', name:"Barbell Row", muscle:"Back · Thickness", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Hinge to 45°, pull to the waist, squeeze the lats.", alt:"Pendlay Row"},
+        {id:'pulldown', label:'C', name:"Lat Pulldown", muscle:"Back · Width", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Lead with the elbows, full stretch up top — chase the V-taper.", alt:"Pull-Up"} ]},
+      {tag:'Block C · Arms', title:'Biceps', rest:'60 sec', exercises:[
+        {id:'bbcurl', label:'D', name:"Barbell Curl", muscle:"Biceps", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Strict, no swing. Back work pre-fatigued them, so respect the load.", alt:"EZ-Bar Curl"},
+        {id:'hammer', label:'E', name:"Hammer Curl", muscle:"Biceps · Brachialis", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Neutral grip for thickness. Last set, drop and rep to failure.", alt:"Incline Dumbbell Curl"} ]} ] },
+    { name: 'Legs', shortName: 'Day 2', warmup: ["5 min bike","Bodyweight squats — 2 × 15","Leg swings — 10 each way","Walking lunges — 1 × 10"], blocks: [
+      {tag:'Block A · Heavy', title:'Squat', rest:'2–3 min', exercises:[
+        {id:'squat', label:'A', name:"Back Squat", muscle:"Quads · Glutes", sets:[{reps:'8',weight:'Moderate',rpe:'7'},{reps:'6',weight:'Heavy',rpe:'8'},{reps:'5',weight:'Heavy',rpe:'9'},{reps:'5',weight:'Heavy',rpe:'9'}], note:"Chest up, knees track over toes, drive through mid-foot.", alt:"Dumbbell Goblet Squat"} ]},
+      {tag:'Block B · Volume', title:'Quads + Posterior', rest:'90 sec', exercises:[
+        {id:'legpress', label:'B', name:"Leg Press", muscle:"Quads", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Controlled depth, no locking out hard at the top.", alt:"Hack Squat"},
+        {id:'rdl', label:'C', name:"Romanian Deadlift", muscle:"Hamstrings · Glutes", sets:[{reps:'10',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Moderate',rpe:'8'}], note:"Push the hips back, feel the hamstring stretch, flat back.", alt:"Lying Leg Curl"} ]},
+      {tag:'Block C · Finisher', title:'Calves', rest:'45 sec', exercises:[
+        {id:'calf', label:'D', name:"Standing Calf Raise", muscle:"Calves", sets:[{reps:'15',weight:'Heavy',rpe:'8'},{reps:'15',weight:'Heavy',rpe:'8'},{reps:'20',weight:'Moderate',rpe:'9'}], note:"Full stretch at the bottom, hard squeeze and pause at the top.", alt:"Seated Calf Raise"} ]} ] },
+    { name: 'Chest + Triceps', shortName: 'Day 3', warmup: ["Arm circles — 30 sec each way","Band pull-aparts — 2 × 20","Light push-ups — 1 × 15"], blocks: [
+      {tag:'Block A · Heavy', title:'Bench', rest:'2–3 min', exercises:[
+        {id:'bench', label:'A', name:"Barbell Bench Press", muscle:"Chest · Primary", sets:[{reps:'8',weight:'Moderate',rpe:'7'},{reps:'6',weight:'Heavy',rpe:'8'},{reps:'5',weight:'Heavy',rpe:'9'},{reps:'5',weight:'Heavy',rpe:'9'}], note:"Retract the shoulder blades, controlled descent, drive evenly.", alt:"Dumbbell Bench Press"} ]},
+      {tag:'Block B · Volume', title:'Upper Chest + Flye', rest:'90 sec', exercises:[
+        {id:'incdb', label:'B', name:"Incline Dumbbell Press", muscle:"Upper Chest", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"30–45° bench, press through the upper chest.", alt:"Incline Barbell Press"},
+        {id:'fly', label:'C', name:"Cable Fly", muscle:"Chest · Stretch", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Big stretch, squeeze the pecs together at the front.", alt:"Dumbbell Chest Flyes"} ]},
+      {tag:'Block C · Triceps', title:'Triceps', rest:'60 sec', exercises:[
+        {id:'cgbench', label:'D', name:"Close-Grip Bench Press", muscle:"Triceps", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Elbows tucked, push with the triceps not the chest.", alt:"Dumbbell Skull Crushers"},
+        {id:'pushdown', label:'E', name:"Rope Pushdown", muscle:"Triceps · Lateral", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'9'}], note:"Elbows pinned, full lockout, spread the rope at the bottom.", alt:"Overhead Tricep Extension"} ]} ] },
+    { name: 'Shoulders + Traps', shortName: 'Day 4', warmup: ["Shoulder rotations — 10 each way","Light lateral raises — 2 × 15","Band face pulls — 2 × 15"], blocks: [
+      {tag:'Block A · Heavy', title:'Overhead Press', rest:'2 min', exercises:[
+        {id:'ohp', label:'A', name:"Overhead Press", muscle:"Front + Medial Delts", sets:[{reps:'8',weight:'Moderate',rpe:'7'},{reps:'6',weight:'Heavy',rpe:'8'},{reps:'5',weight:'Heavy',rpe:'9'}], note:"Brace the core, press in a straight line, no excessive lean.", alt:"Seated Dumbbell Press"} ]},
+      {tag:'Block B · Volume', title:'Side + Rear Delts', rest:'60 sec', exercises:[
+        {id:'latraise', label:'B', name:"Dumbbell Lateral Raise", muscle:"Side Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'}], note:"Lead with the elbows, control the lower — width comes from these.", alt:"Cable Lateral Raise"},
+        {id:'reardelt', label:'C', name:"Rear Delt Flye", muscle:"Rear Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'}], note:"The most neglected head — slow and squeeze, no momentum.", alt:"Seated Rear Delt Raises"} ]},
+      {tag:'Block C · Traps', title:'Traps', rest:'60 sec', exercises:[
+        {id:'shrug', label:'D', name:"Barbell Shrug", muscle:"Traps", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'9'}], note:"Straight up to the ears, pause, no rolling.", alt:"Dumbbell Shrugs"} ]} ] },
+    { name: 'Arms', shortName: 'Day 5', warmup: ["Light curls — 2 × 15","Band pushdowns — 2 × 20","Wrist circles — 30 sec"], blocks: [
+      {tag:'Block A · Biceps', title:'Biceps Volume', rest:'60 sec', exercises:[
+        {id:'ezcurl', label:'A', name:"EZ-Bar Curl", muscle:"Biceps", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Strict, full range, squeeze at the top.", alt:"Barbell Curl"},
+        {id:'inccurl', label:'B', name:"Incline Dumbbell Curl", muscle:"Biceps · Long Head", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Arm hangs behind the torso for the stretch — the peak builder.", alt:"Concentration Curls"} ]},
+      {tag:'Block B · Triceps', title:'Triceps Volume', rest:'60 sec', exercises:[
+        {id:'skull', label:'C', name:"Skull Crusher", muscle:"Triceps · Long Head", sets:[{reps:'10',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Moderate',rpe:'9'}], note:"Elbows pointing at the ceiling, lower to the forehead.", alt:"Overhead Tricep Extension"},
+        {id:'ohext', label:'D', name:"Overhead Cable Extension", muscle:"Triceps · Long Head", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Keep the elbows close to the ears, full stretch overhead.", alt:"Rope Pushdown"} ]} ] }
+  ]
+};
+// ─────────────────────────────────────────────
+// THE OLYMPIA SPLIT — Jay-style one-body-part-per-day, many angles, short rest
+// ─────────────────────────────────────────────
+const OLYMPIA_SPLIT = {
+  id: 'olympia_split',
+  name: 'The Olympia Split',
+  meta: '5-day · one body part a day · high volume',
+  desc: 'One body part a day, attacked from every angle with short 45–60s rests and high volume. Train abs after two or three of these sessions.',
+  locked: true,
+  days: [
+    { name: 'Chest', shortName: 'Day 1', warmup: ["Arm circles — 30 sec each way","Band pull-aparts — 2 × 20","Light push-ups — 1 × 15"], blocks: [
+      {tag:'Block · Volume', title:'Chest From Every Angle', rest:'45–60 sec', exercises:[
+        {id:'incbb', label:'A', name:"Incline Barbell Press", muscle:"Upper Chest", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Start with incline — upper chest is the priority for a full look.", alt:"Incline Dumbbell Press"},
+        {id:'flatdb', label:'B', name:"Flat Dumbbell Press", muscle:"Chest · Mid", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Deep stretch at the bottom, press up and slightly in.", alt:"Barbell Bench Press"},
+        {id:'dip', label:'C', name:"Chest Dip", muscle:"Lower Chest", sets:[{reps:'12',weight:'BW',rpe:'8'},{reps:'12',weight:'BW',rpe:'8'},{reps:'10',weight:'BW',rpe:'9'}], note:"Lean forward to bias the lower chest.", alt:"Decline Push-Ups"},
+        {id:'crossover', label:'D', name:"Cable Crossover", muscle:"Chest · Squeeze", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Cross the hands over at the front for a hard inner-chest squeeze.", alt:"Pec Deck"} ]} ] },
+    { name: 'Back', shortName: 'Day 2', warmup: ["5 min row","Band pull-aparts — 2 × 20","Light pulldowns — 2 × 15"], blocks: [
+      {tag:'Block · Volume', title:'Width Then Thickness', rest:'45–60 sec', exercises:[
+        {id:'pulldown', label:'A', name:"Lat Pulldown", muscle:"Back · Width", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Open with width work — drive the elbows down and back.", alt:"Pull-Up"},
+        {id:'bbrow', label:'B', name:"Barbell Row", muscle:"Back · Thickness", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Pull to the waist, squeeze the mid-back hard.", alt:"Pendlay Row"},
+        {id:'dbrow', label:'C', name:"Single-Arm Dumbbell Row", muscle:"Back · Lats", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Full stretch at the bottom, elbow to the hip at the top.", alt:"Chest-Supported Row"},
+        {id:'strarm', label:'D', name:"Straight-Arm Pulldown", muscle:"Lats · Isolation", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Arms nearly straight, drive the bar to the thighs with the lats.", alt:"Dumbbell Pullover"} ]} ] },
+    { name: 'Shoulders', shortName: 'Day 3', warmup: ["Shoulder rotations — 10 each way","Light lateral raises — 2 × 15","Band face pulls — 2 × 15"], blocks: [
+      {tag:'Block · Volume', title:'All Three Heads', rest:'45–60 sec', exercises:[
+        {id:'dbpress', label:'A', name:"Seated Dumbbell Press", muscle:"Front + Medial Delts", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Press to just short of lockout to keep tension on the delts.", alt:"Arnold Press"},
+        {id:'latraise', label:'B', name:"Dumbbell Lateral Raise", muscle:"Side Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'}], note:"Width maker — lead with the elbows, control the lowering.", alt:"Cable Lateral Raise"},
+        {id:'reardelt', label:'C', name:"Rear Delt Flye", muscle:"Rear Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'}], note:"Slight elbow bend, squeeze the rear delts, no swinging.", alt:"Seated Rear Delt Raises"},
+        {id:'shrug', label:'D', name:"Dumbbell Shrug", muscle:"Traps", sets:[{reps:'15',weight:'Heavy',rpe:'8'},{reps:'15',weight:'Heavy',rpe:'9'}], note:"Straight up, pause at the top, no rolling.", alt:"Barbell Shrug"} ]} ] },
+    { name: 'Legs', shortName: 'Day 4', warmup: ["5 min bike","Bodyweight squats — 2 × 15","Leg swings — 10 each way"], blocks: [
+      {tag:'Block · Volume', title:'Quads, Hams & Calves', rest:'60–90 sec', exercises:[
+        {id:'squat', label:'A', name:"Back Squat", muscle:"Quads · Glutes", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Below parallel if mobility allows, chest tall.", alt:"Dumbbell Goblet Squat"},
+        {id:'legpress', label:'B', name:"Leg Press", muscle:"Quads", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'9'}], note:"Feet mid-platform, controlled depth.", alt:"Hack Squat"},
+        {id:'legcurl', label:'C', name:"Lying Leg Curl", muscle:"Hamstrings", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Squeeze the hams, slow on the way back.", alt:"Romanian Deadlift"},
+        {id:'calf', label:'D', name:"Standing Calf Raise", muscle:"Calves", sets:[{reps:'15',weight:'Heavy',rpe:'8'},{reps:'15',weight:'Heavy',rpe:'8'},{reps:'20',weight:'Moderate',rpe:'9'}], note:"Full range, pause at the top every rep.", alt:"Seated Calf Raise"} ]} ] },
+    { name: 'Arms', shortName: 'Day 5', warmup: ["Light curls — 2 × 15","Band pushdowns — 2 × 20","Wrist circles — 30 sec"], blocks: [
+      {tag:'Block · Volume', title:'Biceps & Triceps', rest:'45–60 sec', exercises:[
+        {id:'bbcurl', label:'A', name:"Barbell Curl", muscle:"Biceps", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Strict reps, full squeeze at the top.", alt:"EZ-Bar Curl"},
+        {id:'pushdown', label:'B', name:"Triceps Pushdown", muscle:"Triceps", sets:[{reps:'12',weight:'Heavy',rpe:'8'},{reps:'12',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Elbows pinned, full lockout.", alt:"Overhead Tricep Extension"},
+        {id:'cablecurl', label:'C', name:"Cable Curl", muscle:"Biceps · Constant Tension", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Cable keeps tension through the whole range.", alt:"Hammer Curl"},
+        {id:'ohext', label:'D', name:"Overhead Cable Extension", muscle:"Triceps · Long Head", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Elbows by the ears, big stretch overhead.", alt:"Skull Crusher"} ]} ] }
+  ]
+};
+// ─────────────────────────────────────────────
+// CLASSIC PHYSIQUE PPL — Cbum-style push/pull/legs, heavy + pump, run twice a week
+// ─────────────────────────────────────────────
+const CLASSIC_PPL = {
+  id: 'classic_ppl',
+  name: 'Classic Physique PPL',
+  meta: '3-day · push/pull/legs · run 2× a week',
+  desc: 'Modern push/pull/legs for a proportioned, classic physique. Heavy work first, pump and superset finishers after. Run it twice through the week and swap to the alternatives on the second pass.',
+  locked: true,
+  days: [
+    { name: 'Push', shortName: 'Push', warmup: ["Arm circles — 30 sec each way","Band pull-aparts — 2 × 20","Light push-ups — 1 × 15"], blocks: [
+      {tag:'Block A · Heavy', title:'Incline Press', rest:'2 min', exercises:[
+        {id:'incbb', label:'A', name:"Incline Barbell Press", muscle:"Upper Chest", sets:[{reps:'8',weight:'Heavy',rpe:'8'},{reps:'6',weight:'Heavy',rpe:'9'},{reps:'6',weight:'Heavy',rpe:'9'}], note:"Top set heavy — upper chest leads the classic look.", alt:"Incline Dumbbell Press"} ]},
+      {tag:'Block B · Volume', title:'Press + Delts', rest:'90 sec', exercises:[
+        {id:'flatdb', label:'B', name:"Flat Dumbbell Press", muscle:"Chest · Mid", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Deep stretch, controlled tempo.", alt:"Barbell Bench Press"},
+        {id:'ohp', label:'C', name:"Seated Dumbbell Press", muscle:"Front + Medial Delts", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Press to just short of lockout, keep the delts loaded.", alt:"Arnold Press"} ]},
+      {tag:'Block C · Superset', title:'Delt + Chest Pump', rest:'60 sec after C2', exercises:[
+        {id:'latraise', label:'C1', name:"Dumbbell Lateral Raise", muscle:"Side Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'},{reps:'15',weight:'Light',rpe:'9'}], note:"Width — the key to the X-frame. Slow lowering.", alt:"Cable Lateral Raise"},
+        {superset:true},
+        {id:'cablefly', label:'C2', name:"Cable Fly", muscle:"Chest · Squeeze", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Squeeze and hold at the front for the pump.", alt:"Pec Deck"} ]},
+      {tag:'Block D · Finisher', title:'Triceps', rest:'60 sec', exercises:[
+        {id:'pushdown', label:'D', name:"Rope Pushdown", muscle:"Triceps", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Spread the rope at the bottom, full lockout.", alt:"Overhead Tricep Extension"} ]} ] },
+    { name: 'Pull', shortName: 'Pull', warmup: ["5 min row","Band pull-aparts — 2 × 20","Light pulldowns — 2 × 15"], blocks: [
+      {tag:'Block A · Heavy', title:'Vertical Pull', rest:'2 min', exercises:[
+        {id:'pullup', label:'A', name:"Weighted Pull-Up", muscle:"Back · Width", sets:[{reps:'8',weight:'Heavy',rpe:'8'},{reps:'6',weight:'Heavy',rpe:'9'},{reps:'6',weight:'Heavy',rpe:'9'}], note:"Add load if you can clear 8 clean reps; otherwise use the pulldown.", alt:"Lat Pulldown"} ]},
+      {tag:'Block B · Volume', title:'Rows', rest:'90 sec', exercises:[
+        {id:'bbrow', label:'B', name:"Barbell Row", muscle:"Back · Thickness", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Pull to the waist, squeeze the mid-back.", alt:"Pendlay Row"},
+        {id:'csrow', label:'C', name:"Chest-Supported Row", muscle:"Back · Mid", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"No body English — pure back. Pause at the top.", alt:"Seated Cable Row"} ]},
+      {tag:'Block C · Superset', title:'Rear Delt + Biceps', rest:'60 sec after C2', exercises:[
+        {id:'reardelt', label:'C1', name:"Rear Delt Flye", muscle:"Rear Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'},{reps:'15',weight:'Light',rpe:'9'}], note:"Detail for 3D delts — control over weight.", alt:"Seated Rear Delt Raises"},
+        {superset:true},
+        {id:'inccurl', label:'C2', name:"Incline Dumbbell Curl", muscle:"Biceps · Long Head", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Stretch the long head, strict reps.", alt:"Hammer Curl"} ]} ] },
+    { name: 'Legs', shortName: 'Legs', warmup: ["5 min bike","Bodyweight squats — 2 × 15","Leg swings — 10 each way","Glute bridges — 1 × 15"], blocks: [
+      {tag:'Block A · Heavy', title:'Squat', rest:'2–3 min', exercises:[
+        {id:'squat', label:'A', name:"Back Squat", muscle:"Quads · Glutes", sets:[{reps:'8',weight:'Heavy',rpe:'8'},{reps:'6',weight:'Heavy',rpe:'9'},{reps:'6',weight:'Heavy',rpe:'9'}], note:"Sit between the hips, chest tall, full depth.", alt:"Dumbbell Goblet Squat"} ]},
+      {tag:'Block B · Volume', title:'Hinge + Lunge', rest:'90 sec', exercises:[
+        {id:'rdl', label:'B', name:"Romanian Deadlift", muscle:"Hamstrings · Glutes", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'}], note:"Hips back, hamstring stretch, flat back.", alt:"Lying Leg Curl"},
+        {id:'lunge', label:'C', name:"Walking Lunge", muscle:"Quads · Glutes", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Upright torso, drive through the front heel.", alt:"Reverse Lunge"} ]},
+      {tag:'Block C · Superset', title:'Quad + Ham Pump', rest:'60 sec after C2', exercises:[
+        {id:'legext', label:'C1', name:"Leg Extension", muscle:"Quads · Squeeze", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Pause and squeeze the quads at the top.", alt:"Wall Sit"},
+        {superset:true},
+        {id:'legcurl', label:'C2', name:"Lying Leg Curl", muscle:"Hamstrings", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'},{reps:'15',weight:'Moderate',rpe:'9'}], note:"Controlled negative, full squeeze.", alt:"Sliding Leg Curl"} ]},
+      {tag:'Block D · Finisher', title:'Calves', rest:'45 sec', exercises:[
+        {id:'calf', label:'D', name:"Seated Calf Raise", muscle:"Calves · Soleus", sets:[{reps:'15',weight:'Moderate',rpe:'8'},{reps:'15',weight:'Moderate',rpe:'9'},{reps:'20',weight:'Light',rpe:'9'}], note:"Full stretch, pause at the top.", alt:"Standing Calf Raise"} ]} ] }
+  ]
+};
+// ─────────────────────────────────────────────
+// OLD-SCHOOL VOLUME — Lee Priest / Flex-style bro split, supersets & drop sets
+// ─────────────────────────────────────────────
+const OLDSCHOOL_VOLUME = {
+  id: 'oldschool_volume',
+  name: 'Old-School Volume',
+  meta: '5-day · bro split · supersets & drop sets',
+  desc: 'One muscle a day, old-school high volume trained by feel, with supersets and drop-set finishers. Heavy at the start, pump to end. Push the working sets, not the warm-ups.',
+  locked: true,
+  days: [
+    { name: 'Chest', shortName: 'Day 1', warmup: ["Arm circles — 30 sec each way","Band pull-aparts — 2 × 20","Light push-ups — 1 × 15"], blocks: [
+      {tag:'Block · Heavy → Pump', title:'Chest', rest:'60–90 sec', exercises:[
+        {id:'bench', label:'A', name:"Barbell Bench Press", muscle:"Chest · Primary", sets:[{reps:'8',weight:'Heavy',rpe:'8'},{reps:'6',weight:'Heavy',rpe:'9'},{reps:'6',weight:'Heavy',rpe:'9'}], note:"Start heavy in the 6–8 range while you are fresh.", alt:"Dumbbell Bench Press"},
+        {id:'incdb', label:'B', name:"Incline Dumbbell Press", muscle:"Upper Chest", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Drive through the upper chest, full stretch.", alt:"Incline Barbell Press"},
+        {id:'fly', label:'C', name:"Dumbbell Flye", muscle:"Chest · Stretch", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Hug a barrel — big stretch, light weight.", alt:"Cable Fly"},
+        {id:'crossover', label:'D', name:"Cable Crossover (drop set)", muscle:"Chest · Finisher", sets:[{reps:'15',weight:'Moderate',rpe:'9'},{reps:'15',weight:'Moderate',rpe:'10'}], note:"Last set: rep to failure, drop the weight, rep again. Chase the pump.", alt:"Push-Ups to failure"} ]} ] },
+    { name: 'Back', shortName: 'Day 2', warmup: ["5 min row","Band pull-aparts — 2 × 20","Light pulldowns — 2 × 15"], blocks: [
+      {tag:'Block · Heavy → Pump', title:'Back', rest:'60–90 sec', exercises:[
+        {id:'dl', label:'A', name:"Deadlift", muscle:"Back · Posterior Chain", sets:[{reps:'8',weight:'Heavy',rpe:'8'},{reps:'6',weight:'Heavy',rpe:'9'},{reps:'5',weight:'Heavy',rpe:'9'}], note:"Heavy and clean — the foundation of a thick back.", alt:"Rack Pull"},
+        {id:'bbrow', label:'B', name:"Bent-Over Row", muscle:"Back · Thickness", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Pull to the waist, squeeze hard.", alt:"Pendlay Row"},
+        {id:'pulldown', label:'C', name:"Lat Pulldown", muscle:"Back · Width", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Elbows down and back, full stretch.", alt:"Pull-Up"},
+        {id:'strarm', label:'D', name:"Straight-Arm Pulldown (drop set)", muscle:"Lats · Finisher", sets:[{reps:'15',weight:'Moderate',rpe:'9'},{reps:'15',weight:'Light',rpe:'10'}], note:"Last set: drop the weight and keep going to failure.", alt:"Dumbbell Pullover"} ]} ] },
+    { name: 'Shoulders', shortName: 'Day 3', warmup: ["Shoulder rotations — 10 each way","Light lateral raises — 2 × 15","Band face pulls — 2 × 15"], blocks: [
+      {tag:'Block · Heavy → Pump', title:'Shoulders', rest:'60 sec', exercises:[
+        {id:'ohp', label:'A', name:"Overhead Press", muscle:"Front + Medial Delts", sets:[{reps:'8',weight:'Heavy',rpe:'8'},{reps:'6',weight:'Heavy',rpe:'9'},{reps:'6',weight:'Heavy',rpe:'9'}], note:"Heavy press first, strict and braced.", alt:"Seated Dumbbell Press"},
+        {id:'latraise', label:'B', name:"Lateral Raise (drop set)", muscle:"Side Delts", sets:[{reps:'12',weight:'Light',rpe:'9'},{reps:'12',weight:'Light',rpe:'9'},{reps:'15',weight:'Light',rpe:'10'}], note:"Last set: triple drop — go light and chase the burn.", alt:"Cable Lateral Raise"},
+        {id:'reardelt', label:'C', name:"Rear Delt Flye", muscle:"Rear Delts", sets:[{reps:'15',weight:'Light',rpe:'8'},{reps:'15',weight:'Light',rpe:'9'}], note:"Slow and controlled, squeeze the rear delts.", alt:"Seated Rear Delt Raises"},
+        {id:'shrug', label:'D', name:"Dumbbell Shrug", muscle:"Traps", sets:[{reps:'15',weight:'Heavy',rpe:'8'},{reps:'15',weight:'Heavy',rpe:'9'}], note:"Straight up, pause, no rolling.", alt:"Barbell Shrug"} ]} ] },
+    { name: 'Arms', shortName: 'Day 4', warmup: ["Light curls — 2 × 15","Band pushdowns — 2 × 20","Wrist circles — 30 sec"], blocks: [
+      {tag:'Block A · Superset', title:'Bi/Tri Superset', rest:'60 sec after A2', exercises:[
+        {id:'bbcurl', label:'A1', name:"Barbell Curl", muscle:"Biceps", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Pair opposing arms back-to-back — the old-school arm pump.", alt:"EZ-Bar Curl"},
+        {superset:true},
+        {id:'cgbench', label:'A2', name:"Close-Grip Bench Press", muscle:"Triceps", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'10',weight:'Heavy',rpe:'9'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Elbows tucked, drive with the triceps.", alt:"Dumbbell Skull Crushers"} ]},
+      {tag:'Block B · Superset', title:'Peak + Long Head', rest:'60 sec after B2', exercises:[
+        {id:'inccurl', label:'B1', name:"Incline Dumbbell Curl", muscle:"Biceps · Long Head", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Stretch the long head behind the torso.", alt:"Concentration Curls"},
+        {superset:true},
+        {id:'ohext', label:'B2', name:"Overhead Cable Extension", muscle:"Triceps · Long Head", sets:[{reps:'12',weight:'Moderate',rpe:'8'},{reps:'12',weight:'Moderate',rpe:'9'}], note:"Elbows by the ears, full overhead stretch.", alt:"Rope Pushdown"} ]},
+      {tag:'Block C · Finisher', title:'Pump Out', rest:'45 sec', exercises:[
+        {id:'concurl', label:'C', name:"Concentration Curl (drop set)", muscle:"Biceps · Peak", sets:[{reps:'12',weight:'Moderate',rpe:'9'},{reps:'12',weight:'Light',rpe:'10'}], note:"Last set: drop and squeeze to failure. Leave it all here.", alt:"Cable Curl"} ]} ] },
+    { name: 'Legs', shortName: 'Day 5', warmup: ["5 min bike","Bodyweight squats — 2 × 15","Leg swings — 10 each way","Walking lunges — 1 × 10"], blocks: [
+      {tag:'Block · Heavy → Pump', title:'Legs', rest:'90 sec', exercises:[
+        {id:'squat', label:'A', name:"Back Squat", muscle:"Quads · Glutes", sets:[{reps:'10',weight:'Heavy',rpe:'8'},{reps:'8',weight:'Heavy',rpe:'9'},{reps:'8',weight:'Heavy',rpe:'9'}], note:"Old-school high-rep squats — grind them out with good form.", alt:"Dumbbell Goblet Squat"},
+        {id:'legpress', label:'B', name:"Leg Press (drop set)", muscle:"Quads", sets:[{reps:'15',weight:'Heavy',rpe:'9'},{reps:'15',weight:'Moderate',rpe:'10'}], note:"Last set: strip a plate each side and keep pressing.", alt:"Hack Squat"},
+        {id:'rdl', label:'C', name:"Romanian Deadlift", muscle:"Hamstrings · Glutes", sets:[{reps:'10',weight:'Moderate',rpe:'8'},{reps:'10',weight:'Moderate',rpe:'9'}], note:"Hips back, feel the hamstrings load.", alt:"Lying Leg Curl"},
+        {id:'calf', label:'D', name:"Standing Calf Raise", muscle:"Calves", sets:[{reps:'20',weight:'Moderate',rpe:'9'},{reps:'20',weight:'Moderate',rpe:'9'},{reps:'20',weight:'Moderate',rpe:'10'}], note:"High reps, full stretch, pause at the top.", alt:"Seated Calf Raise"} ]} ] }
+  ]
+};
+// Built-in program registry (the Programs screen renders these in order)
+const BUILTIN_PROGRAMS = [ARNOLD_PROGRAM, MASS_POWER, OLYMPIA_SPLIT, CLASSIC_PPL, OLDSCHOOL_VOLUME];
+function getBuiltinProgram(id){ return BUILTIN_PROGRAMS.find(p => p.id === id) || null; }
+// ─────────────────────────────────────────────
 // STATE & STORAGE
 // ─────────────────────────────────────────────
 let currentScreen = 'programs';
@@ -926,13 +1118,10 @@ function saveSessionLog(progId, dayIdx, log) {
 function getHistory() { try { return JSON.parse(localStorage.getItem('ge_history') || '[]'); } catch(e) { return []; } }
 function saveHistory(h) { try { localStorage.setItem('ge_history', JSON.stringify(h)); } catch(e){} }
 function getActiveProgram() {
-  if (activeProgramId === 'arnold_golden_era') return ARNOLD_PROGRAM;
-  const progs = getPrograms();
-  return progs.find(p => p.id === activeProgramId) || ARNOLD_PROGRAM;
+  return getBuiltinProgram(activeProgramId) || getPrograms().find(p => p.id === activeProgramId) || ARNOLD_PROGRAM;
 }
 function getProgramById(id) {
-  if (id === 'arnold_golden_era') return ARNOLD_PROGRAM;
-  return getPrograms().find(p => p.id === id) || null;
+  return getBuiltinProgram(id) || getPrograms().find(p => p.id === id) || null;
 }
 // Most recent completed session for this program + day, or null
 function getLastSession(progId, dayIdx) {
@@ -964,21 +1153,22 @@ function renderPrograms() {
   const userProgs = getPrograms();
   const active = getActiveProgramId();
   let html = '';
-  // Arnold program
-  const arnoldActive = active === 'arnold_golden_era';
-  html += `<div class="program-card ${arnoldActive?'active-program':''}">
-    <div class="pc-header">
-      <div class="pc-info">
-        <div class="pc-name">The Golden Era Program</div>
-        <div class="pc-meta">6-day · Arnold-inspired · Chest/Back, Shoulders/Arms, Legs/Core</div>
+  BUILTIN_PROGRAMS.forEach(prog => {
+    const isActive = active === prog.id;
+    html += `<div class="program-card ${isActive?'active-program':''}">
+      <div class="pc-header">
+        <div class="pc-info">
+          <div class="pc-name">${esc(prog.name)}</div>
+          <div class="pc-meta">${esc(prog.meta || (prog.days.length + '-day'))}</div>
+        </div>
+        ${isActive ? '<div class="pc-active-badge">Active</div>' : '<div class="pc-badge">Built-in</div>'}
       </div>
-      ${arnoldActive ? '<div class="pc-active-badge">Active</div>' : '<div class="pc-badge">Built-in</div>'}
-    </div>
-    <div class="pc-actions">
-      ${!arnoldActive ? `<button class="btn btn-gold btn-sm" onclick="activateProgram('arnold_golden_era')">Set Active</button>` : ''}
-      <button class="btn btn-outline btn-sm" onclick="activateProgram('arnold_golden_era');showScreen('tracker')">Open Tracker</button>
-    </div>
-  </div>`;
+      <div class="pc-actions">
+        ${!isActive ? `<button class="btn btn-gold btn-sm" onclick="activateProgram('${prog.id}')">Set Active</button>` : ''}
+        <button class="btn btn-outline btn-sm" onclick="activateProgram('${prog.id}');showScreen('tracker')">Open Tracker</button>
+      </div>
+    </div>`;
+  });
   userProgs.forEach(prog => {
     const isActive = active === prog.id;
     html += `<div class="program-card ${isActive?'active-program':''}">
