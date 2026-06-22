@@ -273,6 +273,15 @@ canvas#progChart{display:block;width:100%;height:180px;}
 .prog-step{font-size:11px;color:var(--text-muted);line-height:1.45;}
 .prog-step b{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-right:6px;font-weight:400;}
 .bank-empty{text-align:center;padding:48px 16px;color:var(--text-dim);font-size:13px;}
+/* ADD-EXERCISE PICKER */
+.addex-list{max-height:52vh;overflow-y:auto;margin-top:2px;}
+.addex-count{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin:2px 0 8px;}
+.addex-row{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--border);}
+.addex-row.added{opacity:.55;}
+.addex-info{flex:1;min-width:0;}
+.addex-name{font-size:13px;font-weight:600;color:var(--text);}
+.addex-meta{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;margin-top:1px;}
+.addex-btn{flex-shrink:0;}
 .bank-empty .be-soon{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:.06em;color:var(--text-muted);margin-bottom:6px;}
 /* DATA LAYER STATUS + SOURCE CHIPS + THUMBNAILS */
 .data-status{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px 11px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);}
@@ -479,15 +488,28 @@ canvas#progChart{display:block;width:100%;height:180px;}
 <div class="modal-overlay" id="addExModal">
   <div class="modal">
     <div class="modal-hdr">
-      <div class="modal-title">Add Exercise</div>
-      <button class="btn btn-ghost" onclick="closeModal('addExModal')">✕</button>
+      <div class="modal-title">Add Exercises</div>
+      <button class="btn btn-gold btn-sm" onclick="closeModal('addExModal')">Done</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">Search Exercise Bank</label>
-        <input class="form-input" id="addExSearch" placeholder="Type to search..." oninput="renderAddExList()">
+      <div class="equip-tabs" id="addExEquip"></div>
+      <div class="bank-controls">
+        <input type="text" class="search-input" id="addExSearch" placeholder="Search exercises..." oninput="renderAddExList()">
+        <select class="filter-select" id="addExMuscle" onchange="renderAddExList()">
+          <option value="">All Muscles</option>
+          <option value="chest">Chest</option>
+          <option value="back">Back</option>
+          <option value="shoulders">Shoulders</option>
+          <option value="biceps">Biceps</option>
+          <option value="triceps">Triceps</option>
+          <option value="quads">Quads</option>
+          <option value="hamstrings">Hamstrings</option>
+          <option value="glutes">Glutes</option>
+          <option value="calves">Calves</option>
+          <option value="core">Core</option>
+        </select>
       </div>
-      <div style="max-height:300px;overflow-y:auto;" id="addExList"></div>
+      <div class="addex-list" id="addExList"></div>
     </div>
   </div>
 </div>
@@ -1266,6 +1288,7 @@ let selectedMuscles = [];
 let generatedWorkout = [];
 let addExTargetDay = null;
 let dayExercises = {};
+let modalEquip = 'dumbbell';
 let chartExId = null;
 let bankEquip = 'dumbbell';
 let genEquip = ['dumbbell'];
@@ -1574,22 +1597,44 @@ function openAddExModal(dayIdx) {
   renderAddExList();
   document.getElementById('addExModal').classList.add('visible');
 }
+function setModalEquip(id) { modalEquip = id; renderAddExList(); }
 function renderAddExList() {
-  const q = document.getElementById('addExSearch').value.toLowerCase();
-  const filtered = EXERCISE_BANK.filter(e => !q || e.name.toLowerCase().includes(q) || e.muscle.includes(q));
-  let html = '';
-  filtered.slice(0, 30).forEach(ex => {
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="addExToDay('${ex.id}')">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(ex.name)}</div>
-        <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase">${esc(ex.muscle)}</div>
+  const q = (document.getElementById('addExSearch').value || '').toLowerCase();
+  const muscle = document.getElementById('addExMuscle')?.value || '';
+  const present = presentEquip();
+  if (present.length && !present.includes(modalEquip)) modalEquip = present[0];
+  const eqEl = document.getElementById('addExEquip');
+  if (eqEl) eqEl.innerHTML = present.map(id => {
+    const n = EXERCISE_BANK.filter(e => e.equip === id).length;
+    return `<div class="equip-tab ${modalEquip===id?'active':''}" onclick="setModalEquip('${id}')">${esc(EQUIP_LABELS[id]||id)} <span class="equip-count">${n}</span></div>`;
+  }).join('');
+  const added = new Set((dayExercises[addExTargetDay] || []).map(e => e.id));
+  const filtered = EXERCISE_BANK.filter(e =>
+    e.equip === modalEquip &&
+    (!muscle || e.muscle === muscle) &&
+    (!q || e.name.toLowerCase().includes(q) || e.muscle.includes(q))
+  );
+  const listEl = document.getElementById('addExList');
+  const sc = listEl ? listEl.scrollTop : 0;
+  if (!filtered.length) { listEl.innerHTML = `<div class="bank-empty">No exercises match — try another bank or search.</div>`; return; }
+  let html = `<div class="addex-count">${filtered.length} exercises${added.size ? ' · ' + added.size + ' added' : ''}</div>`;
+  filtered.forEach(ex => {
+    const isAdded = added.has(ex.id);
+    const diff = ex.difficulty ? `<div class="diff-badge diff-${ex.difficulty}">${esc(ex.difficulty)}</div>` : '';
+    html += `<div class="addex-row ${isAdded?'added':''}">
+      <div class="addex-info">
+        <div class="addex-name">${esc(ex.name)}</div>
+        <div class="addex-meta">${esc(ex.muscle)} · ${esc(EQUIP_LABELS[ex.equip]||ex.equip)}</div>
       </div>
-      <div style="color:var(--gold);font-size:20px;padding:0 4px;">+</div>
+      ${diff}
+      <button class="btn ${isAdded?'btn-outline':'btn-gold'} btn-sm addex-btn" onclick="addExToDay('${ex.id}')" ${isAdded?'disabled':''}>${isAdded?'✓ Added':'+ Add'}</button>
     </div>`;
   });
-  document.getElementById('addExList').innerHTML = html;
+  listEl.innerHTML = html;
+  listEl.scrollTop = sc;
 }
-// Look the exercise up by id — avoids any string-escaping issues with names like "Farmer's Carry"
+// Look the exercise up by id — avoids any string-escaping issues with names like "Farmer's Carry".
+// The picker stays open so several exercises can be added in a row.
 function addExToDay(id) {
   const ex = EXERCISE_BANK.find(e => e.id === id);
   if (!ex) return;
@@ -1598,7 +1643,8 @@ function addExToDay(id) {
   if (dayExercises[d].find(e => e.id === id)) { showToast('Already added', ''); return; }
   dayExercises[d].push({id: ex.id, name: ex.name, muscle: ex.muscle});
   renderDayExercises(d);
-  closeModal('addExModal');
+  renderAddExList();
+  showToast('Added ' + ex.name, 'success');
 }
 function renderDayExercises(d) {
   const container = document.getElementById(`dayExercises_${d}`);
