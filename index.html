@@ -2509,6 +2509,20 @@ function beep() {
 // ─────────────────────────────────────────────
 // PDF EXPORT
 // ─────────────────────────────────────────────
+// jsPDF's built-in font only speaks Latin-1; map the Unicode we use (en/em dashes,
+// arrows, middots, ×, °, smart quotes) to ASCII so the PDF doesn't render as mojibake.
+function pdfSafe(s){
+  return String(s == null ? '' : s)
+    .replace(/[‒–—―−]/g, '-')
+    .replace(/→/g, ' -> ').replace(/←/g, ' <- ').replace(/↩/g, '')
+    .replace(/[·•▪●]/g, '-')
+    .replace(/×/g, 'x')
+    .replace(/°/g, ' deg')
+    .replace(/[‘’‚′]/g, "'")
+    .replace(/[“”„″]/g, '"')
+    .replace(/…/g, '...')
+    .replace(/[^\x00-\x7F]/g, '');
+}
 function exportPDF(entryOverride) {
   const { jsPDF } = window.jspdf || {};
   if (!jsPDF) { showToast('PDF library loading...', ''); return; }
@@ -2522,6 +2536,8 @@ function exportPDF(entryOverride) {
     dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   }
   const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const _pdfText = doc.text.bind(doc);
+  doc.text = (t, ...a) => _pdfText(Array.isArray(t) ? t.map(pdfSafe) : pdfSafe(t), ...a);
   const W = 210, margin = 16, colW = W - margin*2;
   let y = 0;
   const addPage = () => { doc.addPage(); y = 16; };
@@ -2594,7 +2610,7 @@ function exportPDF(entryOverride) {
     doc.text(`Golden Era · ${day.name} · ${dateStr}`,margin,290);
     doc.text(`${i}/${pages}`,W-margin,290,{align:'right'});
   }
-  const fn = `GoldenEra_${day.name.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const fn = `GoldenEra_${pdfSafe(day.name).replace(/[^\w]+/g,'_').replace(/^_+|_+$/g,'')}_${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(fn);
   showToast('PDF downloaded ✓','success');
 }
