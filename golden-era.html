@@ -167,6 +167,20 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .prof-bw-wrap{display:flex;align-items:center;gap:6px;flex:1;}
 .prof-unit{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);min-width:18px;}
 .gen-back{margin-bottom:10px;}
+/* RESET (destructive) */
+.btn-danger{background:#3a1714;color:#ff6b5e;border:1px solid rgba(231,76,60,.5);}
+.btn-danger:hover{background:#c0392b;color:#fff;border-color:#e74c3c;}
+.btn-danger:disabled{opacity:.45;cursor:not-allowed;background:#2a1512;color:#9a6b66;border-color:rgba(231,76,60,.25);}
+.reset-warn{font-size:13px;color:var(--text);line-height:1.55;background:rgba(231,76,60,.09);border:1px solid rgba(231,76,60,.32);border-radius:6px;padding:11px 12px;margin-bottom:14px;}
+.reset-scope{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.reset-opt{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--text-dim);line-height:1.5;cursor:pointer;padding:10px 11px;border:1px solid var(--border);border-radius:6px;transition:.12s;}
+.reset-opt:hover{border-color:var(--text-muted);}
+.reset-opt input{margin-top:2px;flex-shrink:0;accent-color:var(--gold);}
+.reset-opt b{color:var(--text);}
+.reset-gate-lbl{font-size:12px;color:var(--text-dim);margin-bottom:6px;}
+.reset-gate-lbl b{color:#ff6b5e;letter-spacing:.12em;}
+#resetConfirmInput{width:100%;text-transform:uppercase;letter-spacing:.15em;text-align:center;font-family:'JetBrains Mono',monospace;}
+.reset-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
 .set-hdr{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:4px;}
 .set-hdr span{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;text-align:center;}
 .set-row2{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:5px;}
@@ -364,6 +378,7 @@ canvas#progChart{display:block;width:100%;height:180px;}
     <button class="btn btn-outline btn-sm" onclick="exportData()">⬇ Back up data</button>
     <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">⬆ Restore</button>
     <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="importData(this)">
+    <button class="btn btn-danger btn-sm" onclick="openResetModal()">⚠ Reset all data</button>
   </div>
 </div>
 <div id="screen-tracker" class="screen">
@@ -581,6 +596,31 @@ canvas#progChart{display:block;width:100%;height:180px;}
       </div>
       <div class="prof-note">Sex refines the strength estimate; leave it blank and we'll use a neutral average for the big lifts.</div>
       <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="saveProfileForm()">Save profile</button>
+    </div>
+  </div>
+</div>
+<!-- RESET MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-hdr">
+      <div class="modal-title">⚠ Reset all data</div>
+      <button class="btn btn-ghost" onclick="closeModal('resetModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="reset-warn">This erases your saved data on <b>this device</b> and <b>can't be undone</b>. Back up first if there's anything you want to keep.</div>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:16px" onclick="exportData()">⬇ Back up data first</button>
+      <div class="reset-scope">
+        <label class="reset-opt"><input type="radio" name="resetScope" value="mine" checked><span><b>My data only</b> — programs, history, profile & set logs. Keeps the downloaded exercise database, so no re-sync.</span></label>
+        <label class="reset-opt"><input type="radio" name="resetScope" value="all"><span><b>Everything</b> — also clears the cached exercise database (it re-downloads on the next online launch).</span></label>
+      </div>
+      <div class="reset-gate">
+        <div class="reset-gate-lbl">Type <b>RESET</b> to confirm</div>
+        <input type="text" class="form-input" id="resetConfirmInput" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="RESET" oninput="validateResetGate()">
+      </div>
+      <div class="reset-actions">
+        <button class="btn btn-outline" onclick="closeModal('resetModal')">Cancel</button>
+        <button class="btn btn-danger" id="resetConfirmBtn" disabled onclick="doReset()">Erase data</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1700,6 +1740,36 @@ function importData(input) {
     }
   };
   reader.readAsText(file);
+}
+// ── reset all data (guarded by a type-to-confirm gate) ──
+function openResetModal(){
+  const i=document.getElementById('resetConfirmInput'); if(i) i.value='';
+  const b=document.getElementById('resetConfirmBtn'); if(b) b.disabled=true;
+  const mine=document.querySelector('input[name="resetScope"][value="mine"]'); if(mine) mine.checked=true;
+  document.getElementById('resetModal').classList.add('visible');
+}
+function validateResetGate(){
+  const v=(document.getElementById('resetConfirmInput').value||'').trim().toUpperCase();
+  const b=document.getElementById('resetConfirmBtn'); if(b) b.disabled = (v!=='RESET');
+}
+function doReset(){
+  // Defense in depth: never proceed unless the gate word is exact.
+  const v=(document.getElementById('resetConfirmInput').value||'').trim().toUpperCase();
+  if(v!=='RESET') return;
+  const scopeEl=document.querySelector('input[name="resetScope"]:checked');
+  const scope=scopeEl?scopeEl.value:'mine';
+  // 1) Always wipe this app's localStorage (programs, history, profile, logs, units…)
+  try{ Object.keys(localStorage).filter(k=>k.indexOf('ge_')===0).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  const finish=()=>{ try{ showToast('All data reset — fresh start','success'); }catch(e){} setTimeout(()=>location.reload(), 250); };
+  if(scope==='all'){
+    // 2) Also clear the cached exercise database (IndexedDB) + service-worker caches
+    try{ if(window.caches && caches.keys){ caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).catch(()=>{}); } }catch(e){}
+    let done=false; const go=()=>{ if(done) return; done=true; finish(); };
+    try{ const del=indexedDB.deleteDatabase('golden_era'); del.onsuccess=go; del.onerror=go; del.onblocked=go; }catch(e){ go(); }
+    setTimeout(go, 900); // fallback if the IndexedDB delete stalls on an open connection
+  } else {
+    finish();
+  }
 }
 // ─────────────────────────────────────────────
 // CREATE PROGRAM MODAL
