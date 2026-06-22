@@ -144,6 +144,32 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .log-input::placeholder{color:var(--text-dim);font-size:10px;}
 .last-ref{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin:0 0 8px;letter-spacing:.02em;}
 .last-ref b{color:var(--gold-light);font-weight:600;}
+/* COACHING — suggestion line, set steppers, tap-complete, plate calc */
+.suggest{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);background:var(--green-bg);border:1px solid rgba(46,204,113,.3);border-radius:3px;padding:7px 10px;margin-bottom:8px;line-height:1.5;}
+.suggest b{color:var(--green);}
+.suggest span{color:var(--text-muted);}
+.suggest.first{color:var(--gold);background:var(--gold-bg);border-color:var(--gold-dim);}
+.set-hdr{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:4px;}
+.set-hdr span{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;text-align:center;}
+.set-row2{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:5px;}
+.set-n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);text-align:center;}
+.set-presc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);line-height:1.15;text-align:center;}
+.set-presc span{display:block;font-size:8px;color:var(--text-dim);}
+.stepper{display:flex;align-items:center;gap:3px;}
+.stp-btn{flex-shrink:0;width:24px;height:30px;border-radius:4px;border:1px solid var(--border-light);background:var(--surface3);color:var(--text-muted);font-size:16px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;user-select:none;}
+.stp-btn:active{background:var(--gold);color:var(--black);}
+.stp-input{flex:1;min-width:0;width:100%;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);background:var(--surface3);border:1px solid var(--border-light);border-radius:4px;outline:none;height:30px;padding:0 2px;-webkit-appearance:none;}
+.stp-input:focus{border-color:var(--gold);background:var(--surface2);}
+.stp-input::placeholder{color:var(--text-dim);}
+.set-done{width:32px;height:30px;border-radius:4px;border:1px solid var(--border-light);background:var(--surface3);color:var(--text-dim);font-size:14px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;}
+.set-done.on{background:var(--green);border-color:var(--green);color:var(--black);font-weight:700;}
+.set-row2.done .set-n{color:var(--green);}
+.plate-out{margin-top:14px;}
+.plate-side-lbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.plate-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.plate-chip{display:flex;align-items:center;justify-content:center;min-width:42px;height:42px;border-radius:50%;background:var(--gold-bg);border:2px solid var(--gold);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;}
+.plate-total{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);margin-top:12px;}
+.plate-msg{font-size:12px;color:var(--text-muted);margin-top:8px;}
 .notes-input{width:100%;background:var(--surface3);border:1px solid var(--border);border-radius:3px;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:12px;padding:7px 10px;resize:none;outline:none;transition:border-color .15s;min-height:48px;}
 .notes-input:focus{border-color:var(--border-light);color:var(--text);}
 .notes-input::placeholder{color:var(--text-dim);}
@@ -456,6 +482,26 @@ canvas#progChart{display:block;width:100%;height:180px;}
         <input class="form-input" id="addExSearch" placeholder="Type to search..." oninput="renderAddExList()">
       </div>
       <div style="max-height:300px;overflow-y:auto;" id="addExList"></div>
+    </div>
+  </div>
+</div>
+<!-- PLATE CALCULATOR MODAL -->
+<div class="modal-overlay" id="plateModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr">
+      <div class="modal-title">Plate Calculator</div>
+      <button class="btn btn-ghost" onclick="closeModal('plateModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="rule-row">
+        <div class="rule-label">Target weight</div>
+        <input class="form-input" id="plateTarget" inputmode="decimal" oninput="renderPlates()" style="flex:1">
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Bar</div>
+        <select class="form-select" id="plateBar" onchange="renderPlates()" style="flex:1"></select>
+      </div>
+      <div class="plate-out" id="plateOut"></div>
     </div>
   </div>
 </div>
@@ -1117,6 +1163,110 @@ function saveSessionLog(progId, dayIdx, log) {
 }
 function getHistory() { try { return JSON.parse(localStorage.getItem('ge_history') || '[]'); } catch(e) { return []; } }
 function saveHistory(h) { try { localStorage.setItem('ge_history', JSON.stringify(h)); } catch(e){} }
+// ─────────────────────────────────────────────
+// COACHING — units, per-exercise baseline store, progression, e1RM, plates
+// Weights are stored canonically in POUNDS; the display unit just converts at the edges.
+// ─────────────────────────────────────────────
+const LB_PER_KG = 2.2046226218;
+const WEIGHT_STEP = 2.5;   // stepper increment, in the display unit
+const PROG_INC = 5;        // progression jump, in lb
+function getUnit(){ return localStorage.getItem('ge_unit') || 'lb'; }
+function setUnit(u){ localStorage.setItem('ge_unit', u); }
+function unitLabel(){ return getUnit(); }
+function toDisplay(lb){ if(lb==null) return null; const v = getUnit()==='kg' ? lb/LB_PER_KG : lb; return Math.round(v*2)/2; }
+function fromDisplay(v){ if(v==null||v==='') return null; const n=parseFloat(v); if(isNaN(n)) return null; return getUnit()==='kg' ? n*LB_PER_KG : n; }
+function dispNum(lb){ const d=toDisplay(lb); return d==null?'':(Number.isInteger(d)?String(d):d.toFixed(1)); }
+function fmtWeightLb(lb){ if(lb==null) return ''; return dispNum(lb)+' '+unitLabel(); }
+// each logged set is {w: pounds|null, r: reps|null, done: bool}; coerce legacy string logs
+function coerceSet(v){
+  if(v && typeof v==='object') return {w:(v.w==null?null:+v.w), r:(v.r==null?null:+v.r), done:!!v.done};
+  if(typeof v==='string' && v.trim()){ return {w:parseNum(v), r:null, done:true}; }
+  return {w:null, r:null, done:false};
+}
+function setHasData(v){ const s=coerceSet(v); return s.done || s.w!=null || s.r!=null; }
+function e1rm(wLb, reps){ if(!wLb||!reps) return 0; return wLb*(1+reps/30); }
+function parseRepRange(repsStr){
+  const s=String(repsStr||''); if(/sec|min|amrap|max/i.test(s)) return null;
+  const nums=(s.match(/\d+/g)||[]).map(Number); if(!nums.length) return null;
+  return {lo:nums[0], hi:nums[nums.length-1]};
+}
+// per-exercise baseline store, keyed by exercise name (follows the exercise across programs)
+function getExStore(){ try{ return JSON.parse(localStorage.getItem('ge_exlog')||'{}'); }catch(e){ return {}; } }
+function saveExStore(s){ try{ localStorage.setItem('ge_exlog', JSON.stringify(s)); }catch(e){} }
+function exRecord(name){ const s=getExStore(); return s[exKey(name)] || null; }
+function recordExercise(name, rawSets){
+  const clean = rawSets.map(coerceSet).filter(s=>s.w!=null || s.r!=null);
+  if(!clean.length) return {pr:false};
+  const store=getExStore(); const k=exKey(name); const prev=store[k];
+  const best = Math.max(0, ...clean.map(s=>e1rm(s.w, s.r||1)));
+  const isPR = !!(best>0 && prev && prev.e1rm && best > prev.e1rm + 0.01);
+  const today = new Date().toLocaleDateString();
+  store[k] = { name, date: today, sets: clean.map(s=>({w:s.w, r:s.r})), e1rm: Math.max(best, (prev&&prev.e1rm)||0), prDate: isPR ? today : (prev&&prev.prDate)||null };
+  saveExStore(store);
+  return {pr:isPR};
+}
+// progression suggestion for an exercise given its prescribed reps
+function suggestProgression(ex){
+  const rec = exRecord(ex.name);
+  if(!rec || !rec.sets || !rec.sets.length) return {first:true};
+  const range = parseRepRange(ex.sets && ex.sets[0] && ex.sets[0].reps);
+  const maxW = Math.max(0, ...rec.sets.map(s=>s.w||0));
+  if(maxW<=0 || !range) return {text:'Beat last time — more reps or cleaner form.', last:rec};
+  const haveReps = rec.sets.some(s=>s.r!=null);
+  const allTop = haveReps && rec.sets.every(s=>s.r!=null && s.r>=range.hi);
+  if(allTop) return {weightLb:maxW+PROG_INC, reps:range.lo, why:`you hit ${range.hi}+ on every set`, last:rec};
+  return {weightLb:maxW, reps:range.hi, why:`work up to ${range.hi} reps, then add weight`, last:rec};
+}
+// plate calculator → per-side plates in the display unit
+function computePlates(targetLb, barLb){
+  const unit=getUnit();
+  const plates = unit==='kg' ? [25,20,15,10,5,2.5,1.25] : [45,35,25,10,5,2.5];
+  const target=toDisplay(targetLb), bar=toDisplay(barLb);
+  let perSide=(target-bar)/2; const out=[];
+  if(perSide<=0) return {perSide:[], leftover:0, target, bar, none:perSide<0};
+  plates.forEach(p=>{ while(perSide >= p - 1e-6){ out.push(p); perSide-=p; } });
+  return {perSide:out, leftover:Math.round(perSide*100)/100, target, bar, none:false};
+}
+// ── set logging interaction (structured) ──
+function curSet(exId, si){ return coerceSet(sessionLog[`${exId}_${si}`]); }
+function writeSet(exId, si, s){ sessionLog[`${exId}_${si}`] = {w:s.w, r:s.r, done:s.done}; saveSessionLog(activeProgramId, currentDayIdx, sessionLog); }
+function refreshSetRow(exId, si){
+  const s=curSet(exId,si);
+  const w=document.getElementById(`w_${exId}_${si}`); if(w) w.value = dispNum(s.w);
+  const r=document.getElementById(`r_${exId}_${si}`); if(r) r.value = s.r!=null ? s.r : '';
+  const d=document.getElementById(`d_${exId}_${si}`); if(d) d.classList.toggle('on', !!s.done);
+  const row=document.getElementById(`row_${exId}_${si}`); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null);
+}
+function setWeightInput(el){ const [exId,si]=el.dataset.k.split('|'); const s=curSet(exId,+si); s.w=fromDisplay(el.value); writeSet(exId,+si,s); const row=el.closest('.set-row2'); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null); updateProgress(); }
+function setRepInput(el){ const [exId,si]=el.dataset.k.split('|'); const s=curSet(exId,+si); const n=parseInt(el.value,10); s.r=isNaN(n)?null:n; writeSet(exId,+si,s); const row=el.closest('.set-row2'); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null); updateProgress(); }
+function stepW(exId, si, deltaDisp){ const s=curSet(exId,si); const cur=toDisplay(s.w)||0; const nd=Math.max(0, Math.round((cur+deltaDisp)*2)/2); s.w=fromDisplay(nd); writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); }
+function stepR(exId, si, delta){ const s=curSet(exId,si); s.r=Math.max(0,(s.r||0)+delta); writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); }
+function toggleDone(exId, si, restSec){ const s=curSet(exId,si); s.done=!s.done; writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); if(s.done && restSec){ startRest(restSec); } }
+function toggleUnit(){ setUnit(getUnit()==='lb'?'kg':'lb'); if(currentScreen==='tracker') renderTrackerDay(); showToast('Units: '+unitLabel(), ''); }
+function openPlateCalc(presetLb){
+  const unit=getUnit();
+  const bars = unit==='kg' ? [{v:20,l:'20 kg Olympic bar'},{v:15,l:'15 kg bar'},{v:10,l:'10 kg bar'},{v:0,l:'No bar (dumbbell)'}]
+                           : [{v:45,l:'45 lb Olympic bar'},{v:35,l:'35 lb bar'},{v:15,l:'15 lb bar'},{v:0,l:'No bar (dumbbell)'}];
+  document.getElementById('plateBar').innerHTML = bars.map(b=>`<option value="${b.v}">${esc(b.l)}</option>`).join('');
+  document.getElementById('plateTarget').value = presetLb!=null ? dispNum(presetLb) : (unit==='kg'?'60':'135');
+  document.getElementById('plateModal').classList.add('visible');
+  renderPlates();
+}
+function renderPlates(){
+  const unit=getUnit();
+  const tDisp=parseFloat(document.getElementById('plateTarget').value);
+  const barDisp=parseFloat(document.getElementById('plateBar').value);
+  const out=document.getElementById('plateOut');
+  if(isNaN(tDisp)){ out.innerHTML='<div class="plate-msg">Enter a target weight.</div>'; return; }
+  const targetLb = unit==='kg' ? tDisp*LB_PER_KG : tDisp;
+  const barLb = unit==='kg' ? (barDisp||0)*LB_PER_KG : (barDisp||0);
+  const res=computePlates(targetLb, barLb);
+  if(res.none){ out.innerHTML='<div class="plate-msg">Target is below the bar weight.</div>'; return; }
+  if(!res.perSide.length){ out.innerHTML='<div class="plate-msg">Just the bar — no plates needed.</div>'; return; }
+  const chips=res.perSide.map(p=>`<span class="plate-chip">${p}</span>`).join('');
+  const leftover = res.leftover>0 ? `<div class="plate-msg">~${res.leftover} ${esc(unit)}/side can't be matched with standard plates</div>` : '';
+  out.innerHTML=`<div class="plate-side-lbl">Load per side:</div><div class="plate-chips">${chips}</div>${leftover}<div class="plate-total">${res.target} ${esc(unit)} total · ${res.bar} ${esc(unit)} bar</div>`;
+}
 function getActiveProgram() {
   return getBuiltinProgram(activeProgramId) || getPrograms().find(p => p.id === activeProgramId) || ARNOLD_PROGRAM;
 }
@@ -1423,6 +1573,8 @@ function renderTrackerDay() {
       <div class="session-meta">${esc(prog.name)}</div>
     </div>
     <div class="session-acts">
+      <button class="btn btn-ghost" onclick="toggleUnit()" title="Switch units">${esc(unitLabel())}</button>
+      <button class="btn btn-ghost" onclick="openPlateCalc()" title="Plate calculator">🧮</button>
       <button class="btn btn-ghost" onclick="startRest(90)">⏱ Rest</button>
       <button class="btn btn-ghost" onclick="clearTrackerDay()">↺ Reset</button>
       <button class="btn btn-green btn-sm" onclick="finishSession()">✓ Log</button>
@@ -1442,7 +1594,7 @@ function renderTrackerDay() {
   }
   // Last session reference
   if (last) {
-    html += `<div class="last-session-bar">↩ Last session: <b>${esc(last.date)}</b> — your previous numbers show in grey in each field and under every exercise. Aim to beat them.</div>`;
+    html += `<div class="last-session-bar">↩ Last session: <b>${esc(last.date)}</b> — each exercise shows a suggested target and your last numbers. Tap ✓ to log a set and start the rest timer.</div>`;
   }
   // Warmup
   if (day.warmup?.length) {
@@ -1457,25 +1609,39 @@ function renderTrackerDay() {
     block.exercises.forEach(ex => {
       if (ex.superset) { html += `<div class="ss-div"><div class="ss-line"></div><div class="ss-label">↕ Superset — 30 sec ↕</div><div class="ss-line"></div></div>`; return; }
       html += `<div class="exercise"><div class="ex-hdr"><div><div class="ex-name">${esc(ex.label)} — ${esc(ex.name)}</div><div class="ex-muscle-tag">${esc(ex.muscle)}</div></div><div class="ex-set-count">${ex.sets.length} SETS</div></div>`;
-      html += `<div class="sets-con"><div class="set-row"><div></div><div class="set-col"><div class="col-lbl">Reps</div></div><div class="set-col"><div class="col-lbl">Prescribed</div></div><div class="set-col"><div class="col-lbl">Actual</div></div></div>`;
+      const sug = suggestProgression(ex);
+      if (sug.first) {
+        html += `<div class="suggest first">★ First time — log the weight you use; we'll progress you from here.</div>`;
+      } else if (sug.weightLb != null) {
+        html += `<div class="suggest">▲ Suggested: <b>${esc(fmtWeightLb(sug.weightLb))} × ${sug.reps}</b> <span>· ${esc(sug.why)}</span></div>`;
+      } else if (sug.text) {
+        html += `<div class="suggest">▲ ${esc(sug.text)}</div>`;
+      }
+      const restSec = parseRest(block.rest);
+      html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>reps</span><span>weight (${unitLabel()})</span><span></span></div>`;
       ex.sets.forEach((s, si) => {
-        const key = `${ex.id}_${si}`;
-        const val = sessionLog[key] || '';
-        const isFilled = val.trim().length > 0 ? 'filled' : '';
-        const lastVal = lastLog[key];
-        const ph = (lastVal && String(lastVal).trim()) ? 'last: ' + esc(String(lastVal).trim()) : 'e.g. 50 lbs';
-        html += `<div class="set-row">
-          <div class="set-num-lbl">${si+1}</div>
-          <div class="set-col"><div class="presc-val">${esc(s.reps)}</div></div>
-          <div class="set-col"><div class="presc-val">${esc(s.weight)}</div></div>
-          <div class="set-col"><input type="text" class="log-input ${isFilled}" placeholder="${ph}" value="${esc(val)}" data-key="${key}" oninput="handleLog(this)"></div>
+        const cur = curSet(ex.id, si);
+        const rowFilled = (cur.done || cur.w != null || cur.r != null) ? 'done' : '';
+        html += `<div class="set-row2 ${rowFilled}" id="row_${ex.id}_${si}">
+          <div class="set-n">${si+1}</div>
+          <div class="set-presc">${esc(s.reps)}<span>${esc(s.weight)}</span></div>
+          <div class="stepper">
+            <button class="stp-btn" onclick="stepR('${ex.id}',${si},-1)" tabindex="-1">−</button>
+            <input class="stp-input" id="r_${ex.id}_${si}" inputmode="numeric" placeholder="–" value="${cur.r!=null?cur.r:''}" data-k="${ex.id}|${si}" oninput="setRepInput(this)">
+            <button class="stp-btn" onclick="stepR('${ex.id}',${si},1)" tabindex="-1">+</button>
+          </div>
+          <div class="stepper">
+            <button class="stp-btn" onclick="stepW('${ex.id}',${si},-${WEIGHT_STEP})" tabindex="-1">−</button>
+            <input class="stp-input" id="w_${ex.id}_${si}" inputmode="decimal" placeholder="–" value="${dispNum(cur.w)}" data-k="${ex.id}|${si}" oninput="setWeightInput(this)">
+            <button class="stp-btn" onclick="stepW('${ex.id}',${si},${WEIGHT_STEP})" tabindex="-1">+</button>
+          </div>
+          <button class="set-done ${cur.done?'on':''}" id="d_${ex.id}_${si}" onclick="toggleDone('${ex.id}',${si},${restSec})" title="Mark set done">✓</button>
         </div>`;
       });
       html += `</div>`;
-      // Last-session per-set summary (placeholders disappear once you type, so show it explicitly too)
-      if (last) {
-        const lr = ex.sets.map((s, si) => { const v = lastLog[`${ex.id}_${si}`]; return (v && String(v).trim()) ? esc(String(v).trim()) : '·'; });
-        if (lr.some(x => x !== '·')) html += `<div class="last-ref">↩ Last: <b>${lr.join('</b>  ·  <b>')}</b></div>`;
+      if (sug.last && sug.last.sets && sug.last.sets.length) {
+        const lr = sug.last.sets.map(x => `${x.w!=null?dispNum(x.w):'BW'}${x.r!=null?'×'+x.r:''}`);
+        html += `<div class="last-ref">↩ Last (${esc(sug.last.date||'')}): <b>${esc(lr.join('  ·  '))}</b></div>`;
       }
       // Notes
       const nk = `${ex.id}_notes`;
@@ -1516,8 +1682,7 @@ function countFilled(day) {
   let n = 0;
   day.blocks.forEach(b => b.exercises.forEach(ex => {
     if (!ex.superset) ex.sets.forEach((s, si) => {
-      const v = sessionLog[`${ex.id}_${si}`];
-      if (v && v.trim()) n++;
+      if (setHasData(sessionLog[`${ex.id}_${si}`])) n++;
     });
   }));
   return n;
@@ -1551,11 +1716,19 @@ function finishSession() {
   hist.unshift(entry);
   if (hist.length > 80) hist.pop();
   saveHistory(hist);
+  // update the per-exercise baseline store + detect PRs
+  const prs = [];
+  day.blocks.forEach(b => b.exercises.forEach(ex => {
+    if (ex.superset) return;
+    const sets = ex.sets.map((s, si) => sessionLog[`${ex.id}_${si}`]);
+    if (recordExercise(ex.name, sets).pr) prs.push(ex.name);
+  }));
   sessionLog.__completed = true;
   saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
-  if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+  if (navigator.vibrate) navigator.vibrate(prs.length ? [60, 50, 60, 50, 120] : [40, 60, 40]);
   renderTrackerDay();
-  showToast('Session logged! ✓', 'success');
+  if (prs.length) showToast(`🏆 New PR: ${prs[0]}${prs.length > 1 ? ' +' + (prs.length - 1) + ' more' : ''}`, 'success');
+  else showToast('Session logged! ✓', 'success');
 }
 // ─────────────────────────────────────────────
 // EXERCISE BANK
@@ -1981,8 +2154,8 @@ function renderHistory() {
       const day = prog.days[entry.dayIdx];
       day.blocks.forEach(b => b.exercises.forEach(ex => {
         if (!ex.superset) {
-          const actuals = ex.sets.map((s,si) => { const v = entry.log[`${ex.id}_${si}`]; return (v && String(v).trim()) ? String(v).trim() : null; }).filter(Boolean);
-          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(ex.name)}:</strong> ${esc(actuals.join(', '))}<br>`;
+          const actuals = ex.sets.map((s,si) => { const cv = coerceSet(entry.log[`${ex.id}_${si}`]); if (cv.w==null && cv.r==null) return null; return `${cv.w!=null?dispNum(cv.w):'BW'}${cv.r!=null?'×'+cv.r:''}`; }).filter(Boolean);
+          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(ex.name)}:</strong> ${esc(actuals.join(', '))} ${esc(unitLabel())}<br>`;
         }
       }));
     }
@@ -2010,10 +2183,10 @@ function buildProgressData() {
     prog.days[entry.dayIdx].blocks.forEach(b => b.exercises.forEach(ex => {
       if (ex.superset) return;
       let top = null;
-      ex.sets.forEach((s, si) => { const v = parseNum(entry.log[`${ex.id}_${si}`]); if (v != null) top = (top == null) ? v : Math.max(top, v); });
+      ex.sets.forEach((s, si) => { const cv = coerceSet(entry.log[`${ex.id}_${si}`]); if (cv.w != null) top = (top == null) ? cv.w : Math.max(top, cv.w); });
       if (top != null) {
         if (!map[ex.id]) map[ex.id] = {name: ex.name, points: []};
-        map[ex.id].points.push({ts: entry.ts, top, date: entry.date});
+        map[ex.id].points.push({ts: entry.ts, top: toDisplay(top), date: entry.date});
       }
     }));
   });
@@ -2253,7 +2426,7 @@ function exportPDF(entryOverride) {
       y+=1; doc.setDrawColor(50,50,50); doc.setLineWidth(0.2); doc.line(margin,y,W-margin,y); y+=4;
       ex.sets.forEach((s,si) => {
         checkY(7);
-        const key=`${ex.id}_${si}`; const actual=(log[key]&&typeof log[key]==='string')?log[key]:'—';
+        const key=`${ex.id}_${si}`; const cv=coerceSet(log[key]); const actual=(cv.w!=null||cv.r!=null)?`${cv.w!=null?dispNum(cv.w)+unitLabel():''}${cv.r!=null?(cv.w!=null?' x ':'')+cv.r+' reps':''}`.trim():'—';
         if(si%2===0){doc.setFillColor(18,18,18);doc.rect(margin,y-3,colW,6,'F');}
         doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,100); doc.text(String(si+1),c1,y);
         doc.setTextColor(200,200,200); doc.text(s.reps,c2,y); doc.text(s.weight,c3,y);
