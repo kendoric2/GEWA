@@ -154,6 +154,19 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .suggest b{color:var(--green);}
 .suggest span{color:var(--text-muted);}
 .suggest.first{color:var(--gold);background:var(--gold-bg);border-color:var(--gold-dim);}
+.suggest.first b{color:var(--gold);}
+.suggest-link{color:var(--gold);text-decoration:underline;cursor:pointer;}
+/* PROFILE ROW + MODAL */
+.profile-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);}
+.profile-row.prof-cta{border-color:var(--gold-dim);background:var(--gold-bg);}
+.prof-info{font-size:12px;color:var(--text-dim);line-height:1.5;flex:1;min-width:200px;}
+.prof-info b{color:var(--text);}
+.prof-sub{color:var(--text-muted);}
+.prof-help{font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:14px;}
+.prof-note{font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:10px;}
+.prof-bw-wrap{display:flex;align-items:center;gap:6px;flex:1;}
+.prof-unit{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);min-width:18px;}
+.gen-back{margin-bottom:10px;}
 .set-hdr{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:4px;}
 .set-hdr span{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;text-align:center;}
 .set-row2{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:5px;}
@@ -344,6 +357,7 @@ canvas#progChart{display:block;width:100%;height:180px;}
     <button class="btn btn-gold" onclick="showCreateModal()">+ Create Program</button>
     <button class="btn btn-purple" onclick="showScreen('random')">🎲 Random Generator</button>
   </div>
+  <div class="profile-row" id="profileRow"></div>
   <div class="program-grid" id="programGrid"></div>
   <div class="data-row">
     <div class="data-note">Your programs and history live in this browser only. Back them up to keep them safe or move them to another device.</div>
@@ -380,6 +394,7 @@ canvas#progChart{display:block;width:100%;height:180px;}
   <div class="exercise-list" id="exerciseList"></div>
 </div>
 <div id="screen-random" class="screen">
+  <button class="btn btn-outline btn-sm gen-back" onclick="showScreen('programs')">← Programs</button>
   <div class="screen-title">Weekly <span>Generator</span></div>
   <div class="screen-sub">Set the client's goal, experience, equipment and any injuries, pick the muscles and schedule — the generator builds a balanced split from the aggregated exercise database, spaces muscle groups for recovery, and sets goal-based reps. Save it as a program when you like it.</div>
   <div class="gen-section">
@@ -448,7 +463,6 @@ canvas#progChart{display:block;width:100%;height:180px;}
   <button class="bnav-btn active" onclick="showScreen('programs')"><div class="bnav-icon">📋</div><div class="bnav-label">Programs</div></button>
   <button class="bnav-btn" onclick="showScreen('tracker')"><div class="bnav-icon">💪</div><div class="bnav-label">Tracker</div></button>
   <button class="bnav-btn" onclick="showScreen('bank')"><div class="bnav-icon">📚</div><div class="bnav-label">Exercise Bank</div></button>
-  <button class="bnav-btn" onclick="showScreen('random')"><div class="bnav-icon">🎲</div><div class="bnav-label">Generator</div></button>
   <button class="bnav-btn" onclick="showScreen('history')"><div class="bnav-icon">🗂</div><div class="bnav-label">History</div></button>
 </div>
 <!-- CREATE PROGRAM MODAL -->
@@ -530,6 +544,43 @@ canvas#progChart{display:block;width:100%;height:180px;}
         <select class="form-select" id="plateBar" onchange="renderPlates()" style="flex:1"></select>
       </div>
       <div class="plate-out" id="plateOut"></div>
+    </div>
+  </div>
+</div>
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr">
+      <div class="modal-title">Your Profile</div>
+      <button class="btn btn-ghost" onclick="closeModal('profileModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="prof-help">Used to estimate a sensible starting weight for each exercise — just a starting point, the app fine-tunes from your logged sets. Stays on your device.</div>
+      <div class="rule-row">
+        <div class="rule-label">Bodyweight</div>
+        <div class="prof-bw-wrap">
+          <input class="form-input" id="profBw" inputmode="decimal" placeholder="e.g. 175" style="flex:1">
+          <span class="prof-unit" id="profBwUnit">lb</span>
+        </div>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Sex</div>
+        <select class="form-select" id="profSex" style="flex:1">
+          <option value="">Prefer not to say</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+      </div>
+      <div class="rule-row">
+        <div class="rule-label">Experience</div>
+        <select class="form-select" id="profExp" style="flex:1">
+          <option value="beginner">Beginner (under 1 yr)</option>
+          <option value="intermediate">Intermediate (1–3 yrs)</option>
+          <option value="advanced">Advanced (3+ yrs)</option>
+        </select>
+      </div>
+      <div class="prof-note">Sex refines the strength estimate; leave it blank and we'll use a neutral average for the big lifts.</div>
+      <button class="btn btn-gold" style="width:100%;margin-top:8px" onclick="saveProfileForm()">Save profile</button>
     </div>
   </div>
 </div>
@@ -1362,9 +1413,58 @@ function recordExercise(name, rawSets){
 const BW_LOADABLE = /\b(dips?|pull-?ups?|chin-?ups?|muscle-?ups?)\b/i;
 function exIsBwPrescribed(ex){ return ex.sets && ex.sets.length && ex.sets.every(s => /^\s*bw\s*$/i.test(String(s.weight))); }
 function exHideWeight(ex){ return exIsBwPrescribed(ex) && !BW_LOADABLE.test(ex.name || '') && !/dumbbell|barbell|machine|cable|kettlebell/i.test(ex.name || ''); }
+// ── client profile (bodyweight, sex, experience) → starting-weight estimates ──
+// Bodyweight is stored canonically in lb, like every other weight in the app.
+function getProfile(){ try{ return JSON.parse(localStorage.getItem('ge_profile')||'null'); }catch(e){ return null; } }
+function saveProfile(p){ try{ localStorage.setItem('ge_profile', JSON.stringify(p)); }catch(e){} }
+function hasProfile(){ const p=getProfile(); return !!(p && p.bw); }
+// Novice 1RM as a multiple of bodyweight (male baseline), from common strength standards.
+const STD_MULT = { bench:0.75, ohp:0.55, row:0.70, squat:1.00, deadlift:1.30 };
+// per-lift female multiplier relative to male (upper ~0.65, lower ~0.80)
+const STD_SEXF = { bench:0.65, ohp:0.60, row:0.65, squat:0.80, deadlift:0.80 };
+// experience scales the novice baseline toward intermediate/advanced
+const STD_EXPF = { beginner:1.0, intermediate:1.5, advanced:1.85 };
+// dumbbell variant → per-hand fraction of the barbell working weight
+const STD_DBF = { bench:0.42, ohp:0.45, row:0.50 };
+function liftType(name){
+  const n=String(name||'').toLowerCase();
+  if(/deadlift|romanian|stiff-?leg/.test(n)) return 'deadlift';
+  if(/\bsquat\b/.test(n)) return 'squat';
+  if(/bench press|incline barbell press|incline dumbbell press|flat dumbbell press|dumbbell bench/.test(n)) return 'bench';
+  if(/overhead press|shoulder press|military press|arnold press|seated dumbbell press/.test(n)) return 'ohp';
+  if(/barbell row|bent-?over row|pendlay|seated cable row|chest-?supported row|single-?arm dumbbell row|t-?bar row/.test(n)) return 'row';
+  return null;
+}
+// Suggested first-session weight (lb) for a prescribed exercise, or null when we
+// can't stand behind a number (no profile, bodyweight move, or an isolation lift
+// with no clean standard — those get rep guidance instead).
+function estimateStartLb(ex){
+  const p=getProfile(); if(!p || !p.bw) return null;
+  if(exHideWeight(ex)) return null;
+  const lt=liftType(ex.name); if(!lt) return null;
+  const range=parseRepRange(ex.sets && ex.sets[0] && ex.sets[0].reps);
+  const reps = range ? Math.round((range.lo+range.hi)/2) : 10;
+  const sexF = (p.sex==='female') ? (STD_SEXF[lt]||0.7)
+             : (p.sex==='male')   ? 1
+             : (1 + (STD_SEXF[lt]||0.7)) / 2;   // unspecified → neutral average
+  const expF = STD_EXPF[p.exp] || 1.0;
+  const oneRM = p.bw * STD_MULT[lt] * sexF * expF;
+  let work = oneRM / (1 + reps/30) * 0.85;            // ease into it on session 1
+  const isDb = /dumbbell/i.test(ex.name) || ex.equip==='dumbbell';
+  let perHand=false;
+  if(isDb){ if(!STD_DBF[lt]) return null; work *= STD_DBF[lt]; perHand=true; }
+  return { lb: Math.max(5, Math.round(work/5)*5), perHand };
+}
 function suggestProgression(ex){
   const rec = exRecord(ex.name);
-  if(!rec || !rec.sets || !rec.sets.length) return {first:true};
+  if(!rec || !rec.sets || !rec.sets.length){
+    const range=parseRepRange(ex.sets && ex.sets[0] && ex.sets[0].reps);
+    const repTxt = range ? (range.lo===range.hi ? String(range.lo) : range.lo+'–'+range.hi) : '';
+    if(exHideWeight(ex)) return {first:true, bw:true, reps:repTxt};
+    const est=estimateStartLb(ex);
+    if(est) return {first:true, estLb:est.lb, perHand:est.perHand, reps:repTxt};
+    return {first:true, guide:true, reps:repTxt};
+  }
   const range = parseRepRange(ex.sets && ex.sets[0] && ex.sets[0].reps);
   const maxW = Math.max(0, ...rec.sets.map(s=>s.w||0));
   if(maxW<=0 || !range) return {text:'Beat last time — more reps or cleaner form.', last:rec};
@@ -1423,6 +1523,43 @@ function renderPlates(){
   const leftover = res.leftover>0 ? `<div class="plate-msg">~${res.leftover} ${esc(unit)}/side can't be matched with standard plates</div>` : '';
   out.innerHTML=`<div class="plate-side-lbl">Load per side:</div><div class="plate-chips">${chips}</div>${leftover}<div class="plate-total">${res.target} ${esc(unit)} total · ${res.bar} ${esc(unit)} bar</div>`;
 }
+// ── profile editor (drives starting-weight estimates) ──
+function openProfile(){
+  const p=getProfile()||{};
+  document.getElementById('profBwUnit').textContent = unitLabel();
+  document.getElementById('profBw').value = p.bw!=null ? dispNum(p.bw) : '';
+  document.getElementById('profSex').value = p.sex || '';
+  document.getElementById('profExp').value = p.exp || 'beginner';
+  document.getElementById('profileModal').classList.add('visible');
+}
+function saveProfileForm(){
+  const bwDisp=parseFloat(document.getElementById('profBw').value);
+  const p={
+    bw: isNaN(bwDisp) ? null : fromDisplay(bwDisp),
+    sex: document.getElementById('profSex').value || null,
+    exp: document.getElementById('profExp').value || 'beginner'
+  };
+  saveProfile(p);
+  closeModal('profileModal');
+  renderProfileRow();
+  if(currentScreen==='tracker') renderTrackerDay();
+  showToast(p.bw ? 'Profile saved — starting weights updated' : 'Profile saved', 'success');
+}
+function renderProfileRow(){
+  const el=document.getElementById('profileRow'); if(!el) return;
+  const p=getProfile();
+  if(p && p.bw){
+    const expLbl={beginner:'Beginner',intermediate:'Intermediate',advanced:'Advanced'}[p.exp]||'Beginner';
+    const bits=[ dispNum(p.bw)+' '+unitLabel() ];
+    if(p.sex) bits.push(p.sex==='female'?'Female':'Male');
+    bits.push(expLbl);
+    el.innerHTML = `<div class="prof-info"><b>⚙ Profile:</b> ${esc(bits.join(' · '))}<span class="prof-sub"> — used for starting-weight suggestions</span></div><button class="btn btn-outline btn-sm" onclick="openProfile()">Edit</button>`;
+    el.classList.remove('prof-cta');
+  } else {
+    el.innerHTML = `<div class="prof-info">⚙ New to lifting? Add your bodyweight & experience and we'll suggest a starting weight for each exercise.</div><button class="btn btn-gold btn-sm" onclick="openProfile()">Set up profile</button>`;
+    el.classList.add('prof-cta');
+  }
+}
 function getActiveProgram() {
   return getBuiltinProgram(activeProgramId) || getPrograms().find(p => p.id === activeProgramId) || ARNOLD_PROGRAM;
 }
@@ -1442,7 +1579,9 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
-  const idx = ['programs','tracker','bank','random','history'].indexOf(name);
+  // Generator lives under Programs now (no nav tab of its own), so keep Programs lit there.
+  const navName = (name === 'random') ? 'programs' : name;
+  const idx = ['programs','tracker','bank','history'].indexOf(navName);
   if (idx >= 0) document.querySelectorAll('.bnav-btn')[idx].classList.add('active');
   currentScreen = name;
   if (name === 'programs') renderPrograms();
@@ -1455,6 +1594,7 @@ function showScreen(name) {
 // PROGRAMS SCREEN
 // ─────────────────────────────────────────────
 function renderPrograms() {
+  renderProfileRow();
   const grid = document.getElementById('programGrid');
   const userProgs = getPrograms();
   const active = getActiveProgramId();
@@ -1797,7 +1937,17 @@ function renderTrackerDay() {
       html += `<div class="exercise"><div class="ex-hdr"><div><div class="ex-name">${esc(ex.label)} — ${esc(ex.name)}</div><div class="ex-muscle-tag">${esc(ex.muscle)}</div></div><div class="ex-set-count">${ex.sets.length} SETS</div></div>`;
       const sug = suggestProgression(ex);
       if (sug.first) {
-        html += `<div class="suggest first">★ First time — log the weight you use; we'll progress you from here.</div>`;
+        let fm;
+        if (sug.estLb != null) {
+          fm = `★ First time — start around <b>~${esc(fmtWeightLb(sug.estLb))}${sug.perHand ? ' each' : ''}</b>${sug.reps ? ` for ${esc(sug.reps)} reps` : ''}. Aim to leave ~2 in the tank; we fine-tune from your logged sets.`;
+        } else if (sug.bw) {
+          fm = `★ First time — log your reps; we progress you from here.`;
+        } else if (sug.guide) {
+          fm = `★ First time — pick a weight you can do for ${esc(sug.reps || 'these')} reps with ~2 left in the tank.` + (hasProfile() ? '' : ` <a class="suggest-link" onclick="openProfile()">Add your profile</a> for a suggested number.`);
+        } else {
+          fm = `★ First time — log the weight you use; we'll progress you from here.`;
+        }
+        html += `<div class="suggest first">${fm}</div>`;
       } else if (sug.weightLb != null) {
         html += `<div class="suggest">▲ Suggested: <b>${esc(fmtWeightLb(sug.weightLb))} × ${sug.reps}</b> <span>· ${esc(sug.why)}</span></div>`;
       } else if (sug.text) {
