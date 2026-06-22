@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Golden Era">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 :root{--gold:#C9A84C;--gold-light:#E8C96A;--gold-dim:#5A4820;--gold-bg:rgba(201,168,76,0.07);--black:#0A0A0A;--surface:#131313;--surface2:#1C1C1C;--surface3:#242424;--border:#2C2C2C;--border-light:#383838;--text:#EFEFEF;--text-muted:#888;--text-dim:#4A4A4A;--green:#2ECC71;--green-bg:rgba(46,204,113,0.08);--blue:#3498DB;--red:#E74C3C;--purple:#9B59B6;}
@@ -181,6 +182,39 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .reset-gate-lbl b{color:#ff6b5e;letter-spacing:.12em;}
 #resetConfirmInput{width:100%;text-transform:uppercase;letter-spacing:.15em;text-align:center;font-family:'JetBrains Mono',monospace;}
 .reset-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;}
+/* STATS */
+.stats-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.stats-tab{flex:1;padding:10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer;transition:.12s;}
+.stats-tab.active{border-color:var(--gold-dim);background:var(--gold-bg);color:var(--gold);}
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 5px;text-align:center;}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--gold);line-height:1.1;}
+.stat-lbl{font-size:8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;}
+.chart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);}
+.chart-head .filter-select{flex:0 1 auto;max-width:58%;font-size:11px;}
+.chart-wrap{position:relative;height:190px;}
+.chart-wrap-sm{height:150px;}
+.chart-foot{margin-top:8px;text-align:right;font-size:11px;}
+.pr-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.pr-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--black);border:1px solid var(--border);border-radius:6px;}
+.pr-name{flex:1;font-size:12px;font-weight:600;color:var(--text);}
+.pr-val{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);white-space:nowrap;}
+.pr-val span{color:var(--text-muted);font-size:9px;}
+.pr-date{font-size:10px;color:var(--text-muted);white-space:nowrap;}
+.pr-empty,.stats-empty{text-align:center;padding:34px 16px;color:var(--text-muted);font-size:12px;line-height:1.7;}
+.body-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.body-field{display:flex;flex-direction:column;gap:4px;}
+.body-field label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;}
+.body-note{font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:10px;}
+.body-list,.exh-list{display:flex;flex-direction:column;gap:6px;margin-top:6px;}
+.body-hrow,.exh-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--black);border:1px solid var(--border);border-radius:6px;font-size:12px;}
+.body-hdate,.exh-date{color:var(--text-muted);font-size:11px;min-width:74px;}
+.body-hvals,.exh-sets{flex:1;color:var(--text);}
+.exh-e1{font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:11px;white-space:nowrap;}
+.exh-row.pr{border-color:var(--gold-dim);background:var(--gold-bg);}
+.exhist-btn{margin-top:12px;width:100%;}
 .set-hdr{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:4px;}
 .set-hdr span{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;text-align:center;}
 .set-row2{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:5px;}
@@ -467,17 +501,27 @@ canvas#progChart{display:block;width:100%;height:180px;}
   </div>
   <div class="gen-result" id="genResult"></div>
 </div>
+<div id="screen-stats" class="screen">
+  <div class="screen-title">Your <span>Stats</span></div>
+  <div class="screen-sub">Your training, visualized — strength trends, volume, consistency and body metrics, all from your logged sessions and all on your device.</div>
+  <div class="stats-tabs">
+    <button class="stats-tab active" id="sttab-charts" onclick="setStatsTab('charts')">📈 Progress</button>
+    <button class="stats-tab" id="sttab-body" onclick="setStatsTab('body')">⚖️ Body</button>
+  </div>
+  <div id="statsCharts" class="stats-pane"></div>
+  <div id="statsBody" class="stats-pane" style="display:none"></div>
+</div>
 <div id="screen-history" class="screen">
   <div class="screen-title">Session <span>History</span></div>
-  <div class="screen-sub">Track your progression and review past sessions. Export any session as PDF.</div>
-  <div id="progressPanel"></div>
+  <div class="screen-sub">Review and export past sessions. Charts and trends now live in the Stats tab.</div>
   <div id="historyList"></div>
 </div>
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="bnav-btn active" onclick="showScreen('programs')"><div class="bnav-icon">📋</div><div class="bnav-label">Programs</div></button>
   <button class="bnav-btn" onclick="showScreen('tracker')"><div class="bnav-icon">💪</div><div class="bnav-label">Tracker</div></button>
-  <button class="bnav-btn" onclick="showScreen('bank')"><div class="bnav-icon">📚</div><div class="bnav-label">Exercise Bank</div></button>
+  <button class="bnav-btn" onclick="showScreen('bank')"><div class="bnav-icon">📚</div><div class="bnav-label">Bank</div></button>
+  <button class="bnav-btn" onclick="showScreen('stats')"><div class="bnav-icon">📈</div><div class="bnav-label">Stats</div></button>
   <button class="bnav-btn" onclick="showScreen('history')"><div class="bnav-icon">🗂</div><div class="bnav-label">History</div></button>
 </div>
 <!-- CREATE PROGRAM MODAL -->
@@ -622,6 +666,16 @@ canvas#progChart{display:block;width:100%;height:180px;}
         <button class="btn btn-danger" id="resetConfirmBtn" disabled onclick="doReset()">Erase data</button>
       </div>
     </div>
+  </div>
+</div>
+<!-- PER-EXERCISE HISTORY MODAL -->
+<div class="modal-overlay" id="exHistModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-hdr">
+      <div class="modal-title" id="exHistTitle">Exercise</div>
+      <button class="btn btn-ghost" onclick="closeModal('exHistModal')">✕</button>
+    </div>
+    <div class="modal-body" id="exHistBody"></div>
   </div>
 </div>
 <!-- REST TIMER -->
@@ -1380,7 +1434,6 @@ let generatedWorkout = [];
 let addExTargetDay = null;
 let dayExercises = {};
 let modalEquip = 'dumbbell';
-let chartExId = null;
 let bankEquip = 'dumbbell';
 let genEquip = ['dumbbell'];
 let genInjuries = [];
@@ -1448,6 +1501,24 @@ function recordExercise(name, rawSets){
   saveExStore(store);
   return {pr:isPR};
 }
+// Normalize any muscle string to a major group for volume aggregation.
+function majorMuscle(s){
+  const n = String(s||'').toLowerCase();
+  if(/chest|pec/.test(n)) return 'Chest';
+  if(/lat|back|trap|rhomboid|row|spinal|erector/.test(n)) return 'Back';
+  if(/delt|shoulder/.test(n)) return 'Shoulders';
+  if(/bicep|tricep|forearm|brachial|arm/.test(n)) return 'Arms';
+  if(/quad|hamstring|glute|calf|calve|leg|adductor|abductor/.test(n)) return 'Legs';
+  if(/ab|core|oblique|abdominal/.test(n)) return 'Core';
+  return 'Other';
+}
+// ── body metrics (bodyweight + optional tape measurements) ──
+// Bodyweight stored in lb (canonical, like all weights); measurements in cm (canonical).
+function getBody(){ try{ return JSON.parse(localStorage.getItem('ge_body')||'[]'); }catch(e){ return []; } }
+function saveBody(b){ try{ localStorage.setItem('ge_body', JSON.stringify(b)); }catch(e){} }
+function lenUnit(){ return getUnit()==='kg' ? 'cm' : 'in'; }
+function lenToDisp(cm){ if(cm==null) return null; return getUnit()==='kg' ? Math.round(cm*10)/10 : Math.round((cm/2.54)*10)/10; }
+function lenFromInput(v){ if(v==null||v==='') return null; const n=parseFloat(v); if(isNaN(n)) return null; return getUnit()==='kg' ? n : n*2.54; }
 // progression suggestion for an exercise given its prescribed reps
 // Bodyweight moves hide the weight field — but loadable ones (dips, pull/chin-ups) keep an optional one.
 const BW_LOADABLE = /\b(dips?|pull-?ups?|chin-?ups?|muscle-?ups?)\b/i;
@@ -1621,13 +1692,14 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
   // Generator lives under Programs now (no nav tab of its own), so keep Programs lit there.
   const navName = (name === 'random') ? 'programs' : name;
-  const idx = ['programs','tracker','bank','history'].indexOf(navName);
+  const idx = ['programs','tracker','bank','stats','history'].indexOf(navName);
   if (idx >= 0) document.querySelectorAll('.bnav-btn')[idx].classList.add('active');
   currentScreen = name;
   if (name === 'programs') renderPrograms();
   if (name === 'tracker') { activeProgramId = getActiveProgramId(); sessionLog = getSessionLog(activeProgramId, currentDayIdx); renderTracker(); }
   if (name === 'bank') renderBank();
   if (name === 'random') renderGenEquip();
+  if (name === 'stats') renderStats();
   if (name === 'history') renderHistory();
 }
 // ─────────────────────────────────────────────
@@ -2214,6 +2286,7 @@ function filterBank() {
         ${ex.how ? `<div class="ex-how"><div class="ex-how-title">How to do it</div><div class="ex-how-text">${esc(ex.how)}</div></div>` : ''}
         ${ex.cue ? `<div class="ex-cue">💡 ${esc(ex.cue)}</div>` : ''}
         ${prog}
+        <button class="btn btn-outline btn-sm exhist-btn" data-n="${esc(ex.name)}" onclick="event.stopPropagation(); openExHistory(this.dataset.n)">📈 Your history</button>
       </div>
     </div>`;
   });
@@ -2551,8 +2624,242 @@ function discardGenerated() {
 // ─────────────────────────────────────────────
 // HISTORY + PROGRESS
 // ─────────────────────────────────────────────
+// ═════════════════════════════════════════════
+// STATS (charts + per-exercise history + body metrics)
+// ═════════════════════════════════════════════
+let _ch = {};                 // live Chart.js instances, by key
+let statsTab = 'charts';
+let currentStatLift = null;   // exKey of selected lift
+let currentStatLiftName = '';
+let statMuscleFilter = '';
+function cssVar(n){ return (getComputedStyle(document.documentElement).getPropertyValue(n)||'').trim() || '#C9A84C'; }
+function chartBase(){
+  const tick = '#888', grid = 'rgba(255,255,255,0.06)';
+  return { responsive:true, maintainAspectRatio:false, animation:{duration:300},
+    plugins:{ legend:{display:false} },
+    scales:{ x:{ ticks:{color:tick, font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:7}, grid:{color:grid} },
+             y:{ ticks:{color:tick, font:{size:9}}, grid:{color:grid} } } };
+}
+function weekKey(ts){ const d=new Date(ts); const dow=(d.getDay()+6)%7; const m=new Date(d); m.setDate(d.getDate()-dow); m.setHours(0,0,0,0); return m.getTime(); }
+function weekLabel(ts){ const d=new Date(ts); return (d.getMonth()+1)+'/'+d.getDate(); }
+function fmtBigVol(lb){ const v=toDisplay(lb)||0; return v>=10000 ? (Math.round(v/100)/10)+'k' : Math.round(v).toLocaleString(); }
+// Reconstruct per-exercise series + per-session volume from logged history.
+function buildStats(){
+  const hist = getHistory().slice().sort((a,b)=> a.ts - b.ts);
+  const byEx = {}; const sessions = [];
+  hist.forEach(entry => {
+    const prog = getProgramById(entry.progId);
+    if(!prog || !prog.days[entry.dayIdx]) return;
+    let totalVol = 0; const byMuscle = {};
+    prog.days[entry.dayIdx].blocks.forEach(b => b.exercises.forEach(ex => {
+      if(ex.superset) return;
+      const sets = ex.sets.map((s,si)=> coerceSet(entry.log[`${ex.id}_${si}`])).filter(s=> s.w!=null || s.r!=null);
+      if(!sets.length) return;
+      const e1 = Math.max(0, ...sets.map(s=> e1rm(s.w, s.r||1)));
+      const topW = Math.max(0, ...sets.map(s=> s.w||0));
+      const best = sets.reduce((a,s)=> (e1rm(s.w,s.r||1) >= e1rm(a.w,a.r||1) ? s : a), sets[0]);
+      const vol = sets.reduce((sum,s)=> sum + ((s.w||0)*(s.r||0)), 0);
+      const k = exKey(ex.name);
+      if(!byEx[k]) byEx[k] = { name: ex.name, muscle: ex.muscle||'', points: [] };
+      byEx[k].points.push({ ts: entry.ts, e1rm: Math.round(e1), topW, reps: best.r!=null?best.r:null, vol: Math.round(vol) });
+      totalVol += vol;
+      const g = majorMuscle(ex.muscle);
+      byMuscle[g] = (byMuscle[g]||0) + vol;
+    }));
+    sessions.push({ ts: entry.ts, totalVol: Math.round(totalVol), byMuscle });
+  });
+  return { byEx, sessions };
+}
+function weekStreak(sessions){
+  if(!sessions.length) return 0;
+  const weeks = [...new Set(sessions.map(s=> weekKey(s.ts)))].sort((a,b)=> b-a);
+  const WEEK = 7*864e5; let streak = 0; let cursor = weekKey(Date.now());
+  if(weeks[0] < cursor) cursor = weeks[0];
+  for(const w of weeks){ if(w===cursor){ streak++; cursor -= WEEK; } else if(w < cursor){ break; } }
+  return streak;
+}
+function setStatsTab(t){
+  statsTab = t;
+  document.getElementById('sttab-charts').classList.toggle('active', t==='charts');
+  document.getElementById('sttab-body').classList.toggle('active', t==='body');
+  document.getElementById('statsCharts').style.display = t==='charts' ? '' : 'none';
+  document.getElementById('statsBody').style.display   = t==='body'   ? '' : 'none';
+  renderStats();
+}
+function renderStats(){ if(statsTab==='body') renderStatsBody(); else renderStatsCharts(); }
+function renderStatsCharts(){
+  const host = document.getElementById('statsCharts');
+  if(typeof Chart === 'undefined'){
+    host.innerHTML = `<div class="stats-empty">📈 Charts need one online load. Open the app while connected to the internet, then they'll work offline from then on.</div>`;
+    return;
+  }
+  const st = buildStats();
+  if(!st.sessions.length){
+    host.innerHTML = `<div class="stats-empty">No sessions logged yet.<br>Finish a workout in the <b>Tracker</b> and your charts appear here.</div>`;
+    return;
+  }
+  const keys = Object.keys(st.byEx).sort((a,b)=> st.byEx[a].name.localeCompare(st.byEx[b].name));
+  if(!currentStatLift || !st.byEx[currentStatLift]) currentStatLift = keys[0] || null;
+  const store = getExStore();
+  const prAll = Object.values(store).filter(e=> e.prDate).sort((a,b)=> new Date(b.prDate) - new Date(a.prDate));
+  const totalVol = st.sessions.reduce((s,x)=> s + x.totalVol, 0);
+  const liftOpts = keys.map(k=> `<option value="${esc(k)}" ${k===currentStatLift?'selected':''}>${esc(st.byEx[k].name)} (${st.byEx[k].points.length})</option>`).join('');
+  const groups = ['Chest','Back','Shoulders','Arms','Legs','Core'];
+  const muscleOpts = `<option value="">All muscles</option>` + groups.map(g=> `<option value="${g}" ${g===statMuscleFilter?'selected':''}>${g}</option>`).join('');
+  const prRows = prAll.length
+    ? prAll.slice(0,6).map(e=> `<div class="pr-row"><div class="pr-name">${esc(e.name)}</div><div class="pr-val">${esc(fmtWeightLb(e.e1rm))} <span>e1RM</span></div><div class="pr-date">${esc(e.prDate)}</div></div>`).join('')
+    : `<div class="pr-empty">No PRs yet — keep logging.</div>`;
+  host.innerHTML = `
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-num">${st.sessions.length}</div><div class="stat-lbl">Sessions</div></div>
+      <div class="stat-card"><div class="stat-num">${weekStreak(st.sessions)}</div><div class="stat-lbl">Week streak</div></div>
+      <div class="stat-card"><div class="stat-num">${fmtBigVol(totalVol)}</div><div class="stat-lbl">Volume ${esc(unitLabel())}</div></div>
+      <div class="stat-card"><div class="stat-num">${prAll.length}</div><div class="stat-lbl">PRs</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">📈 Estimated 1RM</div><select class="filter-select" id="statLift" onchange="onStatLift()">${liftOpts}</select></div>
+      <div class="chart-wrap"><canvas id="chart1rm"></canvas></div>
+      <div class="chart-foot"><span class="suggest-link" onclick="openCurrentLiftHistory()">View full history →</span></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">📊 Weekly volume</div><select class="filter-select" id="statMuscle" onchange="onStatMuscle()">${muscleOpts}</select></div>
+      <div class="chart-wrap"><canvas id="chartVol"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">🗓 Sessions / week</div></div>
+      <div class="chart-wrap chart-wrap-sm"><canvas id="chartFreq"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏆 Recent PRs</div>
+      <div class="pr-list">${prRows}</div>
+    </div>`;
+  drawLiftChart(); drawVolChart(); drawFreqChart();
+}
+function onStatLift(){ const el=document.getElementById('statLift'); if(el) currentStatLift = el.value; drawLiftChart(); }
+function onStatMuscle(){ const el=document.getElementById('statMuscle'); if(el) statMuscleFilter = el.value; drawVolChart(); }
+function drawLiftChart(){
+  const st = buildStats();
+  if(!currentStatLift || !st.byEx[currentStatLift]){ const ks=Object.keys(st.byEx); currentStatLift = ks[0]||null; }
+  const ex = currentStatLift ? st.byEx[currentStatLift] : null;
+  currentStatLiftName = ex ? ex.name : '';
+  const ctx = document.getElementById('chart1rm'); if(!ctx) return;
+  if(_ch.lift){ _ch.lift.destroy(); _ch.lift=null; }
+  if(!ex) return;
+  const pts = ex.points;
+  _ch.lift = new Chart(ctx, { type:'line',
+    data:{ labels: pts.map(p=> new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})),
+      datasets:[{ data: pts.map(p=> Math.round(toDisplay(p.e1rm))), borderColor: cssVar('--gold'), backgroundColor:'rgba(201,168,76,0.13)', fill:true, tension:0.25, pointRadius:3, pointBackgroundColor:cssVar('--gold'), borderWidth:2 }] },
+    options: Object.assign(chartBase(), { plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> `${c.parsed.y} ${unitLabel()} e1RM` } } } }) });
+}
+function drawVolChart(){
+  const st = buildStats(); const wk = {};
+  st.sessions.forEach(s=>{ const k=weekKey(s.ts); wk[k] = (wk[k]||0) + (statMuscleFilter ? (s.byMuscle[statMuscleFilter]||0) : s.totalVol); });
+  const weeks = Object.keys(wk).map(Number).sort((a,b)=> a-b).slice(-10);
+  const ctx = document.getElementById('chartVol'); if(!ctx) return;
+  if(_ch.vol){ _ch.vol.destroy(); }
+  _ch.vol = new Chart(ctx, { type:'bar',
+    data:{ labels: weeks.map(weekLabel), datasets:[{ data: weeks.map(w=> Math.round(toDisplay(wk[w]))), backgroundColor: cssVar('--gold'), borderRadius:3 }] },
+    options: Object.assign(chartBase(), { scales:{ x: chartBase().scales.x, y: Object.assign(chartBase().scales.y, {beginAtZero:true}) }, plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> `${c.parsed.y.toLocaleString()} ${unitLabel()}` } } } }) });
+}
+function drawFreqChart(){
+  const st = buildStats(); const wk = {};
+  st.sessions.forEach(s=>{ const k=weekKey(s.ts); wk[k] = (wk[k]||0) + 1; });
+  const weeks = Object.keys(wk).map(Number).sort((a,b)=> a-b).slice(-10);
+  const ctx = document.getElementById('chartFreq'); if(!ctx) return;
+  if(_ch.freq){ _ch.freq.destroy(); }
+  _ch.freq = new Chart(ctx, { type:'bar',
+    data:{ labels: weeks.map(weekLabel), datasets:[{ data: weeks.map(w=> wk[w]), backgroundColor: cssVar('--green'), borderRadius:3 }] },
+    options: Object.assign(chartBase(), { scales:{ x: chartBase().scales.x, y: Object.assign(chartBase().scales.y, {beginAtZero:true, ticks:{precision:0, color:'#888', font:{size:9}}}) }, plugins:{ legend:{display:false} } }) });
+}
+function openCurrentLiftHistory(){ openExHistory(currentStatLiftName); }
+function openExHistory(name){
+  if(!name){ showToast('No history yet for this lift',''); return; }
+  const st = buildStats(); const ex = st.byEx[exKey(name)];
+  document.getElementById('exHistTitle').textContent = name;
+  const body = document.getElementById('exHistBody');
+  if(!ex || !ex.points.length){
+    body.innerHTML = `<div class="stats-empty">No logged sessions for ${esc(name)} yet.</div>`;
+  } else {
+    const bestE = Math.max(...ex.points.map(p=> p.e1rm));
+    const rows = ex.points.slice().sort((a,b)=> b.ts-a.ts).map(p=>{
+      const isPR = p.e1rm===bestE && p.e1rm>0;
+      return `<div class="exh-row ${isPR?'pr':''}"><div class="exh-date">${esc(new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))}</div><div class="exh-sets">top ${esc(fmtWeightLb(p.topW))}${p.reps?' × '+p.reps:''}</div><div class="exh-e1">${esc(fmtWeightLb(p.e1rm))}${isPR?' 🏆':''}</div></div>`;
+    }).join('');
+    body.innerHTML = `<div class="chart-wrap chart-wrap-sm"><canvas id="exHistChart"></canvas></div><div class="exh-list">${rows}</div>`;
+  }
+  document.getElementById('exHistModal').classList.add('visible');
+  if(ex && ex.points.length && typeof Chart!=='undefined'){
+    const ctx = document.getElementById('exHistChart');
+    if(_ch.exh){ _ch.exh.destroy(); }
+    const pts = ex.points;
+    _ch.exh = new Chart(ctx, { type:'line',
+      data:{ labels: pts.map(p=> new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})),
+        datasets:[{ data: pts.map(p=> Math.round(toDisplay(p.e1rm))), borderColor: cssVar('--gold'), backgroundColor:'rgba(201,168,76,0.13)', fill:true, tension:0.25, pointRadius:2, borderWidth:2 }] },
+      options: Object.assign(chartBase(), { plugins:{ legend:{display:false} } }) });
+  }
+}
+const BODY_METRICS = [['waist','Waist','W'],['chest','Chest','C'],['arm','Arms','A'],['thigh','Thighs','T']];
+function renderStatsBody(){
+  const host = document.getElementById('statsBody');
+  const body = getBody().slice().sort((a,b)=> a.ts-b.ts);
+  const prof = getProfile()||{};
+  const lastBw = body.length ? body[body.length-1].bw : (prof.bw!=null?prof.bw:null);
+  host.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-title">⚖️ Log today</div>
+      <div class="body-form">
+        <div class="body-field"><label>Bodyweight (${esc(unitLabel())})</label><input id="bwIn" inputmode="decimal" class="form-input" placeholder="${lastBw!=null?dispNum(lastBw):'e.g. 175'}"></div>
+        ${BODY_METRICS.map(([k,lbl])=> `<div class="body-field"><label>${lbl} (${esc(lenUnit())})</label><input id="m_${k}" inputmode="decimal" class="form-input" placeholder="optional"></div>`).join('')}
+      </div>
+      <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="logBody()">Save entry</button>
+      <div class="body-note">Measurements are optional. Saving a bodyweight also updates your profile, so starting-weight suggestions stay current.</div>
+    </div>
+    ${ body.length ? `
+    <div class="chart-card">
+      <div class="chart-head"><div class="chart-title">📉 Trend</div><select class="filter-select" id="bodyMetric" onchange="drawBodyChart()">
+        <option value="bw">Bodyweight</option>
+        ${BODY_METRICS.map(([k,lbl])=> `<option value="${k}">${lbl}</option>`).join('')}
+      </select></div>
+      <div class="chart-wrap"><canvas id="bodyChart"></canvas></div>
+    </div>
+    <div class="chart-card"><div class="chart-title">History</div><div class="body-list">${ body.slice().reverse().map(bodyRow).join('') }</div></div>
+    ` : `<div class="stats-empty">Log your bodyweight above to start a trend.</div>` }`;
+  if(body.length && typeof Chart!=='undefined') drawBodyChart();
+}
+function bodyRow(e){
+  const bits = [`${dispNum(toDisplay(e.bw))} ${unitLabel()}`];
+  BODY_METRICS.forEach(([k,,abbr])=>{ if(e.m && e.m[k]!=null) bits.push(`${abbr} ${lenToDisp(e.m[k])}${lenUnit()}`); });
+  return `<div class="body-hrow"><div class="body-hdate">${esc(new Date(e.ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))}</div><div class="body-hvals">${esc(bits.join(' · '))}</div></div>`;
+}
+function logBody(){
+  const bw = fromDisplay(document.getElementById('bwIn').value);
+  const m = {};
+  BODY_METRICS.forEach(([k])=>{ const v = lenFromInput(document.getElementById('m_'+k).value); if(v!=null) m[k]=v; });
+  if(bw==null && !Object.keys(m).length){ showToast('Enter a weight or a measurement',''); return; }
+  const arr = getBody();
+  const carryBw = arr.length ? arr[arr.length-1].bw : null;
+  const now = new Date();
+  arr.push({ ts: now.getTime(), date: now.toLocaleDateString(), bw: bw!=null ? bw : carryBw, m });
+  saveBody(arr);
+  if(bw!=null){ const p = getProfile()||{}; p.bw = bw; if(!p.exp) p.exp='beginner'; saveProfile(p); }
+  showToast('Body entry saved ✓','success');
+  renderStatsBody();
+}
+function drawBodyChart(){
+  const sel = document.getElementById('bodyMetric'); const metric = sel ? sel.value : 'bw';
+  const body = getBody().slice().sort((a,b)=> a.ts-b.ts);
+  const pts = (metric==='bw')
+    ? body.filter(e=> e.bw!=null).map(e=> ({ ts:e.ts, v: toDisplay(e.bw) }))
+    : body.filter(e=> e.m && e.m[metric]!=null).map(e=> ({ ts:e.ts, v: lenToDisp(e.m[metric]) }));
+  const ctx = document.getElementById('bodyChart'); if(!ctx || typeof Chart==='undefined') return;
+  if(_ch.body){ _ch.body.destroy(); }
+  const unit = metric==='bw' ? unitLabel() : lenUnit();
+  _ch.body = new Chart(ctx, { type:'line',
+    data:{ labels: pts.map(p=> new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})),
+      datasets:[{ data: pts.map(p=> p.v), borderColor: cssVar('--gold'), backgroundColor:'rgba(201,168,76,0.13)', fill:true, tension:0.25, pointRadius:3, borderWidth:2 }] },
+    options: Object.assign(chartBase(), { plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> `${c.parsed.y} ${unit}` } } } }) });
+}
 function renderHistory() {
-  renderProgressPanel();
   const hist = getHistory();
   const list = document.getElementById('historyList');
   if (hist.length === 0) {
@@ -2586,107 +2893,7 @@ function renderHistory() {
   });
   list.innerHTML = html;
 }
-// Build { exId: {name, points:[{ts,top,date}]} } from numeric history data, chronological
-function buildProgressData() {
-  const hist = getHistory().slice().sort((a,b) => a.ts - b.ts);
-  const map = {};
-  hist.forEach(entry => {
-    const prog = getProgramById(entry.progId);
-    if (!prog || !prog.days[entry.dayIdx]) return;
-    prog.days[entry.dayIdx].blocks.forEach(b => b.exercises.forEach(ex => {
-      if (ex.superset) return;
-      let top = null;
-      ex.sets.forEach((s, si) => { const cv = coerceSet(entry.log[`${ex.id}_${si}`]); if (cv.w != null) top = (top == null) ? cv.w : Math.max(top, cv.w); });
-      if (top != null) {
-        if (!map[ex.id]) map[ex.id] = {name: ex.name, points: []};
-        map[ex.id].points.push({ts: entry.ts, top: toDisplay(top), date: entry.date});
-      }
-    }));
-  });
-  return map;
-}
-function renderProgressPanel() {
-  const map = buildProgressData();
-  const ids = Object.keys(map).filter(id => map[id].points.length >= 1);
-  const panel = document.getElementById('progressPanel');
-  if (ids.length === 0) { panel.innerHTML = ''; return; }
-  ids.sort((a,b) => map[a].name.localeCompare(map[b].name));
-  const sel = (chartExId && ids.includes(chartExId)) ? chartExId : ids[0];
-  chartExId = sel;
-  const opts = ids.map(id => `<option value="${id}" ${id===sel?'selected':''}>${esc(map[id].name)} (${map[id].points.length})</option>`).join('');
-  panel.innerHTML = `<div class="progress-panel">
-    <div class="pp-head">
-      <div class="pp-title">📈 Top-Set <span>Progress</span></div>
-      <select class="filter-select" id="chartExercise" onchange="onChartSelect()">${opts}</select>
-    </div>
-    <canvas id="progChart"></canvas>
-    <div class="pp-hint" id="ppHint"></div>
-  </div>`;
-  renderChart();
-}
-function onChartSelect() {
-  chartExId = document.getElementById('chartExercise').value;
-  renderChart();
-}
-function renderChart() {
-  const canvas = document.getElementById('progChart');
-  if (!canvas) return;
-  const map = buildProgressData();
-  const data = map[chartExId];
-  drawLineChart(canvas, data ? data.points : []);
-}
-function drawLineChart(canvas, points) {
-  const hint = document.getElementById('ppHint');
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth || 300;
-  const cssH = 180;
-  canvas.width = cssW * dpr;
-  canvas.height = cssH * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
-  if (!points || points.length === 0) { if (hint) hint.textContent = 'No numeric data yet — log some weights to see your trend.'; return; }
-  const padL = 38, padR = 14, padT = 14, padB = 24;
-  const plotW = cssW - padL - padR, plotH = cssH - padT - padB;
-  const vals = points.map(p => p.top);
-  let min = Math.min(...vals), max = Math.max(...vals);
-  if (min === max) { min -= 5; max += 5; }
-  const padV = (max - min) * 0.12; min -= padV; max += padV;
-  const n = points.length;
-  const xAt = i => n === 1 ? padL + plotW/2 : padL + (plotW * i/(n-1));
-  const yAt = v => padT + plotH * (1 - (v - min)/(max - min));
-  // grid + y labels
-  ctx.strokeStyle = '#2C2C2C'; ctx.fillStyle = '#888'; ctx.font = '9px monospace'; ctx.lineWidth = 1; ctx.textAlign = 'left';
-  for (let g = 0; g <= 3; g++) {
-    const val = min + (max - min) * g/3, yy = yAt(val);
-    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(cssW - padR, yy); ctx.stroke();
-    ctx.fillText(String(Math.round(val)), 4, yy + 3);
-  }
-  // area + line
-  ctx.beginPath();
-  points.forEach((p, i) => { const xx = xAt(i), yy = yAt(p.top); if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy); });
-  ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.lineTo(xAt(n-1), padT + plotH); ctx.lineTo(xAt(0), padT + plotH); ctx.closePath();
-  ctx.fillStyle = 'rgba(201,168,76,0.08)'; ctx.fill();
-  // points
-  ctx.fillStyle = '#E8C96A';
-  points.forEach((p, i) => { const xx = xAt(i), yy = yAt(p.top); ctx.beginPath(); ctx.arc(xx, yy, 3, 0, Math.PI*2); ctx.fill(); });
-  // x labels
-  const fmt = ts => { const d = new Date(ts); return (d.getMonth()+1) + '/' + d.getDate(); };
-  ctx.fillStyle = '#888'; ctx.font = '8px monospace';
-  if (n === 1) { ctx.textAlign = 'center'; ctx.fillText(fmt(points[0].ts), xAt(0), cssH - 8); }
-  else { ctx.textAlign = 'left'; ctx.fillText(fmt(points[0].ts), padL, cssH - 8); ctx.textAlign = 'right'; ctx.fillText(fmt(points[n-1].ts), cssW - padR, cssH - 8); }
-  ctx.textAlign = 'left';
-  // hint text
-  if (hint) {
-    const first = vals[0], lastV = vals[n-1], diff = Math.round((lastV - first) * 10) / 10;
-    if (n < 2) hint.textContent = `Top set: ${lastV}. Log another session to see your trend.`;
-    else {
-      const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '■');
-      hint.textContent = `${arrow} ${diff > 0 ? '+' : ''}${diff} on your top set across ${n} sessions  (${first} → ${lastV}).`;
-    }
-  }
-}
+// (Legacy History mini-chart removed — analytics now live in the dedicated Stats tab.)
 function deleteHistoryEntry(idx) {
   if (!confirm('Delete this session record?')) return;
   const hist = getHistory();
@@ -2901,7 +3108,6 @@ function showToast(msg,type){
 activeProgramId = getActiveProgramId();
 sessionLog = getSessionLog(activeProgramId, 0);
 renderPrograms();
-window.addEventListener('resize', () => { if (currentScreen === 'history') renderChart(); });
 // Kick off the aggregating data layer: load cache, then sync from the web in the background.
 loadExerciseData();
 </script>
