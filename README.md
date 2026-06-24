@@ -5,7 +5,7 @@ A clean, installable workout app for serious lifters: built-in legend‑inspired
 single static site — no build step, no server, no accounts — that installs to your phone and
 works offline.
 
-> **Live app:** `https://<your-live-url>` &nbsp;·&nbsp; **Repo:** https://github.com/kendoric2/GEWA
+> **Live app:** https://kendoric2.github.io/GEWA/ &nbsp;·&nbsp; **Repo:** https://github.com/kendoric2/GEWA
 
 ---
 
@@ -28,8 +28,8 @@ works offline.
 
 It's a PWA, so you install it from the browser — no app store.
 
-- **iPhone / iPad (Safari):** open the live URL → tap **Share** → **Add to Home Screen**.
-- **Android (Chrome):** open the live URL → menu (⋮) → **Install app** / **Add to Home screen**.
+- **iPhone / iPad (Safari):** open https://kendoric2.github.io/GEWA/ → tap **Share** → **Add to Home Screen**.
+- **Android (Chrome):** open https://kendoric2.github.io/GEWA/ → menu (⋮) → **Install app** / **Add to Home screen**.
 
 Once installed it launches full‑screen, works offline, and keeps your data on that device.
 Data doesn't sync between devices automatically — use **Back up / Restore** (on the Programs
@@ -61,7 +61,6 @@ python3 -m http.server 8000
 | `sw.js` | Service worker — offline caching + auto‑update |
 | `manifest.webmanifest` | App metadata + icons (makes it installable) |
 | `icon-*.png`, `apple-touch-icon.png` | Home‑screen icons |
-| `golden-era.html` | Legacy duplicate of `index.html` — safe to delete |
 
 ---
 
@@ -69,7 +68,7 @@ python3 -m http.server 8000
 
 The app deploys straight from this repo. After you push to `main`:
 
-1. Your host (Netlify / Cloudflare Pages / GitHub Pages) redeploys automatically.
+1. **GitHub Pages** rebuilds the site automatically (usually within a minute or two), live at https://kendoric2.github.io/GEWA/.
 2. Installed phones pick up the new version on the next launch — the service worker serves
    `index.html`, `app.js` and `styles.css` **network‑first**, so there's no manual cache‑busting.
 
