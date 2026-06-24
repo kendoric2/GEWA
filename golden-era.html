@@ -215,6 +215,31 @@ body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;fo
 .exh-e1{font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:11px;white-space:nowrap;}
 .exh-row.pr{border-color:var(--gold-dim);background:var(--gold-bg);}
 .exhist-btn{margin-top:12px;width:100%;}
+.exh-tag{font-family:'JetBrains Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:middle;}
+/* DATE RANGE BAR */
+.range-bar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.range-field{display:flex;flex-direction:column;gap:3px;}
+.range-field label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+.range-field input[type=date]{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:7px 9px;font-family:inherit;color-scheme:dark;}
+.range-reset{font-size:11px;padding-bottom:8px;white-space:nowrap;}
+/* QUICK LOG */
+.ql-btn{width:100%;margin-bottom:14px;}
+.ql-tracker-btn{width:100%;margin-bottom:12px;}
+.ql-cta{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;padding:30px 16px;color:var(--text-muted);font-size:13px;line-height:1.6;}
+.ql-help{font-size:12px;color:var(--text-dim);line-height:1.55;margin-bottom:12px;}
+.quick-list{max-height:42vh;overflow-y:auto;margin-top:10px;}
+.quick-row{padding:9px 10px;border-bottom:1px solid var(--border);cursor:pointer;}
+.quick-row:hover{background:var(--surface2);}
+.quick-custom{color:var(--gold);font-size:12px;}
+.ql-selected{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid var(--gold-dim);background:var(--gold-bg);border-radius:8px;margin-bottom:14px;}
+.ql-name{font-size:15px;font-weight:700;color:var(--text);}
+.ql-best{font-size:11px;color:var(--text-muted);margin-top:3px;}
+.ql-best b{color:var(--gold);}
+.ql-sets{display:flex;flex-direction:column;gap:8px;}
+.ql-setrow{display:grid;grid-template-columns:54px 1fr 1fr;gap:8px;align-items:center;}
+.ql-setn{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.ql-hint{font-size:11px;color:var(--text-muted);line-height:1.5;margin:12px 0 14px;}
+.ql-hint b{color:var(--gold);}
 .set-hdr{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:4px;}
 .set-hdr span{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;text-align:center;}
 .set-row2{display:grid;grid-template-columns:16px 52px 1fr 1.15fr 32px;gap:5px;align-items:center;margin-bottom:5px;}
@@ -417,6 +442,7 @@ canvas#progChart{display:block;width:100%;height:180px;}
 </div>
 <div id="screen-tracker" class="screen">
   <div class="day-selector" id="daySelector"></div>
+  <button class="btn btn-outline btn-sm ql-tracker-btn" onclick="openQuickLog()">⚡ Quick Log a PR / 1RM</button>
   <div id="trackerContent"></div>
 </div>
 <div id="screen-bank" class="screen">
@@ -676,6 +702,16 @@ canvas#progChart{display:block;width:100%;height:180px;}
       <button class="btn btn-ghost" onclick="closeModal('exHistModal')">✕</button>
     </div>
     <div class="modal-body" id="exHistBody"></div>
+  </div>
+</div>
+<!-- QUICK LOG MODAL -->
+<div class="modal-overlay" id="quickLogModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-hdr">
+      <div class="modal-title">⚡ Quick Log</div>
+      <button class="btn btn-ghost" onclick="closeModal('quickLogModal')">✕</button>
+    </div>
+    <div class="modal-body" id="quickLogBody"></div>
   </div>
 </div>
 <!-- REST TIMER -->
@@ -1480,7 +1516,7 @@ function coerceSet(v){
   return {w:null, r:null, done:false};
 }
 function setHasData(v){ const s=coerceSet(v); return s.done || s.w!=null || s.r!=null; }
-function e1rm(wLb, reps){ if(!wLb||!reps) return 0; return wLb*(1+reps/30); }
+function e1rm(wLb, reps){ if(!wLb||!reps) return 0; if(reps<=1) return wLb; return wLb*(1+reps/30); }
 function parseRepRange(repsStr){
   const s=String(repsStr||''); if(/sec|min|amrap|max/i.test(s)) return null;
   const nums=(s.match(/\d+/g)||[]).map(Number); if(!nums.length) return null;
@@ -1524,6 +1560,8 @@ function lenFromInput(v){ if(v==null||v==='') return null; const n=parseFloat(v)
 const BW_LOADABLE = /\b(dips?|pull-?ups?|chin-?ups?|muscle-?ups?)\b/i;
 function exIsBwPrescribed(ex){ return ex.sets && ex.sets.length && ex.sets.every(s => /^\s*bw\s*$/i.test(String(s.weight))); }
 function exHideWeight(ex){ return exIsBwPrescribed(ex) && !BW_LOADABLE.test(ex.name || '') && !/dumbbell|barbell|machine|cable|kettlebell/i.test(ex.name || ''); }
+// Timed holds (planks, wall sits, dead hangs…) are prescribed in seconds/minutes, not reps.
+function exIsTimed(ex){ return !!(ex && ex.sets && ex.sets.length && ex.sets.every(s => /sec|min|hold/i.test(String((s && s.reps) || '')))); }
 // ── client profile (bodyweight, sex, experience) → starting-weight estimates ──
 // Bodyweight is stored canonically in lb, like every other weight in the app.
 function getProfile(){ try{ return JSON.parse(localStorage.getItem('ge_profile')||'null'); }catch(e){ return null; } }
@@ -1568,6 +1606,11 @@ function estimateStartLb(ex){
 }
 function suggestProgression(ex){
   const rec = exRecord(ex.name);
+  if(exIsTimed(ex)){
+    const best = (rec && rec.sets) ? Math.max(0, ...rec.sets.map(s=>s.r||0)) : 0;
+    if(best>0) return {timed:true, text:`Beat your best hold — ${best}s.`, last:rec};
+    return {first:true, timed:true};
+  }
   if(!rec || !rec.sets || !rec.sets.length){
     const range=parseRepRange(ex.sets && ex.sets[0] && ex.sets[0].reps);
     const repTxt = range ? (range.lo===range.hi ? String(range.lo) : range.lo+'–'+range.hi) : '';
@@ -2080,7 +2123,9 @@ function renderTrackerDay() {
       const sug = suggestProgression(ex);
       if (sug.first) {
         let fm;
-        if (sug.estLb != null) {
+        if (sug.timed) {
+          fm = `★ First time — hold for the prescribed time; we'll track your best.`;
+        } else if (sug.estLb != null) {
           fm = `★ First time — start around <b>~${esc(fmtWeightLb(sug.estLb))}${sug.perHand ? ' each' : ''}</b>${sug.reps ? ` for ${esc(sug.reps)} reps` : ''}. Aim to leave ~2 in the tank; we fine-tune from your logged sets.`;
         } else if (sug.bw) {
           fm = `★ First time — log your reps; we progress you from here.`;
@@ -2100,7 +2145,8 @@ function renderTrackerDay() {
       const ssNext = block.exercises[exIdx + 1];
       const restSec = (ssNext && ssNext.superset) ? 30 : parseRest(block.rest);
       const hideW = exHideWeight(ex);
-      html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>reps</span><span>${hideW ? 'bodyweight' : 'weight (' + esc(unitLabel()) + ')'}</span><span></span></div>`;
+      const timed = exIsTimed(ex);
+      html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>${timed ? 'seconds' : 'reps'}</span><span>${hideW ? 'bodyweight' : 'weight (' + esc(unitLabel()) + ')'}</span><span></span></div>`;
       ex.sets.forEach((s, si) => {
         const cur = curSet(ex.id, si);
         const rowFilled = (cur.done || cur.w != null || cur.r != null) ? 'done' : '';
@@ -2115,9 +2161,9 @@ function renderTrackerDay() {
           <div class="set-n">${si+1}</div>
           <div class="set-presc">${esc(s.reps)}<span>${esc(s.weight)}</span></div>
           <div class="stepper">
-            <button class="stp-btn" onclick="stepR('${ex.id}',${si},-1)" tabindex="-1">−</button>
-            <input class="stp-input" id="r_${ex.id}_${si}" inputmode="numeric" placeholder="–" value="${cur.r!=null?cur.r:''}" data-k="${ex.id}|${si}" oninput="setRepInput(this)">
-            <button class="stp-btn" onclick="stepR('${ex.id}',${si},1)" tabindex="-1">+</button>
+            <button class="stp-btn" onclick="stepR('${ex.id}',${si},${timed?-5:-1})" tabindex="-1">−</button>
+            <input class="stp-input" id="r_${ex.id}_${si}" inputmode="numeric" placeholder="${timed?'sec':'–'}" value="${cur.r!=null?cur.r:''}" data-k="${ex.id}|${si}" oninput="setRepInput(this)">
+            <button class="stp-btn" onclick="stepR('${ex.id}',${si},${timed?5:1})" tabindex="-1">+</button>
           </div>
           ${weightCell}
           <button class="set-done ${cur.done?'on':''}" id="d_${ex.id}_${si}" onclick="toggleDone('${ex.id}',${si},${restSec})" title="Mark set done">✓</button>
@@ -2632,6 +2678,12 @@ let statsTab = 'charts';
 let currentStatLift = null;   // exKey of selected lift
 let currentStatLiftName = '';
 let statMuscleFilter = '';
+let statsFrom = null, statsTo = null;   // charts date-range filter (ms; null = unbounded)
+function getQuickLog(){ try{ return JSON.parse(localStorage.getItem('ge_quicklog')||'[]'); }catch(e){ return []; } }
+function saveQuickLog(a){ try{ localStorage.setItem('ge_quicklog', JSON.stringify(a)); }catch(e){} }
+function ymd(ts){ const d=new Date(ts); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function ymdToTs(str, end){ if(!str) return null; const a=String(str).split('-').map(Number); const dt=new Date(a[0],(a[1]||1)-1,a[2]||1); dt.setHours(end?23:0, end?59:0, end?59:0, end?999:0); return dt.getTime(); }
+function inStatsRange(ts){ if(statsFrom!=null && ts<statsFrom) return false; if(statsTo!=null && ts>statsTo) return false; return true; }
 function cssVar(n){ return (getComputedStyle(document.documentElement).getPropertyValue(n)||'').trim() || '#C9A84C'; }
 function chartBase(){
   const tick = '#888', grid = 'rgba(255,255,255,0.06)';
@@ -2660,7 +2712,7 @@ function buildStats(){
       const best = sets.reduce((a,s)=> (e1rm(s.w,s.r||1) >= e1rm(a.w,a.r||1) ? s : a), sets[0]);
       const vol = sets.reduce((sum,s)=> sum + ((s.w||0)*(s.r||0)), 0);
       const k = exKey(ex.name);
-      if(!byEx[k]) byEx[k] = { name: ex.name, muscle: ex.muscle||'', points: [] };
+      if(!byEx[k]) byEx[k] = { name: ex.name, muscle: ex.muscle||'', timed: exIsTimed(ex), points: [] };
       byEx[k].points.push({ ts: entry.ts, e1rm: Math.round(e1), topW, reps: best.r!=null?best.r:null, vol: Math.round(vol) });
       totalVol += vol;
       const g = majorMuscle(ex.muscle);
@@ -2668,6 +2720,19 @@ function buildStats(){
     }));
     sessions.push({ ts: entry.ts, totalVol: Math.round(totalVol), byMuscle });
   });
+  // Off-plan Quick Logs feed the per-exercise series (PRs / 1RM trend / history) but NOT sessions or volume.
+  getQuickLog().forEach(q => {
+    const sets = (q.sets||[]).map(coerceSet).filter(s=> s.w!=null || s.r!=null);
+    if(!sets.length) return;
+    const e1 = Math.max(0, ...sets.map(s=> e1rm(s.w, s.r||1)));
+    const topW = Math.max(0, ...sets.map(s=> s.w||0));
+    const best = sets.reduce((a,s)=> (e1rm(s.w,s.r||1) >= e1rm(a.w,a.r||1) ? s : a), sets[0]);
+    const vol = sets.reduce((sum,s)=> sum + ((s.w||0)*(s.r||0)), 0);
+    const k = exKey(q.name);
+    if(!byEx[k]) byEx[k] = { name: q.name, muscle: q.muscle||'', timed:false, points: [] };
+    byEx[k].points.push({ ts: q.ts, e1rm: Math.round(e1), topW, reps: best.r!=null?best.r:null, vol: Math.round(vol), quick:true });
+  });
+  Object.values(byEx).forEach(e => e.points.sort((a,b)=> a.ts - b.ts));
   return { byEx, sessions };
 }
 function weekStreak(sessions){
@@ -2694,24 +2759,37 @@ function renderStatsCharts(){
     return;
   }
   const st = buildStats();
-  if(!st.sessions.length){
-    host.innerHTML = `<div class="stats-empty">No sessions logged yet.<br>Finish a workout in the <b>Tracker</b> and your charts appear here.</div>`;
+  const exKeys = Object.keys(st.byEx);
+  if(!st.sessions.length && !exKeys.length){
+    host.innerHTML = `<div class="ql-cta"><div>No data yet — finish a workout in the <b>Tracker</b>, or log a one-off lift for a PR.</div><button class="btn btn-gold btn-sm" onclick="openQuickLog()">⚡ Quick Log</button></div>`;
     return;
   }
-  const keys = Object.keys(st.byEx).sort((a,b)=> st.byEx[a].name.localeCompare(st.byEx[b].name));
-  if(!currentStatLift || !st.byEx[currentStatLift]) currentStatLift = keys[0] || null;
+  // First view defaults to the current training week (Monday → today).
+  if(statsFrom==null && statsTo==null){ statsFrom = weekKey(Date.now()); statsTo = ymdToTs(ymd(Date.now()), true); }
+  // The 1RM chart only makes sense for weighted lifts (skip bodyweight + timed holds).
+  const liftKeys = exKeys.filter(k=> !st.byEx[k].timed && st.byEx[k].points.some(p=> p.e1rm>0)).sort((a,b)=> st.byEx[a].name.localeCompare(st.byEx[b].name));
+  if(!currentStatLift || !liftKeys.includes(currentStatLift)) currentStatLift = liftKeys[0] || null;
   const store = getExStore();
   const prAll = Object.values(store).filter(e=> e.prDate).sort((a,b)=> new Date(b.prDate) - new Date(a.prDate));
-  const totalVol = st.sessions.reduce((s,x)=> s + x.totalVol, 0);
-  const liftOpts = keys.map(k=> `<option value="${esc(k)}" ${k===currentStatLift?'selected':''}>${esc(st.byEx[k].name)} (${st.byEx[k].points.length})</option>`).join('');
+  const inSessions = st.sessions.filter(s=> inStatsRange(s.ts));
+  const totalVol = inSessions.reduce((s,x)=> s + x.totalVol, 0);
+  const liftOpts = liftKeys.length
+    ? liftKeys.map(k=> `<option value="${esc(k)}" ${k===currentStatLift?'selected':''}>${esc(st.byEx[k].name)}</option>`).join('')
+    : `<option value="">— no weighted lifts yet —</option>`;
   const groups = ['Chest','Back','Shoulders','Arms','Legs','Core'];
   const muscleOpts = `<option value="">All muscles</option>` + groups.map(g=> `<option value="${g}" ${g===statMuscleFilter?'selected':''}>${g}</option>`).join('');
   const prRows = prAll.length
     ? prAll.slice(0,6).map(e=> `<div class="pr-row"><div class="pr-name">${esc(e.name)}</div><div class="pr-val">${esc(fmtWeightLb(e.e1rm))} <span>e1RM</span></div><div class="pr-date">${esc(e.prDate)}</div></div>`).join('')
     : `<div class="pr-empty">No PRs yet — keep logging.</div>`;
   host.innerHTML = `
+    <div class="range-bar">
+      <div class="range-field"><label>From</label><input type="date" id="statFrom" value="${statsFrom!=null?ymd(statsFrom):''}" onchange="setStatsRange()"></div>
+      <div class="range-field"><label>To</label><input type="date" id="statTo" value="${statsTo!=null?ymd(statsTo):''}" onchange="setStatsRange()"></div>
+      <span class="suggest-link range-reset" onclick="resetStatsRange()">↺ Full range</span>
+    </div>
+    <button class="btn btn-gold ql-btn" onclick="openQuickLog()">⚡ Log a PR / 1RM attempt</button>
     <div class="stat-cards">
-      <div class="stat-card"><div class="stat-num">${st.sessions.length}</div><div class="stat-lbl">Sessions</div></div>
+      <div class="stat-card"><div class="stat-num">${inSessions.length}</div><div class="stat-lbl">Sessions</div></div>
       <div class="stat-card"><div class="stat-num">${weekStreak(st.sessions)}</div><div class="stat-lbl">Week streak</div></div>
       <div class="stat-card"><div class="stat-num">${fmtBigVol(totalVol)}</div><div class="stat-lbl">Volume ${esc(unitLabel())}</div></div>
       <div class="stat-card"><div class="stat-num">${prAll.length}</div><div class="stat-lbl">PRs</div></div>
@@ -2735,17 +2813,38 @@ function renderStatsCharts(){
     </div>`;
   drawLiftChart(); drawVolChart(); drawFreqChart();
 }
+function setStatsRange(){
+  const f=document.getElementById('statFrom'), t=document.getElementById('statTo');
+  let from = (f && f.value) ? ymdToTs(f.value, false) : null;
+  let to   = (t && t.value) ? ymdToTs(t.value, true)  : null;
+  if(from!=null && to!=null && from>to){ const tmp=from; from=to; to=tmp; }   // swap if reversed
+  statsFrom = from; statsTo = to;
+  drawLiftChart(); drawVolChart(); drawFreqChart();
+}
+function resetStatsRange(){
+  const st = buildStats(); const allTs = [];
+  st.sessions.forEach(s=> allTs.push(s.ts));
+  Object.values(st.byEx).forEach(e=> e.points.forEach(p=> allTs.push(p.ts)));
+  statsFrom = allTs.length ? ymdToTs(ymd(Math.min(...allTs)), false) : null;
+  statsTo   = ymdToTs(ymd(Date.now()), true);
+  const f=document.getElementById('statFrom'), t=document.getElementById('statTo');
+  if(f) f.value = statsFrom!=null?ymd(statsFrom):'';
+  if(t) t.value = statsTo!=null?ymd(statsTo):'';
+  drawLiftChart(); drawVolChart(); drawFreqChart();
+}
 function onStatLift(){ const el=document.getElementById('statLift'); if(el) currentStatLift = el.value; drawLiftChart(); }
 function onStatMuscle(){ const el=document.getElementById('statMuscle'); if(el) statMuscleFilter = el.value; drawVolChart(); }
 function drawLiftChart(){
   const st = buildStats();
-  if(!currentStatLift || !st.byEx[currentStatLift]){ const ks=Object.keys(st.byEx); currentStatLift = ks[0]||null; }
+  const liftKeys = Object.keys(st.byEx).filter(k=> !st.byEx[k].timed && st.byEx[k].points.some(p=> p.e1rm>0));
+  if(!currentStatLift || !liftKeys.includes(currentStatLift)) currentStatLift = liftKeys[0]||null;
   const ex = currentStatLift ? st.byEx[currentStatLift] : null;
   currentStatLiftName = ex ? ex.name : '';
   const ctx = document.getElementById('chart1rm'); if(!ctx) return;
   if(_ch.lift){ _ch.lift.destroy(); _ch.lift=null; }
   if(!ex) return;
-  const pts = ex.points;
+  const pts = ex.points.filter(p=> inStatsRange(p.ts));
+  if(!pts.length) return;
   _ch.lift = new Chart(ctx, { type:'line',
     data:{ labels: pts.map(p=> new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})),
       datasets:[{ data: pts.map(p=> Math.round(toDisplay(p.e1rm))), borderColor: cssVar('--gold'), backgroundColor:'rgba(201,168,76,0.13)', fill:true, tension:0.25, pointRadius:3, pointBackgroundColor:cssVar('--gold'), borderWidth:2 }] },
@@ -2753,8 +2852,8 @@ function drawLiftChart(){
 }
 function drawVolChart(){
   const st = buildStats(); const wk = {};
-  st.sessions.forEach(s=>{ const k=weekKey(s.ts); wk[k] = (wk[k]||0) + (statMuscleFilter ? (s.byMuscle[statMuscleFilter]||0) : s.totalVol); });
-  const weeks = Object.keys(wk).map(Number).sort((a,b)=> a-b).slice(-10);
+  st.sessions.filter(s=> inStatsRange(s.ts)).forEach(s=>{ const k=weekKey(s.ts); wk[k] = (wk[k]||0) + (statMuscleFilter ? (s.byMuscle[statMuscleFilter]||0) : s.totalVol); });
+  const weeks = Object.keys(wk).map(Number).sort((a,b)=> a-b);
   const ctx = document.getElementById('chartVol'); if(!ctx) return;
   if(_ch.vol){ _ch.vol.destroy(); }
   _ch.vol = new Chart(ctx, { type:'bar',
@@ -2763,8 +2862,8 @@ function drawVolChart(){
 }
 function drawFreqChart(){
   const st = buildStats(); const wk = {};
-  st.sessions.forEach(s=>{ const k=weekKey(s.ts); wk[k] = (wk[k]||0) + 1; });
-  const weeks = Object.keys(wk).map(Number).sort((a,b)=> a-b).slice(-10);
+  st.sessions.filter(s=> inStatsRange(s.ts)).forEach(s=>{ const k=weekKey(s.ts); wk[k] = (wk[k]||0) + 1; });
+  const weeks = Object.keys(wk).map(Number).sort((a,b)=> a-b);
   const ctx = document.getElementById('chartFreq'); if(!ctx) return;
   if(_ch.freq){ _ch.freq.destroy(); }
   _ch.freq = new Chart(ctx, { type:'bar',
@@ -2777,26 +2876,96 @@ function openExHistory(name){
   const st = buildStats(); const ex = st.byEx[exKey(name)];
   document.getElementById('exHistTitle').textContent = name;
   const body = document.getElementById('exHistBody');
+  if(_ch.exh){ _ch.exh.destroy(); _ch.exh=null; }
   if(!ex || !ex.points.length){
     body.innerHTML = `<div class="stats-empty">No logged sessions for ${esc(name)} yet.</div>`;
-  } else {
-    const bestE = Math.max(...ex.points.map(p=> p.e1rm));
-    const rows = ex.points.slice().sort((a,b)=> b.ts-a.ts).map(p=>{
-      const isPR = p.e1rm===bestE && p.e1rm>0;
-      return `<div class="exh-row ${isPR?'pr':''}"><div class="exh-date">${esc(new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))}</div><div class="exh-sets">top ${esc(fmtWeightLb(p.topW))}${p.reps?' × '+p.reps:''}</div><div class="exh-e1">${esc(fmtWeightLb(p.e1rm))}${isPR?' 🏆':''}</div></div>`;
-    }).join('');
-    body.innerHTML = `<div class="chart-wrap chart-wrap-sm"><canvas id="exHistChart"></canvas></div><div class="exh-list">${rows}</div>`;
+    document.getElementById('exHistModal').classList.add('visible');
+    return;
   }
+  const kind = ex.timed ? 'timed' : (ex.points.some(p=> p.e1rm>0) ? 'loaded' : 'bw');
+  const metric = p => kind==='loaded' ? Math.round(toDisplay(p.e1rm)) : (p.reps||0);
+  const best = Math.max(...ex.points.map(metric));
+  const rowMain = p => kind==='timed' ? `${p.reps!=null?p.reps:0}s hold`
+    : kind==='loaded' ? `top ${fmtWeightLb(p.topW)}${p.reps?' × '+p.reps:''}`
+    : `BW × ${p.reps!=null?p.reps:0}`;
+  const rowVal = p => kind==='timed' ? `${p.reps!=null?p.reps:0}s` : kind==='loaded' ? fmtWeightLb(p.e1rm) : `${p.reps!=null?p.reps:0} reps`;
+  const rows = ex.points.slice().sort((a,b)=> b.ts-a.ts).map(p=>{
+    const isPR = metric(p)===best && best>0;
+    return `<div class="exh-row ${isPR?'pr':''}"><div class="exh-date">${esc(new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))}</div><div class="exh-sets">${esc(rowMain(p))}${p.quick?' <span class="exh-tag">quick</span>':''}</div><div class="exh-e1">${esc(rowVal(p))}${isPR?' 🏆':''}</div></div>`;
+  }).join('');
+  body.innerHTML = `<div class="chart-wrap chart-wrap-sm"><canvas id="exHistChart"></canvas></div><div class="exh-list">${rows}</div>`;
   document.getElementById('exHistModal').classList.add('visible');
-  if(ex && ex.points.length && typeof Chart!=='undefined'){
+  if(typeof Chart!=='undefined'){
     const ctx = document.getElementById('exHistChart');
-    if(_ch.exh){ _ch.exh.destroy(); }
     const pts = ex.points;
+    const unitTxt = kind==='timed' ? 's' : kind==='loaded' ? unitLabel() : 'reps';
     _ch.exh = new Chart(ctx, { type:'line',
       data:{ labels: pts.map(p=> new Date(p.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})),
-        datasets:[{ data: pts.map(p=> Math.round(toDisplay(p.e1rm))), borderColor: cssVar('--gold'), backgroundColor:'rgba(201,168,76,0.13)', fill:true, tension:0.25, pointRadius:2, borderWidth:2 }] },
-      options: Object.assign(chartBase(), { plugins:{ legend:{display:false} } }) });
+        datasets:[{ data: pts.map(metric), borderColor: cssVar('--gold'), backgroundColor:'rgba(201,168,76,0.13)', fill:true, tension:0.25, pointRadius:2, borderWidth:2 }] },
+      options: Object.assign(chartBase(), { plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=> `${c.parsed.y} ${unitTxt}` } } } }) });
   }
+}
+// ── Quick Log: log any lift (in or out of the active program) for a PR / 1RM attempt ──
+let quickSel = null;   // {name, muscle, equip} or null while picking
+function openQuickLog(){
+  quickSel = null;
+  document.getElementById('quickLogModal').classList.add('visible');
+  renderQuickLog();
+  setTimeout(()=>{ const s=document.getElementById('quickSearch'); if(s) s.focus(); }, 60);
+}
+function renderQuickLog(){
+  const body = document.getElementById('quickLogBody');
+  if(!quickSel){
+    body.innerHTML = `
+      <div class="ql-help">Pick any exercise — in your program or not — and log your attempt. It lands in your PRs, the 1RM trend, and that lift's history (but not your weekly-volume or session charts).</div>
+      <input type="text" class="form-input" id="quickSearch" placeholder="Search exercises…" autocomplete="off" oninput="renderQuickList()">
+      <div class="quick-list" id="quickList"></div>`;
+    renderQuickList();
+  } else {
+    const rec = exRecord(quickSel.name);
+    const best = (rec && rec.e1rm) ? `Current best: <b>${esc(fmtWeightLb(rec.e1rm))} e1RM</b> — beat it!` : `No record yet — set the first!`;
+    body.innerHTML = `
+      <div class="ql-selected">
+        <div><div class="ql-name">${esc(quickSel.name)}</div><div class="ql-best">${best}</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="quickReselect()">Change</button>
+      </div>
+      <div class="ql-sets">
+        ${[0,1,2].map(i=>`<div class="ql-setrow"><div class="ql-setn">Set ${i+1}</div><input class="form-input" id="qlw_${i}" inputmode="decimal" placeholder="wt (${esc(unitLabel())})"><input class="form-input" id="qlr_${i}" inputmode="numeric" placeholder="reps"></div>`).join('')}
+      </div>
+      <div class="ql-hint">Log <b>1 rep</b> for a true 1-rep max. Leave weight blank for a bodyweight lift.</div>
+      <button class="btn btn-gold" style="width:100%" onclick="quickLogSave()">Save lift</button>`;
+  }
+}
+function renderQuickList(){
+  const el = document.getElementById('quickList'); if(!el) return;
+  const raw = (document.getElementById('quickSearch').value||'').trim();
+  const q = raw.toLowerCase();
+  let matches = EXERCISE_BANK;
+  if(q) matches = EXERCISE_BANK.filter(e=> e.name.toLowerCase().includes(q) || (e.muscle||'').toLowerCase().includes(q));
+  let html = matches.slice(0,40).map(e=> `<div class="quick-row" onclick="selectQuick('${e.id}')"><div class="addex-name">${esc(e.name)}</div><div class="addex-meta">${esc(e.muscle)} · ${esc(EQUIP_LABELS[e.equip]||e.equip)}</div></div>`).join('');
+  if(raw) html += `<div class="quick-row quick-custom" onclick="useCustomQuick()">＋ Use “<b>${esc(raw)}</b>” as a custom lift</div>`;
+  el.innerHTML = html || `<div class="bank-empty">No matches — type a name and add it as a custom lift.</div>`;
+}
+function selectQuick(id){ const e = EXERCISE_BANK.find(x=> x.id===id); if(!e) return; quickSel = {name:e.name, muscle:e.muscle||'', equip:e.equip||''}; renderQuickLog(); }
+function useCustomQuick(){ const v=(document.getElementById('quickSearch').value||'').trim(); if(!v) return; quickSel = {name:v, muscle:'', equip:''}; renderQuickLog(); }
+function quickReselect(){ quickSel = null; renderQuickLog(); }
+function quickLogSave(){
+  if(!quickSel) return;
+  const sets = [];
+  for(let i=0;i<3;i++){
+    const rEl=document.getElementById('qlr_'+i); const r=parseInt((rEl&&rEl.value)||'',10);
+    if(isNaN(r) || r<=0) continue;
+    const wEl=document.getElementById('qlw_'+i); const w=fromDisplay((wEl&&wEl.value)||'');
+    sets.push({ w: (w!=null?w:null), r });
+  }
+  if(!sets.length){ showToast('Enter at least one set (reps required)',''); return; }
+  const res = recordExercise(quickSel.name, sets);
+  const ql = getQuickLog();
+  ql.push({ ts: Date.now(), name: quickSel.name, muscle: quickSel.muscle||'', equip: quickSel.equip||'', sets: sets.map(s=>({w:s.w, r:s.r})) });
+  saveQuickLog(ql);
+  closeModal('quickLogModal');
+  showToast(res.pr ? `🏆 New PR — ${quickSel.name}!` : `Logged ${quickSel.name} ✓`, 'success');
+  if(currentScreen==='stats') renderStats();
 }
 const BODY_METRICS = [['waist','Waist','W'],['chest','Chest','C'],['arm','Arms','A'],['thigh','Thighs','T']];
 function renderStatsBody(){
@@ -2874,8 +3043,9 @@ function renderHistory() {
       const day = prog.days[entry.dayIdx];
       day.blocks.forEach(b => b.exercises.forEach(ex => {
         if (!ex.superset) {
-          const actuals = ex.sets.map((s,si) => { const cv = coerceSet(entry.log[`${ex.id}_${si}`]); if (cv.w==null && cv.r==null) return null; return `${cv.w!=null?dispNum(cv.w):'BW'}${cv.r!=null?'×'+cv.r:''}`; }).filter(Boolean);
-          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(ex.name)}:</strong> ${esc(actuals.join(', '))} ${esc(unitLabel())}<br>`;
+          const timed = exIsTimed(ex);
+          const actuals = ex.sets.map((s,si) => { const cv = coerceSet(entry.log[`${ex.id}_${si}`]); if (cv.w==null && cv.r==null) return null; if (timed) return cv.r!=null ? `${cv.r}s` : null; return `${cv.w!=null?dispNum(cv.w):'BW'}${cv.r!=null?'×'+cv.r:''}`; }).filter(Boolean);
+          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(ex.name)}:</strong> ${esc(actuals.join(', '))}${timed?'':' '+esc(unitLabel())}<br>`;
         }
       }));
     }
