@@ -1,13 +1,15 @@
 /* Golden Era — service worker
    Precaches the app shell for offline launch and runtime-caches the CDN
    resources (fonts, jsPDF, the exercise dataset) so the app works offline
-   after the first online visit. The page is network-first, so installed apps
-   auto-update on the next online launch — no version bump needed for content
-   changes. (Still bump CACHE if you change this service worker or the shell.) */
-const CACHE = 'golden-era-v2';
+   after the first online visit. The page, app.js and styles.css are network-first,
+   so installed apps auto-update on the next online launch — no version bump needed
+   for content changes. (Still bump CACHE if you change this service worker or the shell.) */
+const CACHE = 'golden-era-v3';
 const SHELL = [
   './',
   './index.html',
+  './styles.css',
+  './app.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -48,6 +50,21 @@ self.addEventListener('fetch', event => {
           return res;
         })
         .catch(() => caches.match('./index.html').then(c => c || caches.match('./')))
+    );
+    return;
+  }
+
+  // Same-origin code/styles (app.js, styles.css): NETWORK-FIRST, so a git push updates
+  // the installed app on its next online launch — with the cache as the offline fallback.
+  if (url.origin === self.location.origin && /\.(?:js|css)$/.test(url.pathname)) {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match(req))
     );
     return;
   }
