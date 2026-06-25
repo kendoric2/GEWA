@@ -61,6 +61,12 @@ python3 -m http.server 8000
 | `sw.js` | Service worker — offline caching + auto‑update |
 | `manifest.webmanifest` | App metadata + icons (makes it installable) |
 | `icon-*.png`, `apple-touch-icon.png` | Home‑screen icons |
+| `LICENSE` | Copyright / usage terms |
+| `.gitignore` | Files git should never track (OS cruft, editor folders, env files) |
+
+Tunable settings — the exercise‑data source, cache duration, units, and the starting‑weight
+estimator constants — are centralized in the **`CONFIG`** block at the top of `app.js`, so
+they're all in one place to adjust.
 
 ---
 
@@ -154,3 +160,13 @@ git checkout main
 git merge my-change
 git push
 ```
+
+---
+
+## License
+
+Proprietary — **Copyright (c) 2026 GEWA. All Rights Reserved.**
+
+The code is published here so the app can be hosted and used, but it is **not** open source:
+it may not be copied, modified, reused, or redistributed without permission. See the
+[`LICENSE`](LICENSE) file.
