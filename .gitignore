@@ -1,0 +1,35 @@
+# ── OS cruft ──
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ── Editors / IDEs ──
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ── Environment / secrets ──
+.env
+.env.*
+!.env.example
+
+# ── Node (only if build tooling is added later) ──
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Logs / temp / cache ──
+*.log
+.cache/
+tmp/
+.tmp/

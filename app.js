@@ -1,4 +1,36 @@
 // ─────────────────────────────────────────────
+// CONFIG — every tunable value in one place
+// ─────────────────────────────────────────────
+// Which snapshot of the public exercise database (free-exercise-db) to load.
+// 'main' = always the latest. Replace with a commit hash (e.g. 'a1b2c3d...') to PIN
+// it to a fixed, known-good snapshot so upstream changes can't break the app.
+const FEDB_REF = 'main';
+const CONFIG = {
+  data: {
+    ref: FEDB_REF,
+    urls: [
+      `https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@${FEDB_REF}/dist/exercises.json`,
+      `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${FEDB_REF}/dist/exercises.json`
+    ],
+    imgBase: `https://raw.githubusercontent.com/yuhonas/free-exercise-db/${FEDB_REF}/exercises/`,
+    ttlMs: 7 * 24 * 60 * 60 * 1000,   // how long to cache the dataset (7 days)
+    idbName: 'golden_era'             // IndexedDB store name
+  },
+  units: {
+    lbPerKg: 2.2046226218,
+    weightStep: 2.5,                  // +/- stepper increment (display unit)
+    progInc: 5                        // progression jump, in lb
+  },
+  // Starting-weight estimator — novice 1RM standards (x bodyweight) and modifiers.
+  std: {
+    mult: { bench:0.75, ohp:0.55, row:0.70, squat:1.00, deadlift:1.30 },
+    sexF: { bench:0.65, ohp:0.60, row:0.65, squat:0.80, deadlift:0.80 },
+    expF: { beginner:1.0, intermediate:1.5, advanced:1.85 },
+    dbF:  { bench:0.42, ohp:0.45, row:0.50 }
+  }
+};
+
+// ─────────────────────────────────────────────
 // EXERCISE BANK DATA
 // ─────────────────────────────────────────────
 const DUMBBELL_BANK = [
@@ -190,7 +222,7 @@ let EXERCISE_BANK = BUILTIN_BANK.slice();
 // ── free-exercise-db adapter (public domain, keyless, CORS via CDN) ──
 const FEDB_EQUIP = { 'dumbbell':'dumbbell','barbell':'barbell','e-z curl bar':'barbell','kettlebells':'kettlebell','cable':'cable','machine':'machine','bands':'bands','body only':'bodyweight','medicine ball':'other','exercise ball':'other','foam roll':'other','other':'other' };
 const FEDB_MUSCLE = { abdominals:'core', abductors:'glutes', adductors:'quads', biceps:'biceps', calves:'calves', chest:'chest', forearms:'biceps', glutes:'glutes', hamstrings:'hamstrings', lats:'back', 'lower back':'back', 'middle back':'back', neck:'back', quadriceps:'quads', shoulders:'shoulders', traps:'back', triceps:'triceps' };
-const FEDB_IMG = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+const FEDB_IMG = CONFIG.data.imgBase;
 function normalizeFedb(r){
   if (!r || !r.name) return null;
   const cat = r.category || 'strength';
@@ -211,10 +243,7 @@ function normalizeFedb(r){
     patterns: tagPatterns(r.name, cat, muscle)
   };
 }
-const FEDB_URLS = [
-  'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/dist/exercises.json',
-  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json'
-];
+const FEDB_URLS = CONFIG.data.urls;
 async function fetchJSON(urls){
   for (const u of (Array.isArray(urls) ? urls : [urls])){
     try { const r = await fetch(u, {mode:'cors'}); if (r.ok) return await r.json(); } catch(e) {}
@@ -258,7 +287,7 @@ function mergeBanks(arrays){
 // ── IndexedDB cache ──
 function idbOpen(){
   return new Promise((res, rej) => {
-    const req = indexedDB.open('golden_era', 1);
+    const req = indexedDB.open(CONFIG.data.idbName, 1);
     req.onupgradeneeded = () => req.result.createObjectStore('kv');
     req.onsuccess = () => res(req.result);
     req.onerror = () => rej(req.error);
@@ -274,7 +303,7 @@ async function idbSet(key, val){
 }
 // ── orchestrator ──
 const DATA = { status:'idle', count: BUILTIN_BANK.length, sources:['builtin'], ts:0, loading:false };
-const DATA_TTL = 7 * 24 * 60 * 60 * 1000;
+const DATA_TTL = CONFIG.data.ttlMs;
 async function loadExerciseData(opts){
   opts = opts || {};
   if (DATA.loading) return;
@@ -773,9 +802,9 @@ function saveHistory(h) { try { localStorage.setItem('ge_history', JSON.stringif
 // COACHING — units, per-exercise baseline store, progression, e1RM, plates
 // Weights are stored canonically in POUNDS; the display unit just converts at the edges.
 // ─────────────────────────────────────────────
-const LB_PER_KG = 2.2046226218;
-const WEIGHT_STEP = 2.5;   // stepper increment, in the display unit
-const PROG_INC = 5;        // progression jump, in lb
+const LB_PER_KG = CONFIG.units.lbPerKg;
+const WEIGHT_STEP = CONFIG.units.weightStep;   // stepper increment, in the display unit
+const PROG_INC = CONFIG.units.progInc;         // progression jump, in lb
 function getUnit(){ return localStorage.getItem('ge_unit') || 'lb'; }
 function setUnit(u){ localStorage.setItem('ge_unit', u); }
 function unitLabel(){ return getUnit(); }
@@ -842,13 +871,13 @@ function getProfile(){ try{ return JSON.parse(localStorage.getItem('ge_profile')
 function saveProfile(p){ try{ localStorage.setItem('ge_profile', JSON.stringify(p)); }catch(e){} }
 function hasProfile(){ const p=getProfile(); return !!(p && p.bw); }
 // Novice 1RM as a multiple of bodyweight (male baseline), from common strength standards.
-const STD_MULT = { bench:0.75, ohp:0.55, row:0.70, squat:1.00, deadlift:1.30 };
+const STD_MULT = CONFIG.std.mult;
 // per-lift female multiplier relative to male (upper ~0.65, lower ~0.80)
-const STD_SEXF = { bench:0.65, ohp:0.60, row:0.65, squat:0.80, deadlift:0.80 };
+const STD_SEXF = CONFIG.std.sexF;
 // experience scales the novice baseline toward intermediate/advanced
-const STD_EXPF = { beginner:1.0, intermediate:1.5, advanced:1.85 };
+const STD_EXPF = CONFIG.std.expF;
 // dumbbell variant → per-hand fraction of the barbell working weight
-const STD_DBF = { bench:0.42, ohp:0.45, row:0.50 };
+const STD_DBF = CONFIG.std.dbF;
 function liftType(name){
   const n=String(name||'').toLowerCase();
   if(/deadlift|romanian|stiff-?leg/.test(n)) return 'deadlift';
