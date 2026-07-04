@@ -1038,8 +1038,11 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
   // Generator lives under Programs now (no nav tab of its own), so keep Programs lit there.
   const navName = (name === 'random') ? 'programs' : name;
-  const idx = ['programs','tracker','bank','stats','history'].indexOf(navName);
+  const idx = ['programs','tracker','bank','stats'].indexOf(navName);
   if (idx >= 0) document.querySelectorAll('.bnav-btn')[idx].classList.add('active');
+  // History moved to the header — highlight its top button instead of a bottom tab.
+  const histBtn = document.getElementById('btnHistory');
+  if (histBtn) histBtn.classList.toggle('hdr-active', name === 'history');
   currentScreen = name;
   if (name === 'programs') renderPrograms();
   if (name === 'tracker') { activeProgramId = getActiveProgramId(); sessionLog = getSessionLog(activeProgramId, currentDayIdx); renderTracker(); }

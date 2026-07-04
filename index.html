@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Golden Era — Workout Planner</title>
 <meta name="description" content="Arnold-inspired workout planner with an aggregated exercise database, smart split generator, and progress tracking.">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -21,6 +21,7 @@
 <div class="app-header">
   <div class="app-logo" onclick="showScreen('programs')">Golden <span>Era</span></div>
   <div class="header-actions">
+    <button class="btn btn-outline btn-sm" id="btnHistory" onclick="showScreen('history')">🗂 History</button>
     <button class="btn btn-outline btn-sm" onclick="exportPDF()">⬇ PDF</button>
   </div>
 </div>
@@ -150,7 +151,6 @@
   <button class="bnav-btn" onclick="showScreen('tracker')"><div class="bnav-icon">💪</div><div class="bnav-label">Tracker</div></button>
   <button class="bnav-btn" onclick="showScreen('bank')"><div class="bnav-icon">📚</div><div class="bnav-label">Bank</div></button>
   <button class="bnav-btn" onclick="showScreen('stats')"><div class="bnav-icon">📈</div><div class="bnav-label">Stats</div></button>
-  <button class="bnav-btn" onclick="showScreen('history')"><div class="bnav-icon">🗂</div><div class="bnav-label">History</div></button>
 </div>
 <!-- CREATE PROGRAM MODAL -->
 <div class="modal-overlay" id="createModal">
