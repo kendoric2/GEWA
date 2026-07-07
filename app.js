@@ -945,16 +945,16 @@ function curSet(exId, si){ return coerceSet(sessionLog[`${exId}_${si}`]); }
 function writeSet(exId, si, s){ sessionLog[`${exId}_${si}`] = {w:s.w, r:s.r, done:s.done}; saveSessionLog(activeProgramId, currentDayIdx, sessionLog); }
 function refreshSetRow(exId, si){
   const s=curSet(exId,si);
-  const w=document.getElementById(`w_${exId}_${si}`); if(w) w.value = dispNum(s.w);
+  const w=document.getElementById(`w_${exId}_${si}`); if(w){ if(s.w!=null){ w.value = dispNum(s.w); w.classList.remove('prefill'); } else { w.value = w.dataset.sug || ''; w.classList.toggle('prefill', !!w.dataset.sug); } }
   const r=document.getElementById(`r_${exId}_${si}`); if(r) r.value = s.r!=null ? s.r : '';
   const d=document.getElementById(`d_${exId}_${si}`); if(d) d.classList.toggle('on', !!s.done);
   const row=document.getElementById(`row_${exId}_${si}`); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null);
 }
-function setWeightInput(el){ const [exId,si]=el.dataset.k.split('|'); const s=curSet(exId,+si); s.w=fromDisplay(el.value); writeSet(exId,+si,s); const row=el.closest('.set-row2'); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null); updateProgress(); }
+function setWeightInput(el){ const [exId,si]=el.dataset.k.split('|'); const s=curSet(exId,+si); s.w=fromDisplay(el.value); el.classList.remove('prefill'); writeSet(exId,+si,s); const row=el.closest('.set-row2'); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null); updateProgress(); }
 function setRepInput(el){ const [exId,si]=el.dataset.k.split('|'); const s=curSet(exId,+si); const n=parseInt(el.value,10); s.r=isNaN(n)?null:n; writeSet(exId,+si,s); const row=el.closest('.set-row2'); if(row) row.classList.toggle('done', !!s.done || s.w!=null || s.r!=null); updateProgress(); }
-function stepW(exId, si, deltaDisp){ const s=curSet(exId,si); const cur=toDisplay(s.w)||0; const nd=Math.max(0, Math.round((cur+deltaDisp)*2)/2); s.w=fromDisplay(nd); writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); }
+function stepW(exId, si, deltaDisp){ const s=curSet(exId,si); let base=toDisplay(s.w); if(base==null){ const wEl=document.getElementById(`w_${exId}_${si}`); const v=wEl?parseFloat(wEl.value):NaN; base=isNaN(v)?0:v; } const nd=Math.max(0, Math.round((base+deltaDisp)*2)/2); s.w=fromDisplay(nd); writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); }
 function stepR(exId, si, delta){ const s=curSet(exId,si); s.r=Math.max(0,(s.r||0)+delta); writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); }
-function toggleDone(exId, si, restSec){ const s=curSet(exId,si); s.done=!s.done; writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); if(s.done && restSec){ startRest(restSec); } }
+function toggleDone(exId, si, restSec){ const s=curSet(exId,si); s.done=!s.done; if(s.done && s.w==null){ const wEl=document.getElementById(`w_${exId}_${si}`); if(wEl && wEl.value!==''){ const w=fromDisplay(wEl.value); if(w!=null) s.w=w; } } writeSet(exId,si,s); refreshSetRow(exId,si); updateProgress(); if(s.done && restSec){ startRest(restSec); } }
 function toggleUnit(){ setUnit(getUnit()==='lb'?'kg':'lb'); if(currentScreen==='tracker') renderTrackerDay(); showToast('Units: '+unitLabel(), ''); }
 function openPlateCalc(presetLb){
   const unit=getUnit();
@@ -1452,6 +1452,9 @@ function renderTrackerDay() {
       const restSec = (ssNext && ssNext.superset) ? 30 : parseRest(block.rest);
       const hideW = exHideWeight(ex);
       const timed = exIsTimed(ex);
+      // Live suggested weight (first-time estimate or your progression) → shown as the target + pre-filled.
+      const sugWeightLb = (!hideW && !timed) ? (sug.estLb != null ? sug.estLb : (sug.weightLb != null ? sug.weightLb : null)) : null;
+      const sugPerHand = !!sug.perHand;
       html += `<div class="sets-con"><div class="set-hdr"><span></span><span></span><span>${timed ? 'seconds' : 'reps'}</span><span>${hideW ? 'bodyweight' : 'weight (' + esc(unitLabel()) + ')'}</span><span></span></div>`;
       ex.sets.forEach((s, si) => {
         const cur = curSet(ex.id, si);
@@ -1460,12 +1463,12 @@ function renderTrackerDay() {
           ? `<div class="set-bw">BW</div>`
           : `<div class="stepper">
             <button class="stp-btn" onclick="stepW('${ex.id}',${si},-${WEIGHT_STEP})" tabindex="-1">−</button>
-            <input class="stp-input" id="w_${ex.id}_${si}" inputmode="decimal" placeholder="–" value="${dispNum(cur.w)}" data-k="${ex.id}|${si}" oninput="setWeightInput(this)">
+            <input class="stp-input${cur.w==null && sugWeightLb!=null ? ' prefill' : ''}" id="w_${ex.id}_${si}" inputmode="decimal" placeholder="–" value="${cur.w!=null ? dispNum(cur.w) : (sugWeightLb!=null ? dispNum(sugWeightLb) : '')}" data-sug="${sugWeightLb!=null ? dispNum(sugWeightLb) : ''}" data-k="${ex.id}|${si}" oninput="setWeightInput(this)">
             <button class="stp-btn" onclick="stepW('${ex.id}',${si},${WEIGHT_STEP})" tabindex="-1">+</button>
           </div>`;
         html += `<div class="set-row2 ${rowFilled}" id="row_${ex.id}_${si}">
           <div class="set-n">${si+1}</div>
-          <div class="set-presc">${esc(s.reps)}<span>${esc(s.weight)}</span></div>
+          <div class="set-presc">${esc(s.reps)}<span>${sugWeightLb!=null ? esc(fmtWeightLb(sugWeightLb)) + (sugPerHand ? ' ea' : '') : esc(s.weight)}</span></div>
           <div class="stepper">
             <button class="stp-btn" onclick="stepR('${ex.id}',${si},${timed?-5:-1})" tabindex="-1">−</button>
             <input class="stp-input" id="r_${ex.id}_${si}" inputmode="numeric" placeholder="${timed?'sec':'–'}" value="${cur.r!=null?cur.r:''}" data-k="${ex.id}|${si}" oninput="setRepInput(this)">
