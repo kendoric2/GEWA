@@ -1134,6 +1134,22 @@ function computePlates(targetLb, barLb){
   return {perSide:out, leftover:Math.round(perSide*100)/100, target, bar, none:false};
 }
 // ── set logging interaction (structured) ──
+// ── alternate-exercise swap (this session only) ──
+// Stored in the session log, so it clears on reset/next session and rides along
+// into history — which keeps PRs, 1RM trends and per-exercise history accurate.
+function swapKey(exId){ return `__swap_${exId}`; }
+function swapNameFor(log, exId){ const v = (log||{})[`__swap_${exId}`]; return (typeof v === 'string' && v) ? v : null; }
+function effExercise(ex){
+  const s = swapNameFor(sessionLog, ex.id);
+  return s ? Object.assign({}, ex, {name: s, swapped: true, origName: ex.name}) : ex;
+}
+function toggleSwap(exId, altName){
+  const k = swapKey(exId);
+  if (sessionLog[k]) { delete sessionLog[k]; showToast('Back to the original exercise', ''); }
+  else { sessionLog[k] = altName; showToast('Swapped to ' + altName, 'success'); }
+  saveSessionLog(activeProgramId, currentDayIdx, sessionLog);
+  renderTrackerDay();
+}
 function curSet(exId, si){ return coerceSet(sessionLog[`${exId}_${si}`]); }
 function writeSet(exId, si, s){ sessionLog[`${exId}_${si}`] = {w:s.w, r:s.r, done:s.done}; saveSessionLog(activeProgramId, currentDayIdx, sessionLog); }
 function refreshSetRow(exId, si){
@@ -1616,9 +1632,10 @@ function renderTrackerDay() {
   day.blocks.forEach(block => {
     const restBtn = block.rest ? `<button class="btn-rt-start" onclick="startRest(${parseRest(block.rest)})" title="Start rest timer">⏱</button>` : '';
     html += `<div class="block"><div class="block-hdr"><div class="block-tag">${esc(block.tag)}</div><div class="block-title">${esc(block.title)}</div>${block.rest?`<div class="block-rest"><span>🕐 ${esc(block.rest)}</span>${restBtn}</div>`:''}</div>`;
-    block.exercises.forEach((ex, exIdx) => {
-      if (ex.superset) { html += `<div class="ss-div"><div class="ss-line"></div><div class="ss-label">↕ Superset — 30 sec ↕</div><div class="ss-line"></div></div>`; return; }
-      html += `<div class="exercise"><div class="ex-hdr"><div><div class="ex-name">${esc(ex.label)} — ${esc(ex.name)}</div><div class="ex-muscle-tag">${esc(ex.muscle)}</div></div><div class="ex-set-count">${ex.sets.length} SETS</div></div>`;
+    block.exercises.forEach((ex0, exIdx) => {
+      if (ex0.superset) { html += `<div class="ss-div"><div class="ss-line"></div><div class="ss-label">↕ Superset — 30 sec ↕</div><div class="ss-line"></div></div>`; return; }
+      const ex = effExercise(ex0);   // swapped name (if any) drives logging, suggestions and stats
+      html += `<div class="exercise"><div class="ex-hdr"><div><div class="ex-name">${esc(ex.label)} — ${esc(ex.name)}${ex.swapped ? ' <span class="swap-badge">swapped</span>' : ''}</div><div class="ex-muscle-tag">${esc(ex.muscle)}</div></div><div class="ex-set-count">${ex.sets.length} SETS</div></div>`;
       const sug = suggestProgression(ex);
       if (sug.first) {
         let fm;
@@ -1679,8 +1696,14 @@ function renderTrackerDay() {
       // Notes
       const nk = `${ex.id}_notes`;
       html += `<textarea class="notes-input" placeholder="Notes (how it felt, form, adjustments...)" data-key="${nk}" oninput="handleLog(this)">${esc(sessionLog[nk]||'')}</textarea>`;
-      // Alt exercise
-      if (ex.alt) html += `<div class="alt-wrap"><div class="alt-label">Alternative</div><div class="alt-name">${esc(ex.alt)}</div></div>`;
+      // Alt exercise — tap to swap so your sets log under the exercise you actually did
+      if (ex0.alt) {
+        const sw = !!ex.swapped;
+        html += `<div class="alt-wrap alt-swap${sw?' on':''}" data-alt="${esc(ex0.alt)}" onclick="toggleSwap('${ex0.id}', this.dataset.alt)" title="Tap to swap this exercise">
+          <div class="alt-label">${sw ? '⇄ Doing the alternate · tap to undo' : '⇄ Alternative · tap to swap'}</div>
+          <div class="alt-name">${sw ? esc(ex0.name) : esc(ex0.alt)}</div>
+        </div>`;
+      }
       // Coach note
       if (ex.note) html += `<div class="coach-note">${esc(ex.note)}</div>`;
       html += `</div>`;
@@ -1751,8 +1774,9 @@ function finishSession() {
   saveHistory(hist);
   // update the per-exercise baseline store + detect PRs
   const prs = [];
-  day.blocks.forEach(b => b.exercises.forEach(ex => {
-    if (ex.superset) return;
+  day.blocks.forEach(b => b.exercises.forEach(ex0 => {
+    if (ex0.superset) return;
+    const ex = effExercise(ex0);   // credit the swapped exercise, not the original
     const sets = ex.sets.map((s, si) => sessionLog[`${ex.id}_${si}`]);
     if (recordExercise(ex.name, sets).pr) prs.push(ex.name);
   }));
@@ -2213,8 +2237,9 @@ function buildStats(){
       const topW = Math.max(0, ...sets.map(s=> s.w||0));
       const best = sets.reduce((a,s)=> (e1rm(s.w,s.r||1) >= e1rm(a.w,a.r||1) ? s : a), sets[0]);
       const vol = sets.reduce((sum,s)=> sum + ((s.w||0)*(s.r||0)), 0);
-      const k = exKey(ex.name);
-      if(!byEx[k]) byEx[k] = { name: ex.name, muscle: ex.muscle||'', timed: exIsTimed(ex), points: [] };
+      const nm = swapNameFor(entry.log, ex.id) || ex.name;   // honour an alternate swapped in that session
+      const k = exKey(nm);
+      if(!byEx[k]) byEx[k] = { name: nm, muscle: ex.muscle||'', timed: exIsTimed(ex), points: [] };
       byEx[k].points.push({ ts: entry.ts, e1rm: Math.round(e1), topW, reps: best.r!=null?best.r:null, vol: Math.round(vol) });
       totalVol += vol;
       const g = majorMuscle(ex.muscle);
@@ -2547,7 +2572,8 @@ function renderHistory() {
         if (!ex.superset) {
           const timed = exIsTimed(ex);
           const actuals = ex.sets.map((s,si) => { const cv = coerceSet(entry.log[`${ex.id}_${si}`]); if (cv.w==null && cv.r==null) return null; if (timed) return cv.r!=null ? `${cv.r}s` : null; return `${cv.w!=null?dispNum(cv.w):'BW'}${cv.r!=null?'×'+cv.r:''}`; }).filter(Boolean);
-          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(ex.name)}:</strong> ${esc(actuals.join(', '))}${timed?'':' '+esc(unitLabel())}<br>`;
+          const nm = swapNameFor(entry.log, ex.id) || ex.name;
+          if (actuals.length) summary += `<strong style="color:var(--text)">${esc(nm)}:</strong> ${esc(actuals.join(', '))}${timed?'':' '+esc(unitLabel())}<br>`;
         }
       }));
     }
