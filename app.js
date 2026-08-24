@@ -2750,7 +2750,8 @@ function exportPDF(entryOverride) {
       checkY(14);
       doc.setFillColor(30,30,30); doc.rect(margin,y,colW,6,'F');
       doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(235,235,235);
-      doc.text(`${ex.label} — ${ex.name}`, margin+3, y+4.3);
+      const pdfName = swapNameFor(log, ex.id) || ex.name;   // print the alternate if it was swapped in
+      doc.text(`${ex.label} — ${pdfName}${pdfName !== ex.name ? ' (swapped)' : ''}`, margin+3, y+4.3);
       doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,100,100);
       doc.text(ex.muscle, W-margin-3, y+4.3, {align:'right'});
       y += 7;
