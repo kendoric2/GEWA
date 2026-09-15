@@ -195,7 +195,7 @@ const MACHINE_BANK = [
   {id:'m_leg_press',name:'Leg Press',muscle:'quads',muscles:['quads','glutes','hamstrings'],type:'compound',how:'Feet shoulder-width on the platform, lower until the knees reach about 90 degrees or deeper, then press back without locking out.',cue:'Never fully lock the knees at the top — keep constant tension and push through the whole foot.',alt:'m_hack_squat'},
   {id:'m_leg_curl',name:'Leg Curl',muscle:'hamstrings',muscles:['hamstrings'],type:'isolation',how:'Seated or lying with the pad on your lower calves, curl your heels toward your glutes, squeeze, then lower slowly.',cue:'Full range with a hard squeeze at the top and a controlled negative — never let the stack yank you back.',alt:'m_single_leg_curl'},
   {id:'m_leg_ext',name:'Leg Extension',muscle:'quads',muscles:['quads'],type:'isolation',how:'Pad on the lower shins, extend the knees to full lockout, pause, then lower slowly.',cue:'One-second squeeze at the top and control the negative — no swinging or bouncing.',alt:'m_hack_squat'},
-  {id:'m_seated_calf',name:'Seated Calf Raise',muscle:'calves',muscles:['calves'],type:'isolation',how:'Knees under the pad, balls of the feet on the platform. Rise onto the toes, pause, then stretch fully at the bottom.',cue:'Full range — pause at the bottom stretch and get a big squeeze at the top.',alt:'m_leg_press'},
+  {id:'m_seated_calf',name:'Plate-Loaded Seated Calf Raise',muscle:'calves',muscles:['calves'],type:'isolation',how:'Knees under the pad, balls of the feet on the platform. Rise onto the toes, pause, then stretch fully at the bottom.',cue:'Full range — pause at the bottom stretch and get a big squeeze at the top.',alt:'m_leg_press'},
   {id:'m_single_leg_press',name:'Single-Leg Press',muscle:'quads',muscles:['quads','glutes'],type:'compound',how:'One foot centered on the platform, press through the heel to full range, then control the return. Repeat each leg.',cue:'Even, controlled reps on each side — great for ironing out left-right imbalances.',alt:'m_leg_press'},
   {id:'m_single_leg_curl',name:'Single-Leg Curl',muscle:'hamstrings',muscles:['hamstrings'],type:'isolation',how:'Curl one leg at a time on the leg-curl machine, squeeze at the top, then lower slowly.',cue:'Isolates each hamstring — keep the hips down and avoid swinging the working side.',alt:'m_leg_curl'},
   {id:'m_mts_high_row',name:'MTS High Row',muscle:'back',muscles:['lats','upper back','biceps'],type:'compound',how:'On the iso-lateral high-row machine, chest on the pad, drive the elbows down and back, squeeze the mid-back, then control the return.',cue:'Lead with the elbows, not the hands, and squeeze the mid-back one second each rep.',alt:'c_lat_pulldown'},
@@ -204,20 +204,33 @@ const MACHINE_BANK = [
   {id:'m_belt_squat',name:'Belt Squat',muscle:'quads',muscles:['quads','glutes'],type:'compound',how:'Belt around the waist loaded from below, squat deep with zero bar on your back.',cue:'All the leg work, none of the spinal compression — sit back and down into a deep squat.',alt:'m_hack_squat'},
   {id:'m_reverse_hack',name:'Reverse Hack Squat',muscle:'glutes',muscles:['glutes','hamstrings','quads'],type:'compound',how:'Face INTO the hack-squat machine (chest toward the pad), squat down, then drive back up.',cue:'Facing in shifts the load onto the glutes and hamstrings instead of the quads — push the hips back at the bottom.',alt:'m_hip_thrust'},
   {id:'m_hip_thrust',name:'Hip Thrust Machine',muscle:'glutes',muscles:['glutes','hamstrings'],type:'compound',how:'Back against the pad and pad across the hips, drive the hips up to full extension, and squeeze the glutes hard at the top.',cue:'Full hip extension and a hard glute squeeze at the top — chin tucked, ribs down.',alt:'m_reverse_hack'},
+  {id:'m_lat_pulldown',name:'Lat Pulldown Machine',muscle:'back',muscles:['lats','biceps'],type:'compound',how:'Thighs locked under the pads, grab the handles, and pull down driving the elbows toward your hips. Control the weight back up to a full lat stretch.',cue:'Chest up, pull with the elbows — not the hands — and let the lats stretch fully at the top of each rep.',alt:'c_lat_pulldown'},
+  {id:'m_chest_press',name:'Seated Chest Press Machine',muscle:'chest',muscles:['chest','triceps','front delts'],type:'compound',how:'Seat height so the handles sit at mid-chest. Press forward to full extension, then bring the handles back until you feel a stretch across the chest.',cue:'Plate-loaded (Hammer Strength style) — squeeze the shoulder blades into the pad and drive through the chest, not the shoulders.',alt:'bb_bench'},
+  {id:'m_iso_incline_fly',name:'Iso-Lateral Incline Fly',muscle:'chest',muscles:['upper chest','front delts'],type:'isolation',how:'Seated on the incline fly machine, arms on the pads with a slight elbow bend, bring the arms together in an arc and squeeze the upper chest, then open slowly to a deep stretch.',cue:'Slight elbow bend the whole way, deep stretch at the open position, and a one-second squeeze at the top.',alt:'db_flye'},
+  {id:'m_prone_leg_curl',name:'Prone Leg Curl',muscle:'hamstrings',muscles:['hamstrings'],type:'isolation',how:'Lie face down with the pad on your lower calves, curl the heels toward your glutes, squeeze, then lower slowly.',cue:'Keep the hips pressed into the bench — no lifting — and control the negative all the way down.',alt:'m_leg_curl'},
+  {id:'m_calf_45',name:'45-Degree Calf Raise Machine',muscle:'calves',muscles:['calves'],type:'isolation',how:'Shoulders under the pads on the 45-degree sled, balls of the feet on the edge of the platform. Press up onto the toes, pause, then lower to a full stretch.',cue:'Straight legs, full range — big squeeze at the top and a real stretch at the bottom. No bouncing.',alt:'m_seated_calf'},
+  {id:'m_standing_single_leg_curl',name:'Standing Single-Leg Curl',muscle:'hamstrings',muscles:['hamstrings'],type:'isolation',how:'Standing at the machine with the pad behind one ankle, curl the heel up toward the glute, squeeze, then lower under control. Repeat each leg.',cue:'Stay tall and keep the hips still — only the working leg moves. Squeeze hard at the top.',alt:'m_prone_leg_curl'},
+  {id:'m_lat_pullover',name:'Seated Lat Pullover Machine',muscle:'back',muscles:['lats','chest'],type:'isolation',how:'Seated with the pads on the upper arms, drive the arms down in an arc using the lats, then return slowly to the stretched position.',cue:'Initiate with the lats — imagine pulling with the elbows — and feel the stretch at the top.',alt:'c_lat_pullover'},
+  {id:'m_mts_low_row',name:'MTS Low Row',muscle:'back',muscles:['lats','mid back','biceps'],type:'compound',how:'Chest on the pad of the iso-lateral low-row machine, pull the handles back and down toward the hips, squeeze the mid-back, then control the return.',cue:'Drive the elbows back and down — this hits the lower lats and mid-back. Pause one second at the squeeze.',alt:'m_plate_row'},
+  {id:'m_plate_row',name:'Plate-Loaded Chest-Supported Row',muscle:'back',muscles:['lats','upper back','biceps'],type:'compound',how:'Chest on the pad, grab the handles, and row back squeezing the shoulder blades together. Lower slowly to a full stretch.',cue:'The pad removes all momentum — it is pure back. Squeeze at the top and let the lats stretch at the bottom.',alt:'m_mts_low_row'},
 ];
 // ── CABLE BANK ──
 const CABLE_BANK = [
   {id:'c_lat_pullover',name:'Seated Cable Lat Pullover',muscle:'back',muscles:['lats','chest'],type:'isolation',how:'Seated facing a high pulley, arms nearly straight, pull the handle down in an arc using the lats, then control it back up.',cue:'Initiate with the lats, not the arms — keep the elbows only slightly bent and feel the lat stretch at the top.',alt:'c_straight_arm'},
   {id:'c_straight_arm',name:'Straight-Arm Cable Pulldown',muscle:'back',muscles:['lats'],type:'isolation',how:'Standing at a high pulley, arms nearly straight, drive the bar down toward your thighs in an arc, then control it back up.',cue:'Arms stay nearly straight — drive the elbows toward the hips and squeeze the lats. No bending at the elbow.',alt:'c_lat_pullover'},
-  {id:'c_face_pull',name:'Face Pull',muscle:'shoulders',muscles:['rear delts','traps'],type:'isolation',how:'Rope at face height, pull toward your face with the elbows high and wide, squeeze, then control back.',cue:'Elbows HIGH — pull the rope apart toward your ears. A shoulder-health staple, so keep it light and clean.',alt:'reardelt'},
+  {id:'c_face_pull',name:'Face Pull',muscle:'shoulders',muscles:['rear delts','traps'],type:'isolation',how:'Rope at face height, pull toward your face with the elbows high and wide, squeeze, then control back.',cue:'Elbows HIGH — pull the rope apart toward your ears. A shoulder-health staple, so keep it light and clean.',alt:'db_rear_delt_flye'},
   {id:'c_tricep_pushdown',name:'Cable Tricep Pushdown',muscle:'triceps',muscles:['triceps'],type:'isolation',how:'Elbows pinned to your sides, push the bar or rope down to full lockout, then control it back to the start.',cue:'Elbows stay glued to your sides — only the forearms move. Full extension and squeeze at the bottom.',alt:'m_total_tricep'},
-  {id:'c_lat_pulldown',name:'Lat Pulldown',muscle:'back',muscles:['lats','biceps'],type:'compound',how:'Wide grip, pull the bar to your upper chest driving the elbows down, then control the stretch at the top.',cue:'Pull with the lats — drive the elbows down and in, and feel the stretch at the top of each rep.',alt:'m_mts_high_row'},
+  {id:'c_lat_pulldown',name:'Cable Lat Pulldown',muscle:'back',muscles:['lats','biceps'],type:'compound',how:'Wide grip, pull the bar to your upper chest driving the elbows down, then control the stretch at the top.',cue:'Pull with the lats — drive the elbows down and in, and feel the stretch at the top of each rep.',alt:'m_mts_high_row'},
 ];
 // ── BARBELL BANK ──
 const BARBELL_BANK = [
   {id:'bb_bench',name:'Barbell Bench Press',muscle:'chest',muscles:['chest','triceps','front delts'],type:'compound',how:'Flat bench, feet planted, grip just wider than the shoulders. Lower the bar to mid-chest with the elbows about 45 degrees, then press to lockout.',cue:'Retract the shoulder blades and keep them pinned. Controlled descent, full range, drive through the whole foot.',alt:'db_bench'},
   {id:'bb_ez_curl',name:'EZ-Bar Curl',muscle:'biceps',muscles:['biceps','forearms'],type:'isolation',how:'Grip the EZ bar on the angled sections, curl to the top supinating into the contraction, then lower over about 3 seconds.',cue:'No swinging — keep the elbows at your sides. The angled grip is easier on the wrists; squeeze at the top.',alt:'db_curl'},
   {id:'bb_tbar_row',name:'T-Bar Row',muscle:'back',muscles:['lats','upper back','biceps'],type:'compound',how:'Chest on the pad (or hinge over the bar), drive the elbows back and up, squeeze the mid-back, then control the return.',cue:'Squeeze one second at the top of every rep. Lead with the elbows and keep the lower back neutral.',alt:'m_mts_high_row'},
+  {id:'bb_decline_press',name:'Decline Barbell Press',muscle:'chest',muscles:['lower chest','triceps','front delts'],type:'compound',how:'On a 15–30° decline bench with the legs secured, unrack and lower the bar to the lower chest, then press to lockout.',cue:'Keep the decline subtle and the shoulder blades pinned. Controlled descent, full range — this hits the lower chest hard.',alt:'db_decline_press'},
+  {id:'bb_curl',name:'Straight-Bar Curl',muscle:'biceps',muscles:['biceps','forearms'],type:'isolation',how:'Shoulder-width underhand grip on a straight bar, curl to the top with the elbows pinned at your sides, squeeze, then lower over about 3 seconds.',cue:'No swinging — if you have to rock, it is too heavy. Full supination is built in with the straight bar; squeeze hard at the top.',alt:'bb_ez_curl'},
+  {id:'bb_back_squat',name:'Barbell Back Squat',muscle:'quads',muscles:['quads','glutes','hamstrings','core'],type:'compound',how:'Bar across the upper traps, feet shoulder-width, brace, and sit down between the knees to full depth. Drive up through the whole foot.',cue:'Big breath and brace before every rep. Chest up, knees tracking over the toes, and drive the floor away.',alt:'m_hack_squat'},
+  {id:'bb_rdl',name:'Barbell Romanian Deadlift',muscle:'hamstrings',muscles:['hamstrings','glutes','lower back'],type:'compound',how:'Hold the bar at the hips, soft knees, and hinge back pushing the hips behind you while the bar slides down the thighs. Feel the hamstring stretch, then drive the hips forward to stand.',cue:'It is a hinge, not a squat — the bar stays close and the back stays flat. Straps or Versa Gripps are fine so grip never limits the set.',alt:'db_rdl'},
   {id:'bb_seal_row',name:'Seal Row',muscle:'back',muscles:['lats','rear delts','biceps'],type:'compound',how:'Lie face-down on a raised flat bench and pull the bar up from underneath to the bench, then lower under control.',cue:'Zero momentum — your chest never leaves the bench, so it is pure back. Pause at the top.',alt:'bb_tbar_row'},
 ];
 DUMBBELL_BANK.forEach(e => { e.equip = 'dumbbell'; });
@@ -738,7 +751,7 @@ const GEWA_REBUILT = {
   id: 'gewa_rebuilt',
   name: 'Golden Era — Rebuilt',
   meta: '6-day · recomposition · full gym',
-  desc: 'Six days on, Sunday off. Chest+Back and Shoulders+Arms twice with different emphasis, two distinct leg days, and a core circuit — built for fat loss and muscle at once. Week A / Week B swaps the Day 3 single-leg move.',
+  desc: 'Six days on, Sunday off. Chest+Back and Shoulders+Arms twice with different emphasis, two distinct leg days, and a core circuit — built for fat loss and muscle at once. Tap any exercise\'s Alternative to swap it for the session.',
   locked: true,
   days: [
     { name:'Chest + Back · Chest Priority', shortName:'Mon',
@@ -749,18 +762,18 @@ const GEWA_REBUILT = {
           {superset:true},
           {id:'d1_row',label:'A2',name:'Dumbbell Bent-Over Row',muscle:'Back · Lats',sets:rw(4,'10–12','45–50 lbs'),note:'Hinge to 45°, pull toward the lower chest, squeeze the lat.',alt:'T-Bar Row'},
         ]},
-        {tag:'Block B · Superset',title:'Upper Chest + Lat Width',rest:'90 sec after B2',exercises:[
-          {id:'d1_incline',label:'B1',name:'Incline Dumbbell Press',muscle:'Upper Chest',sets:rw(3,'10–12','40–50 lbs'),note:'30–45° bench, drive through the upper chest.',alt:'Incline Barbell Press'},
+        {tag:'Block B · Superset',title:'Lower Chest + Lat Width',rest:'90 sec after B2',exercises:[
+          {id:'d1_decline',label:'B1',name:'Decline Barbell Press',muscle:'Lower Chest',sets:rw(3,'10–12','95–115 lbs'),note:'Subtle decline, shoulder blades pinned, lower to the lower chest and press to lockout.',alt:'Decline Dumbbell Press'},
           {superset:true},
           {id:'d1_pullover',label:'B2',name:'Seated Cable Lat Pullover',muscle:'Lats',sets:rw(3,'12–15','Moderate stack'),note:'Narrow grip, arms nearly straight, initiate with the lats.',alt:'Straight-Arm Cable Pulldown'},
         ]},
         {tag:'Block C · Superset',title:'Isolation Finishers',rest:'60 sec after C2',exercises:[
-          {id:'d1_flyes',label:'C1',name:'Dumbbell Chest Flyes',muscle:'Chest Width',sets:rw(3,'12–15','25–30 lbs'),note:'Slight incline, slight elbow bend, deep stretch, squeeze at the top.',alt:'Cable Fly'},
+          {id:'d1_isofly',label:'C1',name:'Iso-Lateral Incline Fly',muscle:'Upper Chest',sets:rw(3,'12–15','Moderate'),note:'Slight elbow bend, deep stretch at the open position, one-second squeeze at the top.',alt:'Dumbbell Chest Flyes'},
           {superset:true},
-          {id:'d1_straightarm',label:'C2',name:'Straight-Arm Cable Pulldown',muscle:'Lat Isolation',sets:rw(3,'12–15','40–50 lbs'),note:'Arms nearly straight, drive the elbows toward the hips.',alt:'Seated Cable Lat Pullover'},
+          {id:'d1_pulldownm',label:'C2',name:'Lat Pulldown Machine',muscle:'Lats',sets:rw(3,'12–15','Moderate–heavy'),note:'Chest up, pull with the elbows, full lat stretch at the top.',alt:'Cable Lat Pulldown'},
         ]},
         {tag:'Block D · Finisher',title:'Heavy Chest',rest:'90 sec between sets',exercises:[
-          {id:'d1_bbbench',label:'D',name:'Barbell Bench Press',muscle:'Chest · Heavy',sets:rw(3,'8','95–135 lbs'),note:'Feet flat, full range of motion, controlled descent.',alt:'Dumbbell Bench Press'},
+          {id:'d1_chestpress',label:'D',name:'Seated Chest Press Machine',muscle:'Chest · Heavy',sets:rw(3,'8','Heavy — build up'),note:'Hammer Strength style. Shoulder blades into the pad, drive through the chest, full extension.',alt:'Barbell Bench Press'},
         ]},
       ]},
     { name:'Shoulders + Arms · EZ Bar', shortName:'Tue',
@@ -778,7 +791,7 @@ const GEWA_REBUILT = {
           {id:'d2_facepull',label:'C',name:'Face Pulls',muscle:'Rear Delts · Health',sets:rw(3,'15','20–30 lbs'),note:'Cable at face height, rope attachment, pull toward the face, elbows HIGH.',alt:'Reverse Pec Deck'},
         ]},
         {tag:'Block D · Superset',title:'Biceps + Triceps — Arm Pump',rest:'60 sec after D2',exercises:[
-          {id:'d2_ezcurl',label:'D1',name:'EZ-Bar Curl',muscle:'Biceps',sets:rw(4,'10–12','50–60 lbs total'),note:'Full range, supinate at the top, 3-second descent.',alt:'Dumbbell Bicep Curl'},
+          {id:'d2_bbcurl',label:'D1',name:'Straight-Bar Curl',muscle:'Biceps',sets:rw(4,'10–12','50–60 lbs total'),note:'Elbows pinned, full range, squeeze at the top, 3-second descent.',alt:'EZ-Bar Curl'},
           {superset:true},
           {id:'d2_pushdown',label:'D2',name:'Cable Tricep Pushdown',muscle:'Triceps',sets:rw(4,'10–12','50–60 lbs'),note:'Elbows pinned to the sides, full extension at the bottom.',alt:'Total Tricep Machine'},
         ]},
@@ -798,20 +811,20 @@ const GEWA_REBUILT = {
           {id:'d3_hack',label:'A',name:'Hack Squat',muscle:'Quads',sets:rw(4,'8–12','1–3 plates/side'),note:'Full depth, drive through the heels, knees track over the toes.',alt:'Leg Press'},
         ]},
         {tag:'Block B · Primary',title:'Overall Leg Mass',rest:'90 sec between sets',exercises:[
-          {id:'d3_legpress',label:'B',name:'Leg Press',muscle:'Quads · Glutes',sets:rw(4,'10–12','3+ plates/side (~355 lb+)'),note:'Feet shoulder-width, full range, never lock the knees.',alt:'Hack Squat'},
+          {id:'d3_legpress',label:'B',name:'Leg Press',muscle:'Quads · Glutes',sets:rw(4,'10–12','3+ plates/side (~355 lb+)'),note:'Feet shoulder-width, full range, never lock the knees.',alt:'Barbell Back Squat'},
         ]},
         {tag:'Block C · Posterior Chain',title:'Hamstrings',rest:'90 sec between sets',exercises:[
-          {id:'d3_rdl',label:'C',name:'Dumbbell RDL',muscle:'Hamstrings · Glutes',sets:rw(3,'10','50 lbs ea.'),note:'Hip hinge back, feel the hamstring stretch, drive the hips forward to stand.',alt:'Barbell Romanian Deadlift'},
+          {id:'d3_rdl',label:'C',name:'Barbell Romanian Deadlift',muscle:'Hamstrings · Glutes',sets:rw(3,'10','95–115 lbs'),note:'Hip hinge back, bar close to the legs, feel the hamstring stretch, drive the hips forward to stand. Versa Gripps if grip limits you.',alt:'Dumbbell RDL'},
         ]},
         {tag:'Block D · Isolation',title:'Hamstring + Quad',rest:'60 sec between sets',exercises:[
-          {id:'d3_legcurl',label:'D1',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range, squeeze at the top.',alt:'Single-Leg Curl'},
+          {id:'d3_legcurl',label:'D1',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range, squeeze at the top.',alt:'Prone Leg Curl'},
           {id:'d3_legext',label:'D2',name:'Leg Extension',muscle:'Quads',sets:rw(3,'12–15','90–120 lbs'),note:'Full extension, 1-second squeeze at the top.',alt:'Hack Squat'},
         ]},
         {tag:'Block E · Calves',title:'Calves',rest:'60 sec between sets',exercises:[
-          {id:'d3_calf',label:'E',name:'Seated Calf Raises',muscle:'Calves',sets:rw(3,'20–25','100–120 lbs'),note:'Full range, pause at the bottom stretch.',alt:'Dumbbell Calf Raises'},
+          {id:'d3_calf45',label:'E',name:'45-Degree Calf Raise Machine',muscle:'Calves',sets:rw(3,'20–25','Moderate–heavy'),note:'Straight legs, full range — squeeze at the top, real stretch at the bottom.',alt:'Plate-Loaded Seated Calf Raise'},
         ]},
-        {tag:'Block F · Unilateral',title:'Single-Leg · alternates weekly',rest:'60 sec between sets',exercises:[
-          {id:'d3_singleleg',label:'F',name:'Single-Leg Press',muscle:'Legs · Unilateral',sets:rw(3,'12 ea.','Moderate'),note:'Use the Week A / Week B toggle: Week A = single-leg press, Week B = single-leg curl. 12 each leg, controlled.',alt:'Single-Leg Curl'},
+        {tag:'Block F · Unilateral',title:'Single-Leg',rest:'60 sec between sets',exercises:[
+          {id:'d3_singleleg',label:'F',name:'Single-Leg Press',muscle:'Legs · Unilateral',sets:rw(3,'12 ea.','Moderate'),note:'12 each leg, controlled — even reps on both sides.',alt:'Standing Single-Leg Curl'},
         ]},
         {tag:'Block G · Core Circuit',title:'Abs',rest:'60 sec between rounds',exercises:[
           {id:'d3_crunch',label:'G1',name:'Crunches',muscle:'Abs',sets:rw(3,'25','BW'),note:'Go straight into leg raises. No neck pulling, squeeze the abs.',alt:'Weighted Crunch'},
@@ -822,8 +835,8 @@ const GEWA_REBUILT = {
     { name:'Chest + Back · Back Priority', shortName:'Thu',
       warmup:['Arm circles — 30 sec forward, 30 sec back','Light dumbbell rear-delt flyes (10 lbs) — 2 × 15','Cat-cow — 10 reps slow','Light incline press (20 lbs) — 1 × 15'],
       blocks:[
-        {tag:'Block A · Superset',title:'Upper Chest + Heavy Back',rest:'90 sec after A2',exercises:[
-          {id:'d4_incline',label:'A1',name:'Incline Dumbbell Press',muscle:'Upper Chest',sets:rw(4,'8–12','40–50 lbs'),note:'30–45° bench, drive through the upper chest.',alt:'Incline Barbell Press'},
+        {tag:'Block A · Superset',title:'Lower Chest + Heavy Back',rest:'90 sec after A2',exercises:[
+          {id:'d4_decline',label:'A1',name:'Decline Barbell Press',muscle:'Lower Chest',sets:rw(4,'8–12','95–115 lbs'),note:'Subtle decline, shoulder blades pinned, controlled descent to the lower chest.',alt:'Decline Dumbbell Press'},
           {superset:true},
           {id:'d4_tbar',label:'A2',name:'T-Bar Row',muscle:'Back · Thickness',sets:rw(4,'10–12','65–90 lbs'),note:'Chest on the pad, drive the elbows back, squeeze 1 sec at the top.',alt:'Barbell Row'},
         ]},
@@ -833,11 +846,14 @@ const GEWA_REBUILT = {
           {id:'d4_seal',label:'B2',name:'Seal Row',muscle:'Mid Back',sets:rw(3,'10–12','Moderate'),note:'Face down on a flat bench, pull from underneath, zero momentum.',alt:'Chest-Supported Row'},
         ]},
         {tag:'Block C · Lat Development',title:'Lats',rest:'60 sec between sets',exercises:[
-          {id:'d4_pullover',label:'C',name:'Dumbbell Pullover',muscle:'Lats',sets:rw(3,'12','55–68 lbs'),note:'Arms nearly straight, feel the lat stretch, pull with the lats not the triceps.',alt:'Seated Cable Lat Pullover'},
+          {id:'d4_pullover',label:'C',name:'Dumbbell Pullover',muscle:'Lats',sets:rw(3,'12','55–68 lbs'),note:'Arms nearly straight, feel the lat stretch, pull with the lats not the triceps.',alt:'Seated Lat Pullover Machine'},
         ]},
-        {tag:'Block D · Finishers',title:'Upper Back + Lat',rest:'60 sec between sets',exercises:[
+        {tag:'Block D · Finishers',title:'Upper Back Thickness',rest:'60 sec between sets',exercises:[
           {id:'d4_mts',label:'D1',name:'MTS High Row',muscle:'Upper Back',sets:rw(3,'12–15','35–65 lbs ea.'),note:'Drive the elbows back, squeeze the mid-back.',alt:'T-Bar Row'},
-          {id:'d4_pulldown',label:'D2',name:'Lat Pulldown',muscle:'Lats',sets:rw(3,'12','Moderate–heavy'),note:'Wide grip, pull to the upper chest, feel the lat stretch at the top.',alt:'MTS High Row'},
+          {id:'d4_mtslow',label:'D2',name:'MTS Low Row',muscle:'Lower Lats · Mid Back',sets:rw(3,'12–15','35–65 lbs ea.'),note:'Elbows back and down toward the hips, one-second squeeze.',alt:'Plate-Loaded Chest-Supported Row'},
+        ]},
+        {tag:'Block E · Lat Finisher',title:'Lat Width',rest:'60 sec between sets',exercises:[
+          {id:'d4_pulldownm',label:'E',name:'Lat Pulldown Machine',muscle:'Lats',sets:rw(3,'12','Moderate–heavy'),note:'Chest up, pull with the elbows, full lat stretch at the top.',alt:'Cable Lat Pulldown'},
         ]},
       ]},
     { name:'Shoulders + Arms · Dumbbell', shortName:'Fri',
@@ -882,14 +898,13 @@ const GEWA_REBUILT = {
           {id:'d6_hipthrust',label:'C2',name:'Hip Thrust Machine',muscle:'Glutes',sets:rw(3,'12–15','Moderate'),note:'Full hip extension, squeeze the glutes at the top.',alt:'Reverse Hack Squat'},
         ]},
         {tag:'Block D · Hamstrings + Calves',title:'Finishers',rest:'60 sec between sets',exercises:[
-          {id:'d6_legcurl',label:'D1',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range.',alt:'Single-Leg Curl'},
-          {id:'d6_calf',label:'D2',name:'Seated Calf Raises',muscle:'Calves',sets:rw(3,'20–25','100–120 lbs'),note:'Full range, pause at the bottom.',alt:'Dumbbell Calf Raises'},
+          {id:'d6_legcurl',label:'D1',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range.',alt:'Prone Leg Curl'},
+          {id:'d6_calf45',label:'D2',name:'45-Degree Calf Raise Machine',muscle:'Calves',sets:rw(3,'20–25','Moderate–heavy'),note:'Straight legs, full range, squeeze at the top and stretch at the bottom.',alt:'Plate-Loaded Seated Calf Raise'},
         ]},
       ]},
     { name:'Rest · Meal Prep', shortName:'Sun', rest:true, warmup:[], blocks:[] },
   ]
 };
-GEWA_REBUILT.variants = ['Week A','Week B']; GEWA_REBUILT.swapKind = 'weekB';
 const BUILTIN_PROGRAMS = [ARNOLD_PROGRAM, GEWA_REBUILT, MASS_POWER, OLYMPIA_SPLIT, CLASSIC_PPL, OLDSCHOOL_VOLUME];
 // ── PROGRAM VARIANTS ──
 // Each built-in has two versions, swapped at render time via a central name map.
@@ -899,7 +914,6 @@ const BUILTIN_PROGRAMS = [ARNOLD_PROGRAM, GEWA_REBUILT, MASS_POWER, OLYMPIA_SPLI
 ARNOLD_PROGRAM.variants = ['Dumbbell','Barbell']; ARNOLD_PROGRAM.swapKind = 'toBB';
 [MASS_POWER, OLYMPIA_SPLIT, CLASSIC_PPL, OLDSCHOOL_VOLUME].forEach(p => { p.variants = ['Original','Dumbbell']; p.swapKind = 'toDB'; });
 const SWAP_MAPS = {
-  weekB: { 'Single-Leg Press': 'Single-Leg Curl' },
   toDB: {
     'Deadlift':'Dumbbell Romanian Deadlift', 'Barbell Row':'Dumbbell Bent-Over Row', 'Bent-Over Row':'Dumbbell Bent-Over Row',
     'Lat Pulldown':'Single-Arm Dumbbell Row', 'Weighted Pull-Up':'Single-Arm Dumbbell Row', 'Seated Cable Row':'Chest-Supported Dumbbell Row',
@@ -998,6 +1012,20 @@ function saveHistory(h) { try { localStorage.setItem('ge_history', JSON.stringif
 const LB_PER_KG = CONFIG.units.lbPerKg;
 const WEIGHT_STEP = CONFIG.units.weightStep;   // stepper increment, in the display unit
 const PROG_INC = CONFIG.units.progInc;         // progression jump, in lb
+// ── THEME (dark default · light) ──
+function getTheme(){ return localStorage.getItem('ge_theme') === 'light' ? 'light' : 'dark'; }
+function applyTheme(t){
+  if (t === 'light') document.documentElement.setAttribute('data-theme','light'); else document.documentElement.removeAttribute('data-theme');
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', t === 'light' ? '#FFFFFF' : '#0A0A0A');
+  const b = document.getElementById('btnTheme'); if (b) { b.textContent = t === 'light' ? '🌙' : '☀️'; b.title = t === 'light' ? 'Switch to dark mode' : 'Switch to light mode'; }
+}
+function toggleTheme(){
+  const t = getTheme() === 'light' ? 'dark' : 'light';
+  localStorage.setItem('ge_theme', t); applyTheme(t);
+  if (currentScreen === 'stats') renderStats();   // charts re-read the theme colours
+  showToast(t === 'light' ? 'Light mode' : 'Dark mode', '');
+}
+applyTheme(getTheme());
 function getUnit(){ return localStorage.getItem('ge_unit') || 'lb'; }
 function setUnit(u){ localStorage.setItem('ge_unit', u); }
 function unitLabel(){ return getUnit(); }
@@ -2212,7 +2240,7 @@ function ymdToTs(str, end){ if(!str) return null; const a=String(str).split('-')
 function inStatsRange(ts){ if(statsFrom!=null && ts<statsFrom) return false; if(statsTo!=null && ts>statsTo) return false; return true; }
 function cssVar(n){ return (getComputedStyle(document.documentElement).getPropertyValue(n)||'').trim() || '#C9A84C'; }
 function chartBase(){
-  const tick = '#888', grid = 'rgba(255,255,255,0.06)';
+  const tick = cssVar('--text-muted'), grid = cssVar('--chart-grid');
   return { responsive:true, maintainAspectRatio:false, animation:{duration:300},
     plugins:{ legend:{display:false} },
     scales:{ x:{ ticks:{color:tick, font:{size:9}, maxRotation:0, autoSkip:true, maxTicksLimit:7}, grid:{color:grid} },
