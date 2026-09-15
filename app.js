@@ -2746,67 +2746,67 @@ function exportPDF(entryOverride) {
   doc.text((prog.name || 'Workout').toUpperCase(), margin, 14);
   doc.setFontSize(10); doc.setTextColor(180,180,180);
   doc.text(day.name.toUpperCase(), margin, 21);
-  doc.setFontSize(8); doc.setTextColor(120,120,120);
+  doc.setFontSize(8); doc.setTextColor(150,150,150);
   doc.text(dateStr, margin, 28);
   doc.text('Golden Era', W-margin, 28, {align:'right'});
   doc.setDrawColor(201,168,76); doc.setLineWidth(0.5); doc.line(margin,33,W-margin,33);
   y = 42;
   if (day.warmup?.length) {
-    doc.setFillColor(20,30,45); doc.rect(margin,y,colW,6,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(100,160,220);
+    doc.setFillColor(232,240,250); doc.rect(margin,y,colW,6,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(30,90,160);
     doc.text('WARM-UP', margin+3, y+4); y += 8;
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(140,140,140);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(60,60,60);
     day.warmup.forEach(w => { doc.text(`— ${w}`, margin+3, y); y += 4.5; });
     y += 3;
   }
   day.blocks.forEach(block => {
     checkY(18);
-    doc.setFillColor(25,25,25); doc.rect(margin,y,colW,7,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(201,168,76);
+    doc.setFillColor(247,240,222); doc.rect(margin,y,colW,7,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(120,88,15);
     doc.text(block.tag.toUpperCase(), margin+3, y+5);
-    doc.setTextColor(220,220,220); doc.setFontSize(8);
+    doc.setTextColor(20,20,20); doc.setFontSize(8);
     doc.text(block.title, margin+65, y+5);
     y += 9;
     block.exercises.forEach(ex => {
       if (ex.superset) {
         checkY(6);
-        doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(150,120,60);
-        doc.setLineDash([2,2]); doc.setDrawColor(90,72,32); doc.setLineWidth(0.3);
+        doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(140,105,25);
+        doc.setLineDash([2,2]); doc.setDrawColor(190,165,110); doc.setLineWidth(0.3);
         doc.line(margin+10,y+2,W-margin-10,y+2); doc.setLineDash([]);
         doc.text('SUPERSET', W/2, y+2, {align:'center'}); y += 6; return;
       }
       checkY(14);
-      doc.setFillColor(30,30,30); doc.rect(margin,y,colW,6,'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(235,235,235);
+      doc.setFillColor(236,236,236); doc.rect(margin,y,colW,6,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,15,15);
       const pdfName = swapNameFor(log, ex.id) || ex.name;   // print the alternate if it was swapped in
       doc.text(`${ex.label} — ${pdfName}${pdfName !== ex.name ? ' (swapped)' : ''}`, margin+3, y+4.3);
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,100,100);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(90,90,90);
       doc.text(ex.muscle, W-margin-3, y+4.3, {align:'right'});
       y += 7;
       const c1=margin+4,c2=margin+26,c3=margin+76,c4=margin+130;
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(100,100,100);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(110,110,110);
       doc.text('SET',c1,y); doc.text('REPS',c2,y); doc.text('PRESCRIBED',c3,y); doc.text('ACTUAL USED',c4,y);
-      y+=1; doc.setDrawColor(50,50,50); doc.setLineWidth(0.2); doc.line(margin,y,W-margin,y); y+=4;
+      y+=1; doc.setDrawColor(200,200,200); doc.setLineWidth(0.2); doc.line(margin,y,W-margin,y); y+=4;
       ex.sets.forEach((s,si) => {
         checkY(7);
         const key=`${ex.id}_${si}`; const cv=coerceSet(log[key]); const actual=(cv.w!=null||cv.r!=null)?`${cv.w!=null?dispNum(cv.w)+unitLabel():''}${cv.r!=null?(cv.w!=null?' x ':'')+cv.r+' reps':''}`.trim():'—';
-        if(si%2===0){doc.setFillColor(18,18,18);doc.rect(margin,y-3,colW,6,'F');}
+        if(si%2===0){doc.setFillColor(247,247,247);doc.rect(margin,y-3,colW,6,'F');}
         doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,100); doc.text(String(si+1),c1,y);
-        doc.setTextColor(200,200,200); doc.text(s.reps,c2,y); doc.text(s.weight,c3,y);
-        if(actual!=='—'&&actual.trim()){doc.setFont('helvetica','bold');doc.setTextColor(46,204,113);doc.text(actual,c4,y);}
-        else{doc.setTextColor(70,70,70);doc.text('—',c4,y);}
+        doc.setTextColor(25,25,25); doc.text(s.reps,c2,y); doc.text(s.weight,c3,y);
+        if(actual!=='—'&&actual.trim()){doc.setFont('helvetica','bold');doc.setTextColor(15,115,60);doc.text(actual,c4,y);}
+        else{doc.setTextColor(130,130,130);doc.text('—',c4,y);}
         y+=6;
       });
       const nk=`${ex.id}_notes`; const notes=log[nk];
-      if(notes&&notes.trim()){checkY(8);doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(130,130,130);const lines=doc.splitTextToSize(`Notes: ${notes}`,colW-6);lines.forEach(l=>{checkY(5);doc.text(l,margin+3,y);y+=4.5;});}
+      if(notes&&notes.trim()){checkY(8);doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(80,80,80);const lines=doc.splitTextToSize(`Notes: ${notes}`,colW-6);lines.forEach(l=>{checkY(5);doc.text(l,margin+3,y);y+=4.5;});}
       y+=4;
     });
     y+=3;
   });
   const pages=doc.internal.getNumberOfPages();
   for(let i=1;i<=pages;i++){
-    doc.setPage(i); doc.setDrawColor(50,50,50); doc.setLineWidth(0.3); doc.line(margin,285,W-margin,285);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(80,80,80);
+    doc.setPage(i); doc.setDrawColor(200,200,200); doc.setLineWidth(0.3); doc.line(margin,285,W-margin,285);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,100,100);
     doc.text(`Golden Era · ${day.name} · ${dateStr}`,margin,290);
     doc.text(`${i}/${pages}`,W-margin,290,{align:'right'});
   }
