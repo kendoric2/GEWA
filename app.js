@@ -212,6 +212,8 @@ const MACHINE_BANK = [
   {id:'m_standing_single_leg_curl',name:'Standing Single-Leg Curl',muscle:'hamstrings',muscles:['hamstrings'],type:'isolation',how:'Standing at the machine with the pad behind one ankle, curl the heel up toward the glute, squeeze, then lower under control. Repeat each leg.',cue:'Stay tall and keep the hips still — only the working leg moves. Squeeze hard at the top.',alt:'m_prone_leg_curl'},
   {id:'m_lat_pullover',name:'Seated Lat Pullover Machine',muscle:'back',muscles:['lats','chest'],type:'isolation',how:'Seated with the pads on the upper arms, drive the arms down in an arc using the lats, then return slowly to the stretched position.',cue:'Initiate with the lats — imagine pulling with the elbows — and feel the stretch at the top.',alt:'c_lat_pullover'},
   {id:'m_mts_low_row',name:'MTS Low Row',muscle:'back',muscles:['lats','mid back','biceps'],type:'compound',how:'Chest on the pad of the iso-lateral low-row machine, pull the handles back and down toward the hips, squeeze the mid-back, then control the return.',cue:'Drive the elbows back and down — this hits the lower lats and mid-back. Pause one second at the squeeze.',alt:'m_plate_row'},
+  {id:'m_adductor',name:'Adductor Machine',muscle:'quads',muscles:['adductors','inner thigh'],type:'isolation',how:'Seated with the pads on the inside of the knees and the legs open, squeeze the legs together, pause, then open slowly back to a stretch.',cue:'Control both directions — the slow return is where the stretch does its work. No slamming the pads together.',alt:'m_abductor'},
+  {id:'m_abductor',name:'Abductor Machine',muscle:'glutes',muscles:['glute medius','outer hip'],type:'isolation',how:'Seated with the pads on the outside of the knees and the legs together, push the legs apart, pause and squeeze the outer hips, then return slowly.',cue:'Sit tall or lean slightly forward to bias the glute medius. Squeeze at the top and control the return.',alt:'m_adductor'},
   {id:'m_plate_row',name:'Plate-Loaded Chest-Supported Row',muscle:'back',muscles:['lats','upper back','biceps'],type:'compound',how:'Chest on the pad, grab the handles, and row back squeezing the shoulder blades together. Lower slowly to a full stretch.',cue:'The pad removes all momentum — it is pure back. Squeeze at the top and let the lats stretch at the bottom.',alt:'m_mts_low_row'},
 ];
 // ── CABLE BANK ──
@@ -900,6 +902,10 @@ const GEWA_REBUILT = {
         {tag:'Block D · Hamstrings + Calves',title:'Finishers',rest:'60 sec between sets',exercises:[
           {id:'d6_legcurl',label:'D1',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range.',alt:'Prone Leg Curl'},
           {id:'d6_calf45',label:'D2',name:'45-Degree Calf Raise Machine',muscle:'Calves',sets:rw(3,'20–25','Moderate–heavy'),note:'Straight legs, full range, squeeze at the top and stretch at the bottom.',alt:'Plate-Loaded Seated Calf Raise'},
+        ]},
+        {tag:'Block E · Hips',title:'Adductors + Abductors',rest:'60 sec between sets',exercises:[
+          {id:'d6_adductor',label:'E1',name:'Adductor Machine',muscle:'Inner Thigh',sets:rw(3,'15','Moderate'),note:'Squeeze together, pause, slow return to a stretch.',alt:'Abductor Machine'},
+          {id:'d6_abductor',label:'E2',name:'Abductor Machine',muscle:'Glute Medius · Outer Hip',sets:rw(3,'15','Moderate'),note:'Push apart, squeeze the outer hips at the top, control the return.',alt:'Adductor Machine'},
         ]},
       ]},
     { name:'Rest · Meal Prep', shortName:'Sun', rest:true, warmup:[], blocks:[] },
