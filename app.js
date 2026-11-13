@@ -886,26 +886,29 @@ const GEWA_REBUILT = {
           {id:'d5_totaltri',label:'F',name:'Total Tricep Machine',muscle:'Triceps',sets:rw(3,'12','Heavy'),note:'Finisher — full extension each rep.',alt:'Single-Arm Overhead Tricep Extension'},
         ]},
       ]},
-    { name:'Legs Day 2 · Glute Focus', shortName:'Sat',
-      warmup:['Bodyweight squats — 2 × 15','Hip circles — 10 each direction','Glute bridges — 2 × 15','Leg swings — 10 each leg'],
+    { name:'Legs + Core · Squat Focus', shortName:'Sat',
+      warmup:['Bodyweight squats — 2 × 15','Hip circles — 10 each direction','Glute bridges — 2 × 15'],
       blocks:[
-        {tag:'Block A · Primary',title:'Primary Quad',rest:'90 sec between sets',exercises:[
-          {id:'d6_pendulum',label:'A',name:'Pendulum Squat',muscle:'Quads',sets:rw(4,'8–12','Start light — build up'),note:'Natural arc, full depth, drive through the heels.',alt:'Hack Squat'},
+        {tag:'Block A · Primary',title:'Primary Squat',rest:'90 sec between sets',exercises:[
+          {id:'d6_backsquat',label:'A',name:'Barbell Back Squat',muscle:'Quads · Glutes',sets:[{reps:'12',weight:'135 lbs'},{reps:'10',weight:'185 lbs'},{reps:'10',weight:'205 lbs'},{reps:'9–10',weight:'225 lbs'}],note:'Belt on for the heavy sets. Brace, sit between the heels, drive up through the whole foot.',alt:'Hack Squat'},
         ]},
-        {tag:'Block B · Primary',title:'Belt Squat',rest:'90 sec between sets',exercises:[
-          {id:'d6_belt',label:'B',name:'Belt Squat',muscle:'Quads · Glutes',sets:rw(4,'10–12','Moderate–heavy'),note:'Weight on the belt, zero spinal compression, deep squat.',alt:'Hack Squat'},
+        {tag:'Block B · Quad Volume',title:'Machine Squat',rest:'90 sec between sets',exercises:[
+          {id:'d6_hack',label:'B',name:'Hack Squat',muscle:'Quads',sets:rw(4,'10–12','Moderate–heavy'),note:'Full depth every rep, knees track over the toes. Pendulum Squat works just as well here.',alt:'Pendulum Squat'},
         ]},
-        {tag:'Block C · Glute Focus',title:'Glutes',rest:'60 sec between sets',exercises:[
-          {id:'d6_revhack',label:'C1',name:'Reverse Hack Squat',muscle:'Glutes · Hamstrings',sets:rw(3,'10–12','Light–moderate'),note:'Face INTO the machine — loads glutes and hamstrings instead of quads.',alt:'Hip Thrust Machine'},
-          {id:'d6_hipthrust',label:'C2',name:'Hip Thrust Machine',muscle:'Glutes',sets:rw(3,'12–15','Moderate'),note:'Full hip extension, squeeze the glutes at the top.',alt:'Reverse Hack Squat'},
+        {tag:'Block C · Glutes + Hamstrings',title:'Posterior Chain',rest:'60 sec between sets',exercises:[
+          {id:'d6_hipthrust',label:'C1',name:'Hip Thrust Machine',muscle:'Glutes',sets:rw(3,'12–15','Moderate'),note:'Full hip extension, squeeze the glutes at the top.',alt:'Reverse Hack Squat'},
+          {id:'d6_legcurl',label:'C2',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range, squeeze at the top. No RDLs today — hamstrings recover from the midweek session.',alt:'Prone Leg Curl'},
         ]},
-        {tag:'Block D · Hamstrings + Calves',title:'Finishers',rest:'60 sec between sets',exercises:[
-          {id:'d6_legcurl',label:'D1',name:'Leg Curl',muscle:'Hamstrings',sets:rw(3,'10–12','90–110 lbs'),note:'Full range.',alt:'Prone Leg Curl'},
+        {tag:'Block D · Isolation',title:'Quads + Calves',rest:'60 sec between sets',exercises:[
+          {id:'d6_legext',label:'D1',name:'Leg Extension',muscle:'Quads',sets:rw(3,'12–15','90–120 lbs'),note:'Full extension, 1-second squeeze. Drop set on the last set — log the stack positions.',alt:'Hack Squat'},
           {id:'d6_calf45',label:'D2',name:'45-Degree Calf Raise Machine',muscle:'Calves',sets:rw(3,'20–25','Moderate–heavy'),note:'Straight legs, full range, squeeze at the top and stretch at the bottom.',alt:'Plate-Loaded Seated Calf Raise'},
         ]},
-        {tag:'Block E · Hips',title:'Adductors + Abductors',rest:'60 sec between sets',exercises:[
-          {id:'d6_adductor',label:'E1',name:'Adductor Machine',muscle:'Inner Thigh',sets:rw(3,'15','Moderate'),note:'Squeeze together, pause, slow return to a stretch.',alt:'Abductor Machine'},
-          {id:'d6_abductor',label:'E2',name:'Abductor Machine',muscle:'Glute Medius · Outer Hip',sets:rw(3,'15','Moderate'),note:'Push apart, squeeze the outer hips at the top, control the return.',alt:'Adductor Machine'},
+        {tag:'Block E · Hips',title:'Abductors + Adductors',rest:'60 sec between sets',exercises:[
+          {id:'d6_abductor',label:'E1',name:'Abductor Machine',muscle:'Glute Medius · Outer Hip',sets:rw(3,'15','Moderate'),note:'Push apart, squeeze the outer hips at the top, control the return.',alt:'Adductor Machine'},
+          {id:'d6_adductor',label:'E2',name:'Adductor Machine',muscle:'Inner Thigh',sets:rw(3,'15','Moderate'),note:'Squeeze together, pause, slow return to a stretch.',alt:'Abductor Machine'},
+        ]},
+        {tag:'Block F · Core (Optional)',title:'Abs',rest:'60 sec between sets',exercises:[
+          {id:'d6_hanglegraise',label:'F',name:'Hanging Leg Raise',muscle:'Lower Abs',sets:rw(3,'15','BW'),note:'Optional finisher. Kill the swing — curl the pelvis up rather than just lifting the legs.',alt:'Leg Raises'},
         ]},
       ]},
     { name:'Rest · Meal Prep', shortName:'Sun', rest:true, warmup:[], blocks:[] },
